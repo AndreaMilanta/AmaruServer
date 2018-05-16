@@ -51,5 +51,15 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Game\Assets\Actions\" />
+    <Folder Include="Game\Assets\Bonus\" />
+    <Folder Include="Game\Assets\Cards\" />
+    <Folder Include="Game\Assets\Characters\" />
+    <Folder Include="Game\Assets\Gameboard\" />
+    <Folder Include="Game\Assets\Player\" />
+    <Folder Include="Game\Tools\Managers\" />
+    <Folder Include="Game\Tools\Visitors\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
