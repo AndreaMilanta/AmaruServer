@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace AmaruServer.Networking.Communication
 {
+    [Serializable]
     abstract class Message
     {
     }

@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.IO;
 
 using AmaruServer.Constants;
 using AmaruServer.Networking.Communication;
@@ -10,21 +13,20 @@ namespace AmaruServer.Networking
 {
     class ClientTCP
     {
-        private int _index;
-        private IPEndPoint _ipEndPoint;
-        private Socket _socket;
-        private bool _closing = false;
+        private Socket _socket = null;
         private byte[] _buffer = new byte[NetworkConstants.BufferSize];
+        private IFormatter formatter = new BinaryFormatter();
+        Stream _stream = null;
 
-        public int Index { get => _index; set => _index = value; }
-        public string Ip { get => NetworkConstants.ip2str(_ipEndPoint.Address) ; }
-        public int Port { get => _ipEndPoint.Port; }
-        public bool Closing { get => _closing; set => _closing = value; }
+        public int Index { get; private set; }
+        public string Ip { get => NetworkConstants.ip2str(((IPEndPoint)_socket.RemoteEndPoint).Address); }
+        public int Port { get => ((IPEndPoint)_socket.RemoteEndPoint).Port; }
+        public bool Closing { get; private set; } = false;
 
         public ClientTCP(Socket soc)
         {
             this._socket = soc;
-            this._ipEndPoint = (IPEndPoint)_socket.RemoteEndPoint;
+            this._stream = new MemoryStream(_buffer);
         }
 
         public void startClient()
@@ -39,27 +41,37 @@ namespace AmaruServer.Networking
             try
             {
                 int receivedSize = socket.EndReceive(ar);
-                if (receivedSize <= 0)
-                    CloseClient(_index);
-                else
-                {
-                    byte[] databuffer = new byte[receivedSize];
-                    Array.Copy(_buffer, databuffer, receivedSize);
-                    //Handle data
 
-                }
+                //Read Data
+                _stream.Position = 0;
+                byte[] databuffer = new byte[receivedSize];
+                _socket.Receive(databuffer, receivedSize, 0);
+                Array.Copy(_buffer, databuffer, receivedSize);
+
+                //Get original type
+                Message recMex = (Message)formatter.Deserialize(_stream);
+
+                //Handle data
+
             }
             catch
             {
-                CloseClient(_index);
+                LoggerManager.NetworkLogger.LogException("Error Reading from sokcet");
+                CloseClient(Index);
             }
         }
 
-        public void Write(Message mex) { }
+        public void Write(Message mex)
+        {
+            formatter.Serialize(_stream, mex);
+            _stream.Flush();
+            _socket.Send(_buffer, _buffer.Length, 0);
+            _stream.Position = 0;
+        }
 
         public void CloseClient(int index)
         {
-            this._closing = true;
+            this.Closing = true;
             this._socket.Close();
             LoggerManager.NetworkLogger.Log("Connection from " + this.Ip + " has been terminated");
         }
