@@ -3,24 +3,33 @@ using System.Net;
 using System.Net.Sockets;
 
 using AmaruServer.Constants;
+using AmaruServer.Networking.Communication;
+using AmaruServer.Logging;
 
 namespace AmaruServer.Networking
 {
     class ClientTCP
     {
         private int _index;
-        private uint _ip;
-        public Socket socket;
+        private IPEndPoint _ipEndPoint;
+        private Socket _socket;
         private bool _closing = false;
         private byte[] _buffer = new byte[NetworkConstants.BufferSize];
 
         public int Index { get => _index; set => _index = value; }
-        public uint Ip { get => _ip; set => _ip = value; }
+        public string Ip { get => NetworkConstants.ip2str(_ipEndPoint.Address) ; }
+        public int Port { get => _ipEndPoint.Port; }
         public bool Closing { get => _closing; set => _closing = value; }
+
+        public ClientTCP(Socket soc)
+        {
+            this._socket = soc;
+            this._ipEndPoint = (IPEndPoint)_socket.RemoteEndPoint;
+        }
 
         public void startClient()
         {
-            socket.BeginReceive(_buffer, 0, _buffer.Length, SocketFlags.None, new AsyncCallback(ReceviceCallback), socket);
+            _socket.BeginReceive(_buffer, 0, _buffer.Length, SocketFlags.None, new AsyncCallback(ReceviceCallback), _socket);
             Closing = false;
         }
 
@@ -46,11 +55,13 @@ namespace AmaruServer.Networking
             }
         }
 
+        public void Write(Message mex) { }
+
         public void CloseClient(int index)
         {
-            _closing = true;
-            Console.WriteLine("Connection from {0} has been terminated", NetworkConstants.ip2str(_ip));
-            socket.Close();
+            this._closing = true;
+            this._socket.Close();
+            LoggerManager.NetworkLogger.Log("Connection from " + this.Ip + " has been terminated");
         }
     }
 }

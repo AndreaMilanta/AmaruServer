@@ -6,6 +6,8 @@ namespace AmaruServer.Constants
 {
     static class NetworkConstants
     {
+        public const string MainServerName = "MainServer";
+
         public const int BufferSize = 1024;         // Network Receiving Buffer size
         public const int ServerPort = 5555;         // Main Server Receiving Port
 
@@ -20,5 +22,6 @@ namespace AmaruServer.Constants
         /// Converts IP address as uint to standard string format
         /// </summary>
         public static string ip2str(uint ip) => new IPAddress(BitConverter.GetBytes(ip).Reverse().ToArray()).ToString();
+        public static string ip2str(IPAddress addr) => addr.ToString();
     }
 }

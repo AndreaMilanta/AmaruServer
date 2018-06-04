@@ -1,15 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
+using AmaruServer.Networking;
+using AmaruServer.Logging;
 
 namespace AmaruServer
 {
     class Program
     {
+        private static MainServer mainServer;
         static void Main(string[] args)
         {
+            mainServer = MainServer.Instance;
+            Console.ReadKey();
+            LoggerManager.Close();
         }
     }
 }

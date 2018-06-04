@@ -3,22 +3,23 @@ using System.Net;
 using System.Net.Sockets;
 
 using AmaruServer.Constants;
+using AmaruServer.Logging;
 
 namespace AmaruServer.Networking
 {
     abstract class ServerTCP
     {
-        private Socket _serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-        private byte[] _buffer = new byte[NetworkConstants.BufferSize];
+        protected Socket _serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        protected string _name;
     
-        //public static Socket ServerSocket { get => _serverSocket; set => _serverSocket = value; }
+        //public Socket ServerSocket { get => _serverSocket; }
 
         /// <summary>
         /// setup Server properties
         /// </summary>
-        public void setupServer()
+        public void setupServer(int port)
         {
-            _serverSocket.Bind(new IPEndPoint(IPAddress.Any, NetworkConstants.ServerPort));
+            _serverSocket.Bind(new IPEndPoint(IPAddress.Any, port));
             _serverSocket.Listen(NetworkConstants.MaxUsers);
             _serverSocket.BeginAccept(new AsyncCallback(AcceptCallback), null);
         }
