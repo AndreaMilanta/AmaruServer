@@ -56,7 +56,7 @@ namespace AmaruServer.Networking
             }
             catch
             {
-                LoggerManager.NetworkLogger.LogException("Error Reading from sokcet");
+                LoggerManager.NetworkLogger.LogException("Error Reading from socket");
                 CloseClient(Index);
             }
         }
