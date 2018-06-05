@@ -1,0 +1,94 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{2C996430-74CC-4092-BB5F-2F0B6B2E7AF8}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>AmaruServer</RootNamespace>
+    <AssemblyName>AmaruServer</AssemblyName>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="source\Constants\LogConstants.cs" />
+    <Compile Include="source\Constants\NetworkConstants.cs" />
+    <Compile Include="source\Constants\UserConstants.cs" />
+    <Compile Include="source\Exceptions\UserNotFoundException.cs" />
+    <Compile Include="source\Game\Assets\Actions\IActions.cs" />
+    <Compile Include="source\Game\Assets\Bonus\IBonus.cs" />
+    <Compile Include="source\Game\Assets\Bonus\IncreaseAttackBonus.cs" />
+    <Compile Include="source\Game\Assets\Bonus\IncreaseHealthBonus.cs" />
+    <Compile Include="source\Game\Assets\Bonus\InflictDamageBonus.cs" />
+    <Compile Include="source\Game\Assets\Bonus\ITarget.cs" />
+    <Compile Include="source\Game\Assets\Bonus\MonsterTarget.cs" />
+    <Compile Include="source\Game\Assets\Bonus\PlayerTarget.cs" />
+    <Compile Include="source\Game\Assets\Cards\EquipmentCard.cs" />
+    <Compile Include="source\Game\Assets\Cards\EventCard.cs" />
+    <Compile Include="source\Game\Assets\Cards\ICards.cs" />
+    <Compile Include="source\Game\Assets\Cards\MonsterCard.cs" />
+    <Compile Include="source\Game\Assets\Cards\SpellCard.cs" />
+    <Compile Include="source\Game\Assets\Cards\TerrainCard.cs" />
+    <Compile Include="source\Game\Assets\Characters\Character.cs" />
+    <Compile Include="source\Game\Assets\Characters\CharacterEnum.cs" />
+    <Compile Include="source\Game\Assets\Player\IPlayer.cs" />
+    <Compile Include="source\Game\Tools\Visitors\IVisitor.cs" />
+    <Compile Include="source\Networking\ClientTCP.cs" />
+    <Compile Include="source\Networking\Communication\LoginMessage.cs" />
+    <Compile Include="source\Networking\ConnectionManager.cs" />
+    <Compile Include="source\Networking\MainServer.cs" />
+    <Compile Include="source\Networking\ServerTCP.cs" />
+    <Compile Include="source\Networking\User.cs" />
+    <Compile Include="source\Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ClientServer\ClientServer.csproj">
+      <Project>{d7408f4d-2b8b-4fe1-ad5c-060e10e51ad0}</Project>
+      <Name>ClientServer</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Logging\Logging.csproj">
+      <Project>{5126f598-36fe-40d0-8bde-006a681ce886}</Project>
+      <Name>Logging</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="source\Game\Assets\Gameboard\" />
+    <Folder Include="source\Game\Tools\Managers\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
