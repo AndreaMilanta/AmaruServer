@@ -1,5 +1,8 @@
 ﻿using System;
 
+using Logging;
+
+using AmaruServer.Constants;
 using AmaruServer.Networking;
 
 namespace AmaruServer
@@ -9,10 +12,11 @@ namespace AmaruServer
         private static MainServer mainServer;
         static void Main(string[] args)
         {
-            //Logger
+            LoggerManager.SetupLoggerManager(ServerConstants.LOG_PATH);
             mainServer = MainServer.Instance;
+            mainServer.Start();
             Console.ReadKey();
-            //LoggerManager.Close();
+            LoggerManager.Instance.Close();
         }
     }
 }

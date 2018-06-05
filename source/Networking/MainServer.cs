@@ -1,27 +1,28 @@
 ﻿using System;
 using System.Net.Sockets;
 
+using Logging;
+using ClientServer.Communication;
+using AmaruCommon.Constants;
+using AmaruCommon.Client;
 using AmaruServer.Constants;
-using AmaruServer.Logging;
 
 namespace AmaruServer.Networking
 {
-    class MainServer : ServerTCP
+    class MainServer : ASyncServerTCP
     {
         private static MainServer _instance = null;
 
-        public static MainServer Instance { get => _instance == null ? new MainServer() : _instance; }
+        public static MainServer Instance { get => _instance ?? new MainServer(); }
 
-        private MainServer()
+        private MainServer():base(ServerConstants.ServerName, ServerConstants.ServerLogger)
         {
-            this._name = NetworkConstants.MainServerName;
-            this.setupServer(NetworkConstants.ServerPort);
-            LoggerManager.NetworkLogger.Log("MainServer online");
+            this.Setup(NetworkConstants.ServerPort, ServerConstants.MaxUsers);
         }
 
         protected override void HandleNewConnection(Socket newSocket)
         {
-            throw new System.NotImplementedException();
+            Client client = new Client(newSocket, NetworkConstants.BufferSize, ServerConstants.ServerLogger);
         }
     }
 }

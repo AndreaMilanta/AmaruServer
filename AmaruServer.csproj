@@ -42,10 +42,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="source\Constants\LogConstants.cs" />
-    <Compile Include="source\Constants\NetworkConstants.cs" />
+    <Compile Include="source\Constants\ServerConstants.cs" />
     <Compile Include="source\Constants\UserConstants.cs" />
-    <Compile Include="source\Exceptions\UserNotFoundException.cs" />
     <Compile Include="source\Game\Assets\Actions\IActions.cs" />
     <Compile Include="source\Game\Assets\Bonus\IBonus.cs" />
     <Compile Include="source\Game\Assets\Bonus\IncreaseAttackBonus.cs" />
@@ -64,16 +62,18 @@
     <Compile Include="source\Game\Assets\Characters\CharacterEnum.cs" />
     <Compile Include="source\Game\Assets\Player\IPlayer.cs" />
     <Compile Include="source\Game\Tools\Visitors\IVisitor.cs" />
-    <Compile Include="source\Networking\ClientTCP.cs" />
     <Compile Include="source\Networking\Communication\LoginMessage.cs" />
     <Compile Include="source\Networking\ConnectionManager.cs" />
     <Compile Include="source\Networking\MainServer.cs" />
-    <Compile Include="source\Networking\ServerTCP.cs" />
     <Compile Include="source\Networking\User.cs" />
     <Compile Include="source\Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\AmaruComm\AmaruCommon.csproj">
+      <Project>{69180a16-63dc-4552-b45f-8448f3da7f1e}</Project>
+      <Name>AmaruCommon</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ClientServer\ClientServer.csproj">
       <Project>{d7408f4d-2b8b-4fe1-ad5c-060e10e51ad0}</Project>
       <Name>ClientServer</Name>
@@ -87,6 +87,7 @@
     <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="source\Exceptions\" />
     <Folder Include="source\Game\Assets\Gameboard\" />
     <Folder Include="source\Game\Tools\Managers\" />
   </ItemGroup>
