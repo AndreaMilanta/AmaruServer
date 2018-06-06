@@ -4,7 +4,6 @@ using System.Net.Sockets;
 using Logging;
 using ClientServer.Communication;
 using AmaruCommon.Constants;
-using AmaruCommon.Client;
 using AmaruServer.Constants;
 
 namespace AmaruServer.Networking
@@ -17,12 +16,13 @@ namespace AmaruServer.Networking
 
         private MainServer():base(ServerConstants.ServerName, ServerConstants.ServerLogger)
         {
+            MainServer._instance = this;
             this.Setup(NetworkConstants.ServerPort, ServerConstants.MaxUsers);
         }
 
         protected override void HandleNewConnection(Socket newSocket)
         {
-            Client client = new Client(newSocket, NetworkConstants.BufferSize, ServerConstants.ServerLogger);
+            ServerClient client = new ServerClient(newSocket, NetworkConstants.BufferSize, ServerConstants.ServerLogger);
         }
     }
 }

@@ -62,7 +62,7 @@
     <Compile Include="source\Game\Assets\Characters\CharacterEnum.cs" />
     <Compile Include="source\Game\Assets\Player\IPlayer.cs" />
     <Compile Include="source\Game\Tools\Visitors\IVisitor.cs" />
-    <Compile Include="source\Networking\Communication\LoginMessage.cs" />
+    <Compile Include="source\Networking\ServerClient.cs" />
     <Compile Include="source\Networking\ConnectionManager.cs" />
     <Compile Include="source\Networking\MainServer.cs" />
     <Compile Include="source\Networking\User.cs" />
@@ -70,7 +70,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\AmaruComm\AmaruCommon.csproj">
+    <ProjectReference Include="..\AmaruCommon\AmaruCommon.csproj">
       <Project>{69180a16-63dc-4552-b45f-8448f3da7f1e}</Project>
       <Name>AmaruCommon</Name>
     </ProjectReference>

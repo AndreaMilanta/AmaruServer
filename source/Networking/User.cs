@@ -1,34 +1,34 @@
 ﻿using System;
+using System.Threading;
 
+using AmaruCommon.Messages;
+using AmaruCommon.Exceptions;
 using AmaruServer.Constants;
-using AmaruServer.Networking.Communication;
-using AmaruServer.Exceptions;
-using AmaruServer.Logging;
 
 namespace AmaruServer.Networking
 {
     class User
     {
-        private ClientTCP _client;
-        private int _ranking;
-        private int _points;
-        private string _username;
+        private ServerClient _client = null;
 
-        public int Ranking { get => _ranking; }
-        public int Points { get => _points; }
-        public string Name { get => _username; }
+        public int Ranking { get; private set; }
+        public int Points { get; private set; }
+        public string Username { get; private set; }
 
-        public User(ClientTCP cl)
+        public User(ServerClient client, LoginMessage mex)
         {
-            _client = cl;
-
+            _client = client;
+            Validate(mex.Username, mex.Password);
+            this.Username = mex.Username;
+            LoadData();
+            Write(new LoginReplyMessage(true, Ranking, Points));
         }
 
         /// <summary>
         /// Send Message to Client
         /// </summary>
         /// <param name="mex"></param>
-        public void Write(Message mex)
+        public void Write(AmaruMessage mex)
         {
             _client.Write(mex);
         }
@@ -40,6 +40,8 @@ namespace AmaruServer.Networking
         private bool Validate(string username, string password)
         {
             return true;
+            //_client.Write(new LoginReplyMessage(false));
+            //throw new InvalidUserCredentialsException(username);
         }
 
         /// <summary>
@@ -49,12 +51,9 @@ namespace AmaruServer.Networking
         /// </summary>
         public void LoadData()
         {
-            if (!this.Validate(null, null))
-                throw new UserNotFoundException();
             Random rnd = new Random();
-            _ranking = rnd.Next(UserConstants.maxRanking);
-            _points = rnd.Next(UserConstants.maxPoints);
-            LoggerManager.NetworkLogger.Log("User " + _username + " logged in");
+            this.Ranking = rnd.Next(UserConstants.maxRanking);
+            this.Points = rnd.Next(UserConstants.maxPoints);
         }
     }
 }
