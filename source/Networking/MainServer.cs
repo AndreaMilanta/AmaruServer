@@ -22,7 +22,7 @@ namespace AmaruServer.Networking
 
         protected override void HandleNewConnection(Socket newSocket)
         {
-            ServerClient client = new ServerClient(newSocket, NetworkConstants.BufferSize, ServerConstants.ServerLogger);
+            new User(newSocket, ServerConstants.ServerLogger);
         }
     }
 }

@@ -44,25 +44,11 @@
   <ItemGroup>
     <Compile Include="source\Constants\ServerConstants.cs" />
     <Compile Include="source\Constants\UserConstants.cs" />
-    <Compile Include="source\Game\Assets\Actions\IActions.cs" />
-    <Compile Include="source\Game\Assets\Bonus\IBonus.cs" />
-    <Compile Include="source\Game\Assets\Bonus\IncreaseAttackBonus.cs" />
-    <Compile Include="source\Game\Assets\Bonus\IncreaseHealthBonus.cs" />
-    <Compile Include="source\Game\Assets\Bonus\InflictDamageBonus.cs" />
-    <Compile Include="source\Game\Assets\Bonus\ITarget.cs" />
-    <Compile Include="source\Game\Assets\Bonus\MonsterTarget.cs" />
-    <Compile Include="source\Game\Assets\Bonus\PlayerTarget.cs" />
-    <Compile Include="source\Game\Assets\Cards\EquipmentCard.cs" />
-    <Compile Include="source\Game\Assets\Cards\EventCard.cs" />
-    <Compile Include="source\Game\Assets\Cards\ICards.cs" />
-    <Compile Include="source\Game\Assets\Cards\MonsterCard.cs" />
-    <Compile Include="source\Game\Assets\Cards\SpellCard.cs" />
-    <Compile Include="source\Game\Assets\Cards\TerrainCard.cs" />
-    <Compile Include="source\Game\Assets\Characters\Character.cs" />
-    <Compile Include="source\Game\Assets\Characters\CharacterEnum.cs" />
-    <Compile Include="source\Game\Assets\Player\IPlayer.cs" />
+    <Compile Include="source\Game\Assets\AmaruPlayer.cs" />
+    <Compile Include="source\Game\Assets\Player.cs" />
+    <Compile Include="source\Game\Managing\GameManager.cs" />
+    <Compile Include="source\Game\Tools\GameFactory.cs" />
     <Compile Include="source\Game\Tools\Visitors\IVisitor.cs" />
-    <Compile Include="source\Networking\ServerClient.cs" />
     <Compile Include="source\Networking\ConnectionManager.cs" />
     <Compile Include="source\Networking\MainServer.cs" />
     <Compile Include="source\Networking\User.cs" />
@@ -88,8 +74,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="source\Exceptions\" />
-    <Folder Include="source\Game\Assets\Gameboard\" />
-    <Folder Include="source\Game\Tools\Managers\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

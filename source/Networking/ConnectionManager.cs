@@ -2,44 +2,62 @@
 using System.Linq;
 
 using Logging;
-using AmaruCommon.Messages;
+using AmaruCommon.Communication.Messages;
 using AmaruCommon.Exceptions;
 using AmaruCommon.Constants;
 using AmaruServer.Constants;
+using AmaruServer.Game.Tools;
+using AmaruServer.Game.Managing;
 
 namespace AmaruServer.Networking
 {
     public class ConnectionManager : Loggable
     {
-        List<User> users = new List<User>();      //Dictionary mapping ranks with users
+        List<User> waitingRoom = new List<User>();      //Dictionary mapping ranks with users
+        private GameFactory gameFactory = null;
+
         private static ConnectionManager _instance = null;
         public static ConnectionManager Instance { get => _instance ?? new ConnectionManager(ServerConstants.ConnMngLogger); }
 
         private ConnectionManager(string log) : base(log)
         {
             ConnectionManager._instance = this;
+            try
+            {
+                GameFactory.Init(log);
+                gameFactory = GameFactory.Instance;
+            }
+            catch (ItemAlreadyInitializedException e)
+            {
+                LogError(e.ToString());
+            }
         }
 
-        public void NewLogin(ServerClient caller, LoginMessage mex)
+        public void NewLogin(User newUser)
         {
             try
             {
-                User newUser = new User(caller, mex);
-                users.Add(newUser);
-                Log("user " + newUser.Username + " added to waiting room");
-                Reorder();
-                List<User> players = GetMatch(newUser);
-                if(players != null)
+                lock (waitingRoom)
                 {
-                    foreach (User u in players)
-                        users.Remove(u);
-                    // TODO 
-                    // start new game
+
+                    waitingRoom.Add(newUser);
+                    Log("user " + newUser.Username + " added to waiting room");
+                    Reorder();
+                    List<User> players = GetMatch(newUser);
+                    if (players != null)
+                    {
+                        GameManager newGame = gameFactory.StartNew(players);
+                        foreach (User u in players)
+                        {
+                            waitingRoom.Remove(u);
+                        }
+                        Log("Game " + newGame.Id + " has started");
+                    }
                 }
             }
             catch(InvalidUserCredentialsException e)
             {
-                LogException(e.ToString());
+                LogException(e);
             } 
         }
 
@@ -48,18 +66,18 @@ namespace AmaruServer.Networking
         /// </summary>
         private void Reorder()
         {
-            users = users.OrderBy(u => u.Ranking).ToList();
+            waitingRoom = waitingRoom.OrderBy(u => u.Ranking).ToList();
         }
 
         private List<User> GetMatch(User newUser)
         {
-            if (users.Count < AmaruConstants.NUM_PLAYER)
+            if (waitingRoom.Count < AmaruConstants.NUM_PLAYER)
                 return null;
-            int index = users.FindIndex(u => u == newUser);
+            int index = waitingRoom.FindIndex(u => u == newUser);
             for (int i = 0; i < AmaruConstants.NUM_PLAYER; i++)
-                if (index >= i && index < users.Count - AmaruConstants.NUM_PLAYER + i)
-                    if (users[index - i + AmaruConstants.NUM_PLAYER - 1].Ranking - users[index - i].Ranking < UserConstants.maxRankDelta)
-                        return users.GetRange(index - i, AmaruConstants.NUM_PLAYER);
+                if (index >= i && index < waitingRoom.Count - AmaruConstants.NUM_PLAYER + i)
+                    if (waitingRoom[index - i + AmaruConstants.NUM_PLAYER - 1].Ranking - waitingRoom[index - i].Ranking < UserConstants.maxRankDelta)
+                        return waitingRoom.GetRange(index - i, AmaruConstants.NUM_PLAYER);
             return null;
         }
     }

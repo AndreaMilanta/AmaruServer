@@ -1,36 +1,42 @@
 ﻿using System;
-using System.Threading;
+using System.Net.Sockets;
 
-using AmaruCommon.Messages;
+using Logging;
+using ClientServer.Messages;
+using ClientServer.Communication;
+using AmaruCommon.Constants;
 using AmaruCommon.Exceptions;
+using AmaruCommon.Communication.Messages;
 using AmaruServer.Constants;
+using AmaruServer.Game.Assets;
 
 namespace AmaruServer.Networking
 {
-    class User
+    public class User : ClientWrapper
     {
-        private ServerClient _client = null;
-
+        // User Stuff
         public int Ranking { get; private set; }
         public int Points { get; private set; }
         public string Username { get; private set; }
 
-        public User(ServerClient client, LoginMessage mex)
-        {
-            _client = client;
-            Validate(mex.Username, mex.Password);
-            this.Username = mex.Username;
-            LoadData();
-            Write(new LoginReplyMessage(true, Ranking, Points));
-        }
+        // Player Stuff
+        public Player Player { get; private set; }
 
-        /// <summary>
-        /// Send Message to Client
-        /// </summary>
-        /// <param name="mex"></param>
-        public void Write(AmaruMessage mex)
+        public User(Socket soc, string logger) : base(logger)
         {
-            _client.Write(mex);
+            Client = new ClientTCP(soc, NetworkConstants.BufferSize, NetworkConstants.MaxFailures, NetworkConstants.MaxConsecutiveFailures, logger);
+            Client.HandleSyncMessage += this.HandleUserMessage;
+            Client.HandleASyncMessage += this.HandleUserMessage;
+
+            // Begins Async reading
+            try
+            {
+                this.ReadAsync();
+            }
+            catch
+            {
+                this.Close();
+            }
         }
 
         /// <summary>
@@ -49,11 +55,51 @@ namespace AmaruServer.Networking
         /// AS OF NOW random Ranking and points
         /// <throws>UserNotFoundException</throws>
         /// </summary>
-        public void LoadData()
+        private void LoadData()
         {
             Random rnd = new Random();
             this.Ranking = rnd.Next(UserConstants.maxRanking);
             this.Points = rnd.Next(UserConstants.maxPoints);
+        }
+
+        private void HandleUserMessage(Message mex)
+        {
+            // Logical switch on mex type
+            if (mex is LoginMessage)
+            {
+                LoginMessage lgMex = (LoginMessage)mex;
+                Validate(lgMex.Username, lgMex.Password);
+                this.Username = lgMex.Username;
+                LoadData();
+                Write(new LoginReplyMessage(true, Ranking, Points));
+                ConnectionManager.Instance.NewLogin(this);
+            }
+            // Default
+            else
+            {
+                Log("Unknown Message received (ignored)");
+            }
+        }
+
+        public void SetPlayer(Player player)
+        {
+            Player = player;
+            Client.HandleASyncMessage = null;
+            Client.HandleSyncMessage = HandlePlayerMessage;
+        }
+
+        private void HandlePlayerMessage(Message mex)
+        {
+            // Logical switch on mex type  
+            if (mex is Message)
+            {
+            }
+            //*/
+            // Default
+            else
+            {
+                Log("Unknown Message received (ignored)");
+            }
         }
     }
 }
