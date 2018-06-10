@@ -16,6 +16,7 @@ namespace AmaruServer
             mainServer = MainServer.Instance;
             mainServer.Start();
             Console.ReadKey();
+            ConnectionManager.Instance.Shutdown();
             LoggerManager.Instance.Close();
         }
     }

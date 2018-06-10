@@ -7,7 +7,7 @@ using AmaruCommon.Constants;
 using AmaruCommon.Communication.Messages;
 using AmaruCommon.GameAssets.Characters;
 using AmaruCommon.GameAssets.Player;
-using AmaruServer.Game.Assets;
+using AmaruCommon.Responses;
 using AmaruServer.Networking;
 
 namespace AmaruServer.Game.Managing
@@ -16,18 +16,23 @@ namespace AmaruServer.Game.Managing
     {
         public readonly int Id;
         Dictionary<CharacterEnum, User> _userDict = new Dictionary<CharacterEnum, User>();
+        public ValidationVisitor ValidationVisitor { get; private set; }
+        public ExecutionVisitor ExecutionVisitor { get; private set; }
 
         public GameManager(int id, Dictionary<CharacterEnum, User> clientsDict) : base(AmaruConstants.GAME_PREFIX + id)
         {
             Id = id;
             this._userDict = clientsDict;
 
+            this.ValidationVisitor = new ValidationVisitor(this);
+            this.ExecutionVisitor = new ExecutionVisitor(this);
+
             // Get disadvantaged players
             List<CharacterEnum> disadvantaged = _userDict.Keys.ToList().GetRange(AmaruConstants.NUM_PLAYER - AmaruConstants.NUM_DISADVANTAGED, AmaruConstants.NUM_DISADVANTAGED);
 
             // Init Players
             foreach (CharacterEnum c in _userDict.Keys)                       // Default draw
-                _userDict[c].SetPlayer(new Player(c));
+                _userDict[c].SetPlayer(new Player(c), this);
 
             // Draw cards 
             foreach (CharacterEnum c in _userDict.Keys)                       // Default draw
@@ -50,6 +55,13 @@ namespace AmaruServer.Game.Managing
         {
             foreach(User u in _userDict.Values)
                 u.Write(new ShutdownMessage());
+        }
+
+        public void SendResponse(CharacterEnum Dest, Response response)
+        {
+            if (Dest == CharacterEnum.AMARU)
+                return;
+            _userDict[Dest].Write(new ResponseMessage(response));
         }
     }
 }

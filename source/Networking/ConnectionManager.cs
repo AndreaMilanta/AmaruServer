@@ -13,11 +13,13 @@ namespace AmaruServer.Networking
 {
     public class ConnectionManager : Loggable
     {
-        List<User> waitingRoom = new List<User>();      //Dictionary mapping ranks with users
+        private List<User> _waitingRoom = new List<User>();     // List of users waiting to join a match
+        List<GameManager> _matches = new List<GameManager>();   // List of active matches
+
         private GameFactory gameFactory = null;
 
         private static ConnectionManager _instance = null;
-        public static ConnectionManager Instance { get => _instance ?? new ConnectionManager(ServerConstants.ConnMngLogger); }
+        internal static ConnectionManager Instance { get => _instance ?? new ConnectionManager(ServerConstants.ConnMngLogger); }
 
         private ConnectionManager(string log) : base(log)
         {
@@ -33,14 +35,14 @@ namespace AmaruServer.Networking
             }
         }
 
-        public void NewLogin(User newUser)
+        internal void NewLogin(User newUser)
         {
             try
             {
-                lock (waitingRoom)
+                lock (_waitingRoom) lock(_matches)
                 {
 
-                    waitingRoom.Add(newUser);
+                    _waitingRoom.Add(newUser);
                     Log("user " + newUser.Username + " added to waiting room");
                     Reorder();
                     List<User> players = GetMatch(newUser);
@@ -49,7 +51,7 @@ namespace AmaruServer.Networking
                         GameManager newGame = gameFactory.StartNew(players);
                         foreach (User u in players)
                         {
-                            waitingRoom.Remove(u);
+                            _waitingRoom.Remove(u);
                         }
                         Log("Game " + newGame.Id + " has started");
                     }
@@ -61,23 +63,55 @@ namespace AmaruServer.Networking
             } 
         }
 
+        internal void DropUser(User user)
+        {
+            lock(_waitingRoom)
+            {
+                if (_waitingRoom.Contains(user))
+                {
+                    _waitingRoom.Remove(user);
+                    user.Close();
+                }
+            }
+        }
+
+        internal void GameFinished(GameManager match)
+        {
+            lock (_matches)
+            {
+                _matches.Remove(match);
+                // TODO: Procedure to update users points and ranking
+            }
+        }
+
+        internal void Shutdown()
+        {
+            lock (_waitingRoom) lock (_matches)
+            {
+                foreach (User u in _waitingRoom)
+                    u.Close(new ShutdownMessage());
+                foreach (GameManager m in _matches)
+                    m.Shutdown();
+            }
+        }
+
         /// <summary>
         /// Reorders users according to ranking
         /// </summary>
         private void Reorder()
         {
-            waitingRoom = waitingRoom.OrderBy(u => u.Ranking).ToList();
+            _waitingRoom = _waitingRoom.OrderBy(u => u.Ranking).ToList();
         }
 
         private List<User> GetMatch(User newUser)
         {
-            if (waitingRoom.Count < AmaruConstants.NUM_PLAYER)
+            if (_waitingRoom.Count < AmaruConstants.NUM_PLAYER)
                 return null;
-            int index = waitingRoom.FindIndex(u => u == newUser);
+            int index = _waitingRoom.FindIndex(u => u == newUser);
             for (int i = 0; i < AmaruConstants.NUM_PLAYER; i++)
-                if (index >= i && index < waitingRoom.Count - AmaruConstants.NUM_PLAYER + i)
-                    if (waitingRoom[index - i + AmaruConstants.NUM_PLAYER - 1].Ranking - waitingRoom[index - i].Ranking < UserConstants.maxRankDelta)
-                        return waitingRoom.GetRange(index - i, AmaruConstants.NUM_PLAYER);
+                if (index >= i && index < _waitingRoom.Count - AmaruConstants.NUM_PLAYER + i)
+                    if (_waitingRoom[index - i + AmaruConstants.NUM_PLAYER - 1].Ranking - _waitingRoom[index - i].Ranking < UserConstants.maxRankDelta)
+                        return _waitingRoom.GetRange(index - i, AmaruConstants.NUM_PLAYER);
             return null;
         }
     }

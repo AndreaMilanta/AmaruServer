@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Net.Sockets;
 
-using Logging;
 using ClientServer.Messages;
 using ClientServer.Communication;
 using AmaruCommon.Constants;
-using AmaruCommon.Exceptions;
 using AmaruCommon.Communication.Messages;
+using AmaruCommon.GameAssets.Player;
+using AmaruCommon.Exceptions;
 using AmaruServer.Constants;
-using AmaruServer.Game.Assets;
+using AmaruServer.Game.Managing;
 
 namespace AmaruServer.Networking
 {
@@ -21,6 +21,7 @@ namespace AmaruServer.Networking
 
         // Player Stuff
         public Player Player { get; private set; }
+        private GameManager _gameManager;
 
         public User(Socket soc, string logger) : base(logger)
         {
@@ -31,7 +32,7 @@ namespace AmaruServer.Networking
             // Begins Async reading
             try
             {
-                this.ReadAsync();
+                this.ReadASync(true);
             }
             catch
             {
@@ -74,6 +75,12 @@ namespace AmaruServer.Networking
                 Write(new LoginReplyMessage(true, Ranking, Points));
                 ConnectionManager.Instance.NewLogin(this);
             }
+            else if (mex is ShutdownMessage)
+            {
+                Log("User at " + Client.Remote + " has shutdown");
+                mex = (ShutdownMessage)mex;
+                ConnectionManager.Instance.DropUser(this);
+            }
             // Default
             else
             {
@@ -81,9 +88,10 @@ namespace AmaruServer.Networking
             }
         }
 
-        public void SetPlayer(Player player)
+        public void SetPlayer(Player player, GameManager gameManager)
         {
             Player = player;
+            _gameManager = gameManager;
             Client.HandleASyncMessage = null;
             Client.HandleSyncMessage = HandlePlayerMessage;
         }
@@ -91,8 +99,19 @@ namespace AmaruServer.Networking
         private void HandlePlayerMessage(Message mex)
         {
             // Logical switch on mex type  
-            if (mex is Message)
+            if (mex is ActionMessage)
             {
+                ActionMessage aMex = (ActionMessage)mex;
+                try
+                {
+                    aMex.Action.Visit(_gameManager.ValidationVisitor);
+                    aMex.Action.Visit(_gameManager.ExecutionVisitor);
+                }
+                catch (InvalidActionException)
+                {
+                    LogError("Invalid action attempted");
+                    // TODO send response to INVALID ACTION
+                }
             }
             //*/
             // Default

@@ -44,9 +44,9 @@
   <ItemGroup>
     <Compile Include="source\Constants\ServerConstants.cs" />
     <Compile Include="source\Constants\UserConstants.cs" />
-    <Compile Include="source\Game\Assets\AmaruPlayer.cs" />
-    <Compile Include="source\Game\Assets\Player.cs" />
+    <Compile Include="source\Game\Managing\ExecutionVisitor.cs" />
     <Compile Include="source\Game\Managing\GameManager.cs" />
+    <Compile Include="source\Game\Managing\ValidationVisitor.cs" />
     <Compile Include="source\Game\Tools\GameFactory.cs" />
     <Compile Include="source\Game\Tools\Visitors\IVisitor.cs" />
     <Compile Include="source\Networking\ConnectionManager.cs" />
