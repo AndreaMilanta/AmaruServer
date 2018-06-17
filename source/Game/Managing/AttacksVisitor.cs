@@ -40,5 +40,10 @@ namespace AmaruServer.Game.Managing
         {
             throw new NotImplementedException();
         }
+
+        public void Visit(ImperiaAttack attack)
+        {
+            GameManager.GetPlayer(PlayerTarget.Character).Health -= ;
+        }
     }
 }
