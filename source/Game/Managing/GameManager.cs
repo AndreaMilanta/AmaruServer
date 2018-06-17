@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Linq;
 
 using Logging;
@@ -9,6 +10,7 @@ using AmaruCommon.GameAssets.Characters;
 using AmaruCommon.GameAssets.Player;
 using AmaruCommon.Responses;
 using AmaruServer.Networking;
+using AmaruServer.Constants;
 
 namespace AmaruServer.Game.Managing
 {
@@ -18,6 +20,15 @@ namespace AmaruServer.Game.Managing
         Dictionary<CharacterEnum, User> _userDict = new Dictionary<CharacterEnum, User>();
         public ValidationVisitor ValidationVisitor { get; private set; }
         public ExecutionVisitor ExecutionVisitor { get; private set; }
+        public bool GameHasFinished { get; set; }
+        public CharacterEnum ActiveCharacter { get; private set; }                 // Player whose turn it is to play
+        public int CurrentRound { get; private set; }
+
+        // private list for simplified turn management
+        private int _currentIndex;              // Index of current active player
+        private List<CharacterEnum> _turnList;  // List of players in order of turn
+
+
 
         public GameManager(int id, Dictionary<CharacterEnum, User> clientsDict) : base(AmaruConstants.GAME_PREFIX + id)
         {
@@ -26,6 +37,20 @@ namespace AmaruServer.Game.Managing
 
             this.ValidationVisitor = new ValidationVisitor(this);
             this.ExecutionVisitor = new ExecutionVisitor(this);
+            this.ActiveCharacter = this._userDict.Keys.ToArray()[0];
+            this._turnList = new List<CharacterEnum>() {
+                _userDict.Keys.ToArray()[0],
+                _userDict.Keys.ToArray()[1],
+                CharacterEnum.AMARU,
+                _userDict.Keys.ToArray()[2],
+                _userDict.Keys.ToArray()[3],
+                CharacterEnum.AMARU
+                };
+        }
+
+        public void StartGame()
+        {
+            Log("Game " + this.Id + " has started");
 
             // Get disadvantaged players
             List<CharacterEnum> disadvantaged = _userDict.Keys.ToList().GetRange(AmaruConstants.NUM_PLAYER - AmaruConstants.NUM_DISADVANTAGED, AmaruConstants.NUM_DISADVANTAGED);
@@ -43,17 +68,31 @@ namespace AmaruServer.Game.Managing
             // Send GameInitMessage to Users
             foreach (CharacterEnum target in _userDict.Keys)
             {
-                Dictionary<CharacterEnum,EnemyInfo> enemies = new Dictionary<CharacterEnum, EnemyInfo>();
+                Dictionary<CharacterEnum, EnemyInfo> enemies = new Dictionary<CharacterEnum, EnemyInfo>();
                 OwnInfo own = _userDict[target].Player.AsOwn;
                 foreach (CharacterEnum c in CharacterManager.Instance.Others(target))
                     enemies.Add(c, _userDict[c].Player.AsEnemy);
-               _userDict[target].Write(new GameInitMessage(enemies, own));
+                _userDict[target].Write(new GameInitMessage(enemies, own));
+            }
+
+            // Start running
+            this.Run();
+        }
+
+        /// <summary>
+        /// Running method for the GameManager
+        /// </summary>
+        private void Run()
+        {
+            while (!GameHasFinished)
+            {
+                Thread.Sleep(ServerConstants.SleepTime_ms);
             }
         }
 
         public void Shutdown()
         {
-            foreach(User u in _userDict.Values)
+            foreach (User u in _userDict.Values)
                 u.Write(new ShutdownMessage());
         }
 
@@ -62,6 +101,46 @@ namespace AmaruServer.Game.Managing
             if (Dest == CharacterEnum.AMARU)
                 return;
             _userDict[Dest].Write(new ResponseMessage(response));
+        }
+
+        public Player GetPlayer(CharacterEnum character)
+        {
+            return _userDict[character].Player;
+        }
+
+        public CharacterEnum NextTurn()
+        {
+            this._currentIndex = (_currentIndex == _turnList.Count - 1) ? 0 : _currentIndex++;
+            if (_currentIndex == 0)
+                CurrentRound++;
+            this.ActiveCharacter = _turnList[_currentIndex];
+            this._userDict[this.ActiveCharacter].Player.ResetManaCount();
+            return ActiveCharacter;
+        }
+
+        public void KillPlayer(CharacterEnum deadChar)
+        {
+            // Adapt current player index
+            if (_turnList.FindIndex(c => c == deadChar) < _currentIndex)
+                _currentIndex--;
+
+            // Remove player from turn
+            if (deadChar != CharacterEnum.AMARU)
+                _turnList.RemoveAll(c => c == CharacterEnum.AMARU); 
+            else
+            {
+                _turnList.Remove(deadChar);
+                // Handle two players left (must remove first AMARU before currentIndex)
+                if (_turnList.Exists(c => c == CharacterEnum.AMARU) && _turnList.Count <= 4)     
+                {
+                    int tempIndex = _currentIndex;
+                    while (_turnList[tempIndex] == CharacterEnum.AMARU)
+                        tempIndex = tempIndex == 0 ? _turnList.Count - 1 : tempIndex - 1;
+                    _turnList.RemoveAt(tempIndex);
+                    if (tempIndex < _currentIndex)
+                        _currentIndex--;
+                }
+            }
         }
     }
 }

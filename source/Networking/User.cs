@@ -21,7 +21,7 @@ namespace AmaruServer.Networking
 
         // Player Stuff
         public Player Player { get; private set; }
-        private GameManager _gameManager;
+        private GameManager GameManager { get; set; }
 
         public User(Socket soc, string logger) : base(logger)
         {
@@ -91,7 +91,7 @@ namespace AmaruServer.Networking
         public void SetPlayer(Player player, GameManager gameManager)
         {
             Player = player;
-            _gameManager = gameManager;
+            GameManager = gameManager;
             Client.HandleASyncMessage = null;
             Client.HandleSyncMessage = HandlePlayerMessage;
         }
@@ -104,8 +104,8 @@ namespace AmaruServer.Networking
                 ActionMessage aMex = (ActionMessage)mex;
                 try
                 {
-                    aMex.Action.Visit(_gameManager.ValidationVisitor);
-                    aMex.Action.Visit(_gameManager.ExecutionVisitor);
+                    aMex.Action.Visit(GameManager.ValidationVisitor);
+                    aMex.Action.Visit(GameManager.ExecutionVisitor);
                 }
                 catch (InvalidActionException)
                 {

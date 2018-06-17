@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 
 using Logging;
 using AmaruCommon.Exceptions;
@@ -36,6 +37,10 @@ namespace AmaruServer.Game.Tools
             for (int i = 0; i < AmaruConstants.NUM_PLAYER; i++)
                 playerClientDict.Add(chars[i], users[i]);
             GameManager newGame = new GameManager(NextId, playerClientDict);
+
+            // Create and run game thread
+            Thread newGameThread = new Thread(new ThreadStart(newGame.StartGame));
+            newGameThread.Start();
 
             NextId++;
             return newGame;
