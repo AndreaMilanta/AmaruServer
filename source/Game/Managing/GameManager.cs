@@ -71,8 +71,8 @@ namespace AmaruServer.Game.Managing
             {
                 Dictionary<CharacterEnum, EnemyInfo> enemies = new Dictionary<CharacterEnum, EnemyInfo>();
                 OwnInfo own = _userDict[target].Player.AsOwn;
-                foreach (CharacterEnum c in CharacterManager.Instance.Others(target))
-                    enemies.Add(c, _userDict[c].Player.AsEnemy);
+                //foreach (CharacterEnum c in CharacterManager.Instance.Others(target))
+                   // enemies.Add(c, _userDict[c].Player.AsEnemy);
                 _userDict[target].Write(new GameInitMessage(enemies, own, _turnList));
             }
 

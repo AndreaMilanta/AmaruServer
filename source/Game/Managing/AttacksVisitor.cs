@@ -60,5 +60,35 @@ namespace AmaruServer.Game.Managing
         {
             throw new NotImplementedException();
         }
+
+        public int Visit(GainCPAttack attack)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Visit(GainHPAttack attack)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Visit(KrumAttack attack)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Visit(PoisonAttack attack)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Visit(SalazarAttack attack)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Visit(SeribuAttack attack)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
