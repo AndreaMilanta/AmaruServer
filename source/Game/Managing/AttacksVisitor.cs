@@ -45,5 +45,20 @@ namespace AmaruServer.Game.Managing
         {
             throw new NotImplementedException();
         }
+
+        int IPropertyVisitor.Visit(SimpleAttack attack)
+        {
+            throw new NotImplementedException();
+        }
+
+        int IPropertyVisitor.Visit(AttackFromInnerEffect effect)
+        {
+            throw new NotImplementedException();
+        }
+
+        int IPropertyVisitor.Visit(ImperiaAttack attack)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
