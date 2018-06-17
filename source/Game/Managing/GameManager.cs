@@ -38,14 +38,15 @@ namespace AmaruServer.Game.Managing
             this.ValidationVisitor = new ValidationVisitor(this);
             this.ExecutionVisitor = new ExecutionVisitor(this);
             this.ActiveCharacter = this._userDict.Keys.ToArray()[0];
-            this._turnList = new List<CharacterEnum>() {
-                _userDict.Keys.ToArray()[0],
-                _userDict.Keys.ToArray()[1],
-                CharacterEnum.AMARU,
-                _userDict.Keys.ToArray()[2],
-                _userDict.Keys.ToArray()[3],
-                CharacterEnum.AMARU
-                };
+            this._turnList = new List<CharacterEnum>();
+            for (int i = 0; i < _userDict.Keys.ToArray().Length; i++)
+            {
+                _turnList.Add(_userDict.Keys.ToArray()[i]);
+                if (i % 2 == 1)
+                    _turnList.Add(CharacterEnum.AMARU);
+            }
+            if (_turnList.Last() != CharacterEnum.AMARU)
+                _turnList.Add(CharacterEnum.AMARU);
         }
 
         public void StartGame()
@@ -72,7 +73,7 @@ namespace AmaruServer.Game.Managing
                 OwnInfo own = _userDict[target].Player.AsOwn;
                 foreach (CharacterEnum c in CharacterManager.Instance.Others(target))
                     enemies.Add(c, _userDict[c].Player.AsEnemy);
-                _userDict[target].Write(new GameInitMessage(enemies, own));
+                _userDict[target].Write(new GameInitMessage(enemies, own, _turnList));
             }
 
             // Start running

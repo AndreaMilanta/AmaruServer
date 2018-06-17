@@ -105,6 +105,8 @@ namespace AmaruServer.Networking
 
         private List<User> GetMatch(User newUser)
         {
+            if (AmaruConstants.NUM_PLAYER == 1)
+                return new List<User>() { newUser };
             if (_waitingRoom.Count < AmaruConstants.NUM_PLAYER)
                 return null;
             int index = _waitingRoom.FindIndex(u => u == newUser);

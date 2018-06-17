@@ -31,19 +31,19 @@ namespace AmaruServer.Game.Managing
             if (target is PlayerTarget)
                 PlayerTarget = (PlayerTarget)target;
         }
-        public void Visit(SimpleAttack attack)
+        public int Visit(SimpleAttack attack)
         {
-            GameManager.GetPlayer(PlayerTarget.Character).Health -= attack.Power;
+            return attack.Power;
         }
 
-        public void Visit(AttackFromInnerEffect  effect)
+        public int Visit(AttackFromInnerEffect  effect)
         {
             throw new NotImplementedException();
         }
 
-        public void Visit(ImperiaAttack attack)
+        public int Visit(ImperiaAttack attack)
         {
-            GameManager.GetPlayer(PlayerTarget.Character).Health -= ;
+            throw new NotImplementedException();
         }
     }
 }
