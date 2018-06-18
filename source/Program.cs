@@ -12,12 +12,16 @@ namespace AmaruServer
         private static MainServer mainServer;
         static void Main(string[] args)
         {
-            LoggerManager.SetupLoggerManager(ServerConstants.LOG_PATH);
-            mainServer = MainServer.Instance;
-            mainServer.Start();
-            Console.ReadKey();
-            ConnectionManager.Instance.Shutdown();
-            LoggerManager.Instance.Close();
-        }
+            try 
+            {
+                LoggerManager.SetupLoggerManager(ServerConstants.LOG_PATH, timerDt: 1);
+                mainServer = MainServer.Instance;
+                mainServer.Start();
+                Console.ReadKey();
+                ConnectionManager.Instance.Shutdown();
+                LoggerManager.Instance.Close();
+            }
+            catch(Exception e) { LoggerManager.Instance.Close(); throw e; }
+}
     }
 }

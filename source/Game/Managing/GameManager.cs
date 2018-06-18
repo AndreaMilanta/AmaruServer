@@ -32,49 +32,55 @@ namespace AmaruServer.Game.Managing
 
         public GameManager(int id, Dictionary<CharacterEnum, User> clientsDict) : base(AmaruConstants.GAME_PREFIX + id)
         {
-            Id = id;
-            this._userDict = clientsDict;
+            try {
+                Id = id;
+                this._userDict = clientsDict;
 
-            this.ValidationVisitor = new ValidationVisitor(this);
-            this.ExecutionVisitor = new ExecutionVisitor(this);
-            this.ActiveCharacter = this._userDict.Keys.ToArray()[0];
-            this._turnList = new List<CharacterEnum>();
-            for (int i = 0; i < _userDict.Keys.ToArray().Length; i++)
-            {
-                _turnList.Add(_userDict.Keys.ToArray()[i]);
-                if (i % 2 == 1)
+                this.ValidationVisitor = new ValidationVisitor(this);
+                this.ExecutionVisitor = new ExecutionVisitor(this);
+                this.ActiveCharacter = this._userDict.Keys.ToArray()[0];
+                this._turnList = new List<CharacterEnum>();
+                for (int i = 0; i < _userDict.Keys.ToArray().Length; i++) {
+                    _turnList.Add(_userDict.Keys.ToArray()[i]);
+                    if (i % 2 == 1)
+                        _turnList.Add(CharacterEnum.AMARU);
+                }
+                if (_turnList.Last() != CharacterEnum.AMARU)
                     _turnList.Add(CharacterEnum.AMARU);
             }
-            if (_turnList.Last() != CharacterEnum.AMARU)
-                _turnList.Add(CharacterEnum.AMARU);
+            catch(Exception e) { LogException(e); throw e; }
         }
 
         public void StartGame()
         {
-            Log("Game " + this.Id + " has started");
+            try 
+            { 
+                Log("Game " + this.Id + " has started");
 
-            // Get disadvantaged players
-            List<CharacterEnum> disadvantaged = _userDict.Keys.ToList().GetRange(AmaruConstants.NUM_PLAYER - AmaruConstants.NUM_DISADVANTAGED, AmaruConstants.NUM_DISADVANTAGED);
+                // Get disadvantaged players
+                List<CharacterEnum> disadvantaged = _userDict.Keys.ToList().GetRange(AmaruConstants.NUM_PLAYER - AmaruConstants.NUM_DISADVANTAGED, AmaruConstants.NUM_DISADVANTAGED);
 
-            // Init Players
-            foreach (CharacterEnum c in _userDict.Keys)                       // Default draw
-                _userDict[c].SetPlayer(new Player(c), this);
+                // Init Players
+                foreach (CharacterEnum c in _userDict.Keys)                       // Default draw
+                    _userDict[c].SetPlayer(new Player(c), this);
 
-            // Draw cards 
-            foreach (CharacterEnum c in _userDict.Keys)                       // Default draw
-                _userDict[c].Player.Draw(AmaruConstants.INITIAL_HAND_SIZE);
-            foreach (CharacterEnum c in disadvantaged)                      // Extra draw for disadvantaged
-                _userDict[c].Player.Draw(AmaruConstants.INITIAL_HAND_BONUS);
+                // Draw cards 
+                foreach (CharacterEnum c in _userDict.Keys)                       // Default draw
+                    _userDict[c].Player.Draw(AmaruConstants.INITIAL_HAND_SIZE);
+                foreach (CharacterEnum c in disadvantaged)                      // Extra draw for disadvantaged
+                    _userDict[c].Player.Draw(AmaruConstants.INITIAL_HAND_BONUS);
 
-            // Send GameInitMessage to Users
-            foreach (CharacterEnum target in _userDict.Keys)
-            {
-                Dictionary<CharacterEnum, EnemyInfo> enemies = new Dictionary<CharacterEnum, EnemyInfo>();
-                OwnInfo own = _userDict[target].Player.AsOwn;
-                foreach (CharacterEnum c in CharacterManager.Instance.Others(target))
-                    enemies.Add(c, _userDict[c].Player.AsEnemy);
-                _userDict[target].Write(new GameInitMessage(enemies, own, _turnList));
-            }
+                // Send GameInitMessage to Users
+                foreach (CharacterEnum target in _userDict.Keys)
+                {
+                    Dictionary<CharacterEnum, EnemyInfo> enemies = new Dictionary<CharacterEnum, EnemyInfo>();
+                    OwnInfo own = _userDict[target].Player.AsOwn;
+                    foreach (CharacterEnum c in CharacterManager.Instance.PlayOthers(target))
+                        enemies.Add(c, _userDict[c].Player.AsEnemy);
+                    _userDict[target].Write(new GameInitMessage(enemies, own, _turnList));
+                }
+            } 
+            catch(Exception e) { LogException(e); throw e; }
 
             // Start running
             this.Run();
