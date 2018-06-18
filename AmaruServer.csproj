@@ -56,7 +56,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\AmaruCommon\AmaruCommon.csproj">
+    <ProjectReference Include="..\AmaruComm\AmaruCommon.csproj">
       <Project>{69180a16-63dc-4552-b45f-8448f3da7f1e}</Project>
       <Name>AmaruCommon</Name>
     </ProjectReference>
