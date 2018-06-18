@@ -49,6 +49,8 @@ namespace AmaruServer.Game.Managing
                 }
                 if (_turnList.Last() != CharacterEnum.AMARU)
                     _turnList.Add(CharacterEnum.AMARU);
+
+                _userDict.Add(CharacterEnum.AMARU, new AIUser(AmaruConstants.GAME_PREFIX + id));
             }
             catch(Exception e) { LogException(e); throw e; }
         }
@@ -60,11 +62,14 @@ namespace AmaruServer.Game.Managing
                 Log("Game " + this.Id + " has started");
 
                 // Get disadvantaged players
-                List<CharacterEnum> disadvantaged = _userDict.Keys.ToList().GetRange(AmaruConstants.NUM_PLAYER - AmaruConstants.NUM_DISADVANTAGED, AmaruConstants.NUM_DISADVANTAGED);
+                List<CharacterEnum> disadvantaged = _userDict.Keys.ToList().Where(c => c != CharacterEnum.AMARU).ToList().GetRange(AmaruConstants.NUM_PLAYER - AmaruConstants.NUM_DISADVANTAGED, AmaruConstants.NUM_DISADVANTAGED);
 
                 // Init Players
                 foreach (CharacterEnum c in _userDict.Keys)                       // Default draw
                     _userDict[c].SetPlayer(new Player(c), this);
+
+                
+
 
                 // Draw cards 
                 foreach (CharacterEnum c in _userDict.Keys)                       // Default draw
@@ -77,7 +82,7 @@ namespace AmaruServer.Game.Managing
                 {
                     Dictionary<CharacterEnum, EnemyInfo> enemies = new Dictionary<CharacterEnum, EnemyInfo>();
                     OwnInfo own = _userDict[target].Player.AsOwn;
-                    foreach (CharacterEnum c in CharacterManager.Instance.PlayOthers(target))
+                    foreach (CharacterEnum c in CharacterManager.Instance.Others(target))
                         enemies.Add(c, _userDict[c].Player.AsEnemy);
                     _userDict[target].Write(new GameInitMessage(enemies, own, _turnList));
                 }
