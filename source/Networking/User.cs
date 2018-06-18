@@ -20,8 +20,13 @@ namespace AmaruServer.Networking
         public string Username { get; private set; }
 
         // Player Stuff
-        public Player Player { get; private set; }
-        private GameManager GameManager { get; set; }
+        public Player Player { get; protected set; }
+        protected GameManager GameManager { get; set; }
+
+        public User(string logger) : base(logger)
+        {
+
+        }
 
         public User(Socket soc, string logger) : base(logger)
         {
@@ -88,15 +93,15 @@ namespace AmaruServer.Networking
             }
         }
 
-        public void SetPlayer(Player player, GameManager gameManager)
+        public virtual void SetPlayer(Player player, GameManager gameManager)
         {
-            Player = player;
-            GameManager = gameManager;
+            this.Player = player;
+            this.GameManager = gameManager;
             Client.HandleASyncMessage = null;
             Client.HandleSyncMessage = HandlePlayerMessage;
         }
 
-        private void HandlePlayerMessage(Message mex)
+        protected void HandlePlayerMessage(Message mex)
         {
             // Logical switch on mex type  
             if (mex is ActionMessage)

@@ -49,6 +49,7 @@
     <Compile Include="source\Game\Managing\GameManager.cs" />
     <Compile Include="source\Game\Managing\ValidationVisitor.cs" />
     <Compile Include="source\Game\Tools\GameFactory.cs" />
+    <Compile Include="source\Networking\AIUser.cs" />
     <Compile Include="source\Networking\ConnectionManager.cs" />
     <Compile Include="source\Networking\MainServer.cs" />
     <Compile Include="source\Networking\User.cs" />
@@ -56,7 +57,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\AmaruComm\AmaruCommon.csproj">
+    <ProjectReference Include="..\AmaruCommon\AmaruCommon.csproj">
       <Project>{69180a16-63dc-4552-b45f-8448f3da7f1e}</Project>
       <Name>AmaruCommon</Name>
     </ProjectReference>
