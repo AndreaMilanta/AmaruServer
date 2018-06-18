@@ -6,7 +6,7 @@ namespace AmaruServer.Constants
         // Logging
         public const string ServerLogger = "MainServer";
         public const string ConnMngLogger = "ConnMngLogger";
-        public const string LOG_PATH = "D:\\Projects\\Visual Studio 2017\\AmaruServer\\Logs\\";
+        public const string LOG_PATH =  ".\\..\\Projects\\Visual Studio 2017\\AmaruServer\\Logs\\";
 
         // Server specific
         public const string ServerName = ServerLogger;
