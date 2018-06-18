@@ -1,12 +1,20 @@
-﻿
+﻿using System;
+using System.IO;
+
 namespace AmaruServer.Constants
 {
     class ServerConstants
     {
         // Logging
         public const string ServerLogger = "MainServer";
-        public const string ConnMngLogger = "ConnMngLogger";
-        public const string LOG_PATH =  ".\\..\\Projects\\Visual Studio 2017\\AmaruServer\\Logs\\";
+        public const string ConnMngLogger = "ConnectionManagerLogger";
+        public static string LOG_PATH {
+            get {
+                if (!Directory.Exists(AppDomain.CurrentDomain.BaseDirectory + "\\Logs"))
+                    Directory.CreateDirectory(AppDomain.CurrentDomain.BaseDirectory + "\\Logs");
+                return AppDomain.CurrentDomain.BaseDirectory + "\\Logs\\";
+            }
+        }
 
         // Server specific
         public const string ServerName = ServerLogger;
