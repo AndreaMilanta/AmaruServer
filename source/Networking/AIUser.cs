@@ -23,7 +23,7 @@ namespace AmaruServer.Networking
         {
             this.Player = player;
             this.GameManager = gameManager;
-            this.messageHandler = this.HandlePlayerMessage;
+            this.messageHandler = this.GameManager.HandlePlayerMessage;
         }
 
         public override void Write(Message mex)
@@ -31,14 +31,14 @@ namespace AmaruServer.Networking
 
         }
 
-        public override void ReadSync(int timeout_s)
+        public override Message ReadSync(int timeout_s)
         {
-
+            return null;
         }
 
         public override void ReadASync(bool continuous)
         {
-            
+            // Asyncronously calls messageHabndler(Message)
         }
 
         public override void Close(Message notification = null)

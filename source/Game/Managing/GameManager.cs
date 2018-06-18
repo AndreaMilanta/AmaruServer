@@ -11,6 +11,8 @@ using AmaruCommon.GameAssets.Player;
 using AmaruCommon.Responses;
 using AmaruServer.Networking;
 using AmaruServer.Constants;
+using AmaruCommon.Exceptions;
+using ClientServer.Messages;
 
 namespace AmaruServer.Game.Managing
 {
@@ -115,6 +117,31 @@ namespace AmaruServer.Game.Managing
             return _userDict[character].Player;
         }
 
+        public void HandlePlayerMessage(Message mex)
+        {
+            // Logical switch on mex type  
+            if (mex is ActionMessage)
+            {
+                ActionMessage aMex = (ActionMessage)mex;
+                try
+                {
+                    aMex.Action.Visit(this.ValidationVisitor);
+                    aMex.Action.Visit(this.ExecutionVisitor);
+                }
+                catch (InvalidActionException)
+                {
+                    LogError("Invalid action attempted");
+                    // TODO send response to INVALID ACTION
+                }
+            }
+            //*/
+            // Default
+            else
+            {
+                Log("Unknown Message received (ignored)");
+            }
+        }
+
         public CharacterEnum NextTurn()
         {
             this._currentIndex = (_currentIndex == _turnList.Count - 1) ? 0 : _currentIndex++;
@@ -132,7 +159,7 @@ namespace AmaruServer.Game.Managing
                 _currentIndex--;
 
             // Remove player from turn
-            if (deadChar != CharacterEnum.AMARU)
+            if (deadChar == CharacterEnum.AMARU)
                 _turnList.RemoveAll(c => c == CharacterEnum.AMARU); 
             else
             {

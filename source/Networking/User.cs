@@ -31,7 +31,6 @@ namespace AmaruServer.Networking
         public User(Socket soc, string logger) : base(logger)
         {
             Client = new ClientTCP(soc, NetworkConstants.BufferSize, NetworkConstants.MaxFailures, NetworkConstants.MaxConsecutiveFailures, logger);
-            Client.HandleSyncMessage += this.HandleUserMessage;
             Client.HandleASyncMessage += this.HandleUserMessage;
 
             // Begins Async reading
@@ -97,33 +96,7 @@ namespace AmaruServer.Networking
         {
             this.Player = player;
             this.GameManager = gameManager;
-            Client.HandleASyncMessage = null;
-            Client.HandleSyncMessage = HandlePlayerMessage;
-        }
-
-        protected void HandlePlayerMessage(Message mex)
-        {
-            // Logical switch on mex type  
-            if (mex is ActionMessage)
-            {
-                ActionMessage aMex = (ActionMessage)mex;
-                try
-                {
-                    aMex.Action.Visit(GameManager.ValidationVisitor);
-                    aMex.Action.Visit(GameManager.ExecutionVisitor);
-                }
-                catch (InvalidActionException)
-                {
-                    LogError("Invalid action attempted");
-                    // TODO send response to INVALID ACTION
-                }
-            }
-            //*/
-            // Default
-            else
-            {
-                Log("Unknown Message received (ignored)");
-            }
+            Client.HandleASyncMessage = GameManager.HandlePlayerMessage;
         }
     }
 }

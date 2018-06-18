@@ -29,7 +29,7 @@ namespace AmaruServer.Game.Managing
             CreatureCard playedCard = (CreatureCard)(caller.GetCardFromId(action.PlayedCardId, Place.INNER) ?? caller.GetCardFromId(action.PlayedCardId, Place.OUTER));
             playedCard.Energy -= playedCard.Attack.Cost;
             AttacksVisitor attackVisitor = new AttacksVisitor(GameManager, caller, action.Target);
-            playedCard.Attack.Visit(attackVisitor);
+            target.Health -= playedCard.Attack.Visit(attackVisitor);
         }
     }
 }

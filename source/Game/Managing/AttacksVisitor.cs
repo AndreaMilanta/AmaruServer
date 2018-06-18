@@ -6,6 +6,7 @@ using AmaruCommon.GameAssets.Cards.Properties;
 using AmaruCommon.GameAssets.Player;
 using AmaruCommon.GameAssets.Characters;
 using AmaruCommon.GameAssets.Cards.Properties.Effects;
+using AmaruCommon.GameAssets.Cards.Properties.Abilities;
 
 namespace AmaruServer.Game.Managing
 {
@@ -87,6 +88,16 @@ namespace AmaruServer.Game.Managing
         }
 
         public int Visit(SeribuAttack attack)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Visit(GainHPAbility ability)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Visit(GiveEPAbility ability)
         {
             throw new NotImplementedException();
         }
