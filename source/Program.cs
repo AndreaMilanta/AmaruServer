@@ -16,7 +16,7 @@ namespace AmaruServer
             Tester.Execute();
             try 
             {
-                LoggerManager.SetupLoggerManager(ServerConstants.LOG_PATH, timerDt: 1);
+                LoggerManager.SetupLoggerManager(ServerConstants.LOG_PATH, timerDt: 1, instantLog: ToConsole);
                 mainServer = MainServer.Instance;
                 mainServer.Start();
                 Console.ReadKey();
@@ -24,6 +24,11 @@ namespace AmaruServer
                 LoggerManager.Instance.Close();
             }
             catch(Exception e) { LoggerManager.Instance.Close(); throw e; }
+        }
+
+        static void ToConsole(string svalue)
+        {
+            Console.WriteLine(svalue);
         }
     }
 }
