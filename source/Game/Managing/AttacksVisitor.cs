@@ -101,5 +101,55 @@ namespace AmaruServer.Game.Managing
         {
             throw new NotImplementedException();
         }
+
+        public int Visit(SpendCPToDealDamageAbility spendCPToDealDamageAbility)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Visit(ResurrectAbility resurrectAbility)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Visit(SeribuAbility seribuAbility)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Visit(KillIfPDAbility killIfPDAbility)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Visit(SummonAbility summonAbility)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Visit(AmaruIncarnationAbility amaruIncarnationAbility)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Visit(DamageDependingOnCreatureNumberAbility damageDependingOnCreatureNumberAbility)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Visit(BonusAttackDependingOnHealthAbility bonusAttackDependingOnHealthAbility)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Visit(DamageWithPDAbility damageWithPDAbility)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Visit(GainCPAbility gainCPAbility)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
