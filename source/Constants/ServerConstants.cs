@@ -24,5 +24,7 @@ namespace AmaruServer.Constants
 
         // Threading parameters
         public const int SleepTime_ms = 10;         // Thread sleeping time in ms
+        public const int ReadTimeout_ms = 30000;    // Max timeout
+
     }
 }

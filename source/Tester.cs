@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
+using AmaruCommon.Responses;
 
 namespace AmaruServer
 {
@@ -16,7 +14,6 @@ namespace AmaruServer
         /// </summary>
         public static void Execute()
         {
-            
         }
     }
 }

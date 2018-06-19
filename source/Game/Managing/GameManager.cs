@@ -68,9 +68,6 @@ namespace AmaruServer.Game.Managing
                 foreach (CharacterEnum c in _userDict.Keys)                       // Default draw
                     _userDict[c].SetPlayer(new Player(c), this);
 
-                
-
-
                 // Draw cards 
                 foreach (CharacterEnum c in _userDict.Keys)                       // Default draw
                     _userDict[c].Player.Draw(AmaruConstants.INITIAL_HAND_SIZE);
@@ -86,6 +83,10 @@ namespace AmaruServer.Game.Managing
                         enemies.Add(c, _userDict[c].Player.AsEnemy);
                     _userDict[target].Write(new GameInitMessage(enemies, own, _turnList));
                 }
+
+                // Start turn
+                foreach (CharacterEnum target in _userDict.Keys)
+                    _userDict[target].Write(new ResponseMessage(new NewTurnResponse(ActiveCharacter)));
             } 
             catch(Exception e) { LogException(e); throw e; }
 
@@ -100,7 +101,18 @@ namespace AmaruServer.Game.Managing
         {
             while (!GameHasFinished)
             {
-                Thread.Sleep(ServerConstants.SleepTime_ms);
+                try
+                {
+                    _userDict[ActiveCharacter].ReadSync(ServerConstants.ReadTimeout_ms);
+                }
+                catch (Exception e)
+                {
+                    KillPlayer(ActiveCharacter);
+                    _userDict.Remove(ActiveCharacter);
+                    foreach (CharacterEnum target in _userDict.Keys.ToList())
+                        _userDict[target].Write(new PlayerKilledMessage(ActiveCharacter, true));
+                    NextTurn();
+                }
             }
         }
 
