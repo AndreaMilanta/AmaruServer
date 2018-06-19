@@ -13,6 +13,7 @@ using AmaruServer.Networking;
 using AmaruServer.Constants;
 using AmaruCommon.Exceptions;
 using ClientServer.Messages;
+using AmaruCommon.GameAssets.Cards;
 
 namespace AmaruServer.Game.Managing
 {
@@ -85,8 +86,7 @@ namespace AmaruServer.Game.Managing
                 }
 
                 // Start turn
-                foreach (CharacterEnum target in _userDict.Keys)
-                    _userDict[target].Write(new ResponseMessage(new NewTurnResponse(ActiveCharacter)));
+                StartTurn();
             } 
             catch(Exception e) { LogException(e); throw e; }
 
@@ -114,6 +114,16 @@ namespace AmaruServer.Game.Managing
                     NextTurn();
                 }
             }
+        }
+
+        public void StartTurn()
+        {
+            Card drawnCard = _userDict[ActiveCharacter].Player.Draw();
+            // TODO: Se ha finito il deck
+
+            _userDict[ActiveCharacter].Write(new ResponseMessage(new NewTurnResponse(ActiveCharacter, drawnCard)));
+            foreach (CharacterEnum target in CharacterManager.Instance.Others(ActiveCharacter))
+                _userDict[target].Write(new ResponseMessage(new NewTurnResponse(ActiveCharacter, drawnCard == null)));
         }
 
         public void Shutdown()
