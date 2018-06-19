@@ -46,5 +46,20 @@ namespace AmaruServer.Game.Managing
             if (target.IsImmune || target.IsShieldUpProtected)
                 throw new PlayerCannotBeTargetedException();
         }
+
+        public void Visit(MoveCreatureAction action)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Visit(PlayACreatureFromHandAction action)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Visit(PlayASpellFromHandAction action)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

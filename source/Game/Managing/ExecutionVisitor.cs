@@ -5,7 +5,6 @@ using AmaruCommon.Actions;
 using AmaruCommon.GameAssets.Player;
 using AmaruCommon.GameAssets.Cards;
 using AmaruCommon.GameAssets.Cards.Properties.Abilities;
-using AmaruCommon.GameAssets.Cards.Properties.Effects;
 
 namespace AmaruServer.Game.Managing
 {
@@ -30,6 +29,21 @@ namespace AmaruServer.Game.Managing
             playedCard.Energy -= playedCard.Attack.Cost;
             AttacksVisitor attackVisitor = new AttacksVisitor(GameManager, caller, action.Target);
             target.Health -= playedCard.Attack.Visit(attackVisitor);
+        }
+
+        public void Visit(MoveCreatureAction action)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Visit(PlayACreatureFromHandAction action)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Visit(PlayASpellFromHandAction action)
+        {
+            throw new NotImplementedException();
         }
     }
 }

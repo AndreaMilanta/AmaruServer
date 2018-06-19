@@ -5,8 +5,8 @@ using AmaruCommon.GameAssets.Cards.Properties.Attacks;
 using AmaruCommon.GameAssets.Cards.Properties;
 using AmaruCommon.GameAssets.Player;
 using AmaruCommon.GameAssets.Characters;
-using AmaruCommon.GameAssets.Cards.Properties.Effects;
 using AmaruCommon.GameAssets.Cards.Properties.Abilities;
+using AmaruCommon.GameAssets.Cards.Properties.SpellAbilities;
 
 namespace AmaruServer.Game.Managing
 {
@@ -36,23 +36,12 @@ namespace AmaruServer.Game.Managing
         {
             return attack.Power;
         }
-
-        public int Visit(AttackFromInnerEffect  effect)
-        {
-            throw new NotImplementedException();
-        }
-
         public int Visit(ImperiaAttack attack)
         {
             throw new NotImplementedException();
         }
 
         int IPropertyVisitor.Visit(SimpleAttack attack)
-        {
-            throw new NotImplementedException();
-        }
-
-        int IPropertyVisitor.Visit(AttackFromInnerEffect effect)
         {
             throw new NotImplementedException();
         }
@@ -107,11 +96,6 @@ namespace AmaruServer.Game.Managing
             throw new NotImplementedException();
         }
 
-        public int Visit(ResurrectAbility resurrectAbility)
-        {
-            throw new NotImplementedException();
-        }
-
         public int Visit(SeribuAbility seribuAbility)
         {
             throw new NotImplementedException();
@@ -148,6 +132,26 @@ namespace AmaruServer.Game.Managing
         }
 
         public int Visit(GainCPAbility gainCPAbility)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Visit(AttackFromInnerSpellAbility attackFromInnerSpellAbility)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Visit(ReturnToHandAbility returnToHandAbility)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Visit(SalazarAbility salazarAbility)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Visit(ResurrectOrTakeFromGraveyardAbility resurrectAbility)
         {
             throw new NotImplementedException();
         }
