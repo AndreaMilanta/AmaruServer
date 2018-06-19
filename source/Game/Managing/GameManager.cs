@@ -107,6 +107,7 @@ namespace AmaruServer.Game.Managing
                 }
                 catch (Exception e)
                 {
+                    LogException(e);
                     KillPlayer(ActiveCharacter);
                     _userDict.Remove(ActiveCharacter);
                     foreach (CharacterEnum target in _userDict.Keys.ToList())
@@ -118,12 +119,17 @@ namespace AmaruServer.Game.Managing
 
         public void StartTurn()
         {
+            int damage = 0;
             Card drawnCard = _userDict[ActiveCharacter].Player.Draw();
-            // TODO: Se ha finito il deck
 
-            _userDict[ActiveCharacter].Write(new ResponseMessage(new NewTurnResponse(ActiveCharacter, drawnCard)));
+            // Handle if deck is finished
+            if (drawnCard == null)
+                if (_userDict[ActiveCharacter].Player.Deck.Count == 0)
+                    damage = 1;
+
+            _userDict[ActiveCharacter].Write(new ResponseMessage(new NewTurnResponse(ActiveCharacter, drawnCard, damage)));
             foreach (CharacterEnum target in CharacterManager.Instance.Others(ActiveCharacter))
-                _userDict[target].Write(new ResponseMessage(new NewTurnResponse(ActiveCharacter, drawnCard == null)));
+                _userDict[target].Write(new ResponseMessage(new NewTurnResponse(ActiveCharacter, drawnCard == null, damage)));
         }
 
         public void Shutdown()

@@ -36,7 +36,7 @@ namespace AmaruServer.Networking
             // Begins Async reading
             try
             {
-                this.ReadASync(true);
+                this.ReadASync(false);
             }
             catch
             {
