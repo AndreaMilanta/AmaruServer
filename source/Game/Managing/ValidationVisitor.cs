@@ -61,5 +61,10 @@ namespace AmaruServer.Game.Managing
         {
             throw new NotImplementedException();
         }
+
+        public void Visit(EndTurnAction action)
+        {
+            
+        }
     }
 }

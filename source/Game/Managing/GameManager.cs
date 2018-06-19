@@ -28,9 +28,9 @@ namespace AmaruServer.Game.Managing
         public int CurrentRound { get; private set; }
 
         // private list for simplified turn management
-        private int _currentIndex;              // Index of current active player
+        private int _currentIndex = 0;              // Index of current active player
         private List<CharacterEnum> _turnList;  // List of players in order of turn
-
+        private bool _isMainTurn;
 
 
         public GameManager(int id, Dictionary<CharacterEnum, User> clientsDict) : base(AmaruConstants.GAME_PREFIX + id)
@@ -103,7 +103,7 @@ namespace AmaruServer.Game.Managing
             {
                 try
                 {
-                    _userDict[ActiveCharacter].ReadSync(ServerConstants.ReadTimeout_ms);
+                    HandlePlayerMessage(_userDict[ActiveCharacter].ReadSync(ServerConstants.ReadTimeout_ms));
                 }
                 catch (Exception e)
                 {
@@ -119,6 +119,8 @@ namespace AmaruServer.Game.Managing
 
         public void StartTurn()
         {
+            Log("Start turn for " + ActiveCharacter.ToString());
+            _isMainTurn = false;
             int damage = 0;
             Card drawnCard = _userDict[ActiveCharacter].Player.Draw();
 
@@ -130,6 +132,14 @@ namespace AmaruServer.Game.Managing
             _userDict[ActiveCharacter].Write(new ResponseMessage(new NewTurnResponse(ActiveCharacter, drawnCard, damage)));
             foreach (CharacterEnum target in CharacterManager.Instance.Others(ActiveCharacter))
                 _userDict[target].Write(new ResponseMessage(new NewTurnResponse(ActiveCharacter, drawnCard != null, damage)));
+        }
+
+        public void StartMainTurn()
+        {
+            Log("Start main turn for " + ActiveCharacter.ToString());
+            _isMainTurn = true;
+            foreach (CharacterEnum target in _userDict.Keys.ToList())
+                _userDict[target].Write(new ResponseMessage(new MainTurnResponse()));
         }
 
         public void Shutdown()
@@ -177,11 +187,14 @@ namespace AmaruServer.Game.Managing
 
         public CharacterEnum NextTurn()
         {
-            this._currentIndex = (_currentIndex == _turnList.Count - 1) ? 0 : _currentIndex++;
+            this._currentIndex = (_currentIndex == (_turnList.Count - 1)) ? 0 : _currentIndex+1;
             if (_currentIndex == 0)
                 CurrentRound++;
             this.ActiveCharacter = _turnList[_currentIndex];
             this._userDict[this.ActiveCharacter].Player.ResetManaCount();
+            Log("New Player: " + ActiveCharacter.ToString());
+            Log("Current index: " + _currentIndex);
+            
             return ActiveCharacter;
         }
 

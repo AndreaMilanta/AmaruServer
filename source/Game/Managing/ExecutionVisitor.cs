@@ -45,5 +45,15 @@ namespace AmaruServer.Game.Managing
         {
             throw new NotImplementedException();
         }
+
+        public void Visit(EndTurnAction action)
+        {
+            if (action.IsMainTurn) {
+                GameManager.NextTurn();
+                GameManager.StartTurn();
+            }
+            else
+                GameManager.StartMainTurn();
+        }
     }
 }
