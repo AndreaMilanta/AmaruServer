@@ -155,5 +155,75 @@ namespace AmaruServer.Game.Managing
         {
             throw new NotImplementedException();
         }
+
+        public int Visit(DrawCardAndAttack drawCardAndAttack)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Visit(DuplicatorSpellAbility duplicatorSpellAbility)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Visit(AddEPAndDrawSpellAbility addEPAndDrawSpellAbility)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Visit(PDDamageToCreatureSpellAbility pDDamageToCreatureSpellAbility)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Visit(ResurrectSpecificCreatureSpellAbility resurrectSpecificCreatureSpellAbility)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Visit(ResurrectOrReturnToHandSpellAbility resurrectOrReturnToHandSpellAbility)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Visit(GiveHPSpellAbility giveHPSpellAbility)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Visit(GainCpSpellAbility gainCpSpellAbility)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Visit(DealDamageDependingOnPDNumberSpellAbility dealDamageDependingOnPDNumberSpellAbility)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Visit(DealDamageToEverythingSpellAbility dealDamageToEverythingSpellAbility)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Visit(DealTotDamageToTotTargetsSpellAbility dealTotDamageToTotTargetsSpellAbility)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Visit(DamagePDToAllCreaturesOfTargetPlayerSpellAbility damagePDToAllCreaturesOfTargetPlayerSpellAbility)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Visit(DealDamageDependingOnMAXHPSpeelAbility dealDamageDependingOnMAXHPSpeelAbility)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Visit(AttackEqualToHPSpellAbility attackEqualToHPSpellAbility)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
