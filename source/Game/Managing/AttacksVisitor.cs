@@ -7,6 +7,7 @@ using AmaruCommon.GameAssets.Player;
 using AmaruCommon.GameAssets.Characters;
 using AmaruCommon.GameAssets.Cards.Properties.Abilities;
 using AmaruCommon.GameAssets.Cards.Properties.SpellAbilities;
+using AmaruCommon.GameAssets.Cards.Properties.CreatureEffects;
 
 namespace AmaruServer.Game.Managing
 {
@@ -222,6 +223,41 @@ namespace AmaruServer.Game.Managing
         }
 
         public int Visit(AttackEqualToHPSpellAbility attackEqualToHPSpellAbility)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Visit(HalveDamageIfPDEffect halveDamageIfPDEffect)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Visit(CostLessForPDEffect costLessForPDEffect)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Visit(GainHPForDamageEffect gainHPForDamageEffect)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Visit(IfKillGainHPEffect ifKillGainHPEffect)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Visit(GainAdditionalEPEffect gainAdditionalEPEffect)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Visit(GainCPForCardPlayedEffect gainCPForCardPlayed)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Visit(AttackBuffInSpecificZoneEffect attackBuffInSpecificZoneEffect)
         {
             throw new NotImplementedException();
         }

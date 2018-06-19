@@ -129,7 +129,7 @@ namespace AmaruServer.Game.Managing
 
             _userDict[ActiveCharacter].Write(new ResponseMessage(new NewTurnResponse(ActiveCharacter, drawnCard, damage)));
             foreach (CharacterEnum target in CharacterManager.Instance.Others(ActiveCharacter))
-                _userDict[target].Write(new ResponseMessage(new NewTurnResponse(ActiveCharacter, drawnCard == null, damage)));
+                _userDict[target].Write(new ResponseMessage(new NewTurnResponse(ActiveCharacter, drawnCard != null, damage)));
         }
 
         public void Shutdown()
