@@ -13,7 +13,7 @@ namespace AmaruServer
         private static MainServer mainServer;
         static void Main(string[] args)
         {
-            TestFunction();
+            Tester.Execute();
             try 
             {
                 LoggerManager.SetupLoggerManager(ServerConstants.LOG_PATH, timerDt: 1);
@@ -24,22 +24,6 @@ namespace AmaruServer
                 LoggerManager.Instance.Close();
             }
             catch(Exception e) { LoggerManager.Instance.Close(); throw e; }
-        }
-
-        /// <summary>
-        /// Function called before everything
-        /// put here code to test
-        /// </summary>
-        public static void TestFunction()
-        {
-            List<int> testList = new List<int>() { 1, 2, 3, 4, 5, 6, 7 };
-            Console.Write("ordered:  ");
-            testList.ForEach(i => Console.Write(i + ", "));
-            Console.WriteLine();
-            AmaruCommon.Constants.Tools.Shuffle(testList);
-            Console.Write("shuffled: ");
-            testList.ForEach(i => Console.Write(i + ", "));
-            Console.WriteLine();
         }
     }
 }

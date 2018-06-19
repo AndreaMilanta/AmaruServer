@@ -55,7 +55,6 @@ namespace AmaruServer.Networking
                         }
                         Log("Game " + newGame.Id + " has started");
                     }
-                    Log("Could not start new game");
                 }
             }
             catch(InvalidUserCredentialsException e)
@@ -111,15 +110,10 @@ namespace AmaruServer.Networking
             if (_waitingRoom.Count < AmaruConstants.NUM_PLAYER)
                 return null;
             int index = _waitingRoom.FindIndex(u => u == newUser);
-            Log("index: " + index);
             for (int i = 0; i < AmaruConstants.NUM_PLAYER; i++)
-                if (index >= i && index <= _waitingRoom.Count - AmaruConstants.NUM_PLAYER + i) {
-                    Log("i is" + i);
-                    if (_waitingRoom[index - i + AmaruConstants.NUM_PLAYER - 1].Ranking - _waitingRoom[index - i].Ranking < UserConstants.maxRankDelta) {
-                        Log("in if interno");
+                if (index >= i && index <= _waitingRoom.Count - AmaruConstants.NUM_PLAYER + i)
+                    if (_waitingRoom[index - i + AmaruConstants.NUM_PLAYER - 1].Ranking - _waitingRoom[index - i].Ranking < UserConstants.maxRankDelta)
                         return _waitingRoom.GetRange(index - i, AmaruConstants.NUM_PLAYER);
-                    }
-                }
             return null;
         }
     }
