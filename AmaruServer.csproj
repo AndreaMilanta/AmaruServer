@@ -47,6 +47,7 @@
     <Compile Include="source\Game\Managing\AttacksVisitor.cs" />
     <Compile Include="source\Game\Managing\ExecutionVisitor.cs" />
     <Compile Include="source\Game\Managing\GameManager.cs" />
+    <Compile Include="source\Game\Managing\OnTurnStartVisitor.cs" />
     <Compile Include="source\Game\Managing\ValidationVisitor.cs" />
     <Compile Include="source\Game\Tools\GameFactory.cs" />
     <Compile Include="source\Networking\AIUser.cs" />

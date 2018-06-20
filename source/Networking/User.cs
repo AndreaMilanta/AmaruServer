@@ -5,7 +5,7 @@ using ClientServer.Messages;
 using ClientServer.Communication;
 using AmaruCommon.Constants;
 using AmaruCommon.Communication.Messages;
-using AmaruCommon.GameAssets.Player;
+using AmaruCommon.GameAssets.Players;
 using AmaruCommon.Exceptions;
 using AmaruServer.Constants;
 using AmaruServer.Game.Managing;

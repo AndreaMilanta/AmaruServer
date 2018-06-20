@@ -7,7 +7,7 @@ using Logging;
 using AmaruCommon.Constants;
 using AmaruCommon.Communication.Messages;
 using AmaruCommon.GameAssets.Characters;
-using AmaruCommon.GameAssets.Player;
+using AmaruCommon.GameAssets.Players;
 using AmaruCommon.Responses;
 using AmaruServer.Networking;
 using AmaruServer.Constants;
@@ -121,17 +121,36 @@ namespace AmaruServer.Game.Managing
         {
             Log("Start turn for " + ActiveCharacter.ToString());
             _isMainTurn = false;
+
+            // Draw card
             int damage = 0;
             Card drawnCard = _userDict[ActiveCharacter].Player.Draw();
-
-            // Handle if deck is finished
-            if (drawnCard == null)
+            if (drawnCard == null)                                         // Handle if deck is finished
                 if (_userDict[ActiveCharacter].Player.Deck.Count == 0)
                     damage = 1;
 
-            _userDict[ActiveCharacter].Write(new ResponseMessage(new NewTurnResponse(ActiveCharacter, drawnCard, damage)));
+            // Give mana
+            _userDict[ActiveCharacter].Player.Mana += CurrentRound;
+
+            // Add EP and execute onturnstart for each card on table
+            OnTurnStartVisitor OTSVisitor = new OnTurnStartVisitor(_userDict[ActiveCharacter].Player);
+            List<Card> Modified = new List<Card>();
+            foreach (CreatureCard card in _userDict[ActiveCharacter].Player.Inner)
+            {
+                card.Energy++;
+                card.Visit(OTSVisitor, _userDict[ActiveCharacter].Player, null);
+                Modified.Add(card);
+            }
+            foreach (CreatureCard card in _userDict[ActiveCharacter].Player.Outer)
+            {
+                card.Energy++;
+                card.Visit(OTSVisitor, _userDict[ActiveCharacter].Player, null);
+                Modified.Add(card);
+            }
+
+            _userDict[ActiveCharacter].Write(new ResponseMessage(new NewTurnResponse(CurrentRound, ActiveCharacter, _userDict[ActiveCharacter].Player.Mana, drawnCard, Modified, damage)));
             foreach (CharacterEnum target in CharacterManager.Instance.Others(ActiveCharacter))
-                _userDict[target].Write(new ResponseMessage(new NewTurnResponse(ActiveCharacter, drawnCard != null, damage)));
+                _userDict[ActiveCharacter].Write(new ResponseMessage(new NewTurnResponse(CurrentRound, ActiveCharacter, _userDict[ActiveCharacter].Player.Mana, drawnCard != null, Modified, damage)));
         }
 
         public void StartMainTurn()
