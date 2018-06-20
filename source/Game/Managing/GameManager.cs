@@ -25,7 +25,7 @@ namespace AmaruServer.Game.Managing
         public ExecutionVisitor ExecutionVisitor { get; private set; }
         public bool GameHasFinished { get; set; }
         public CharacterEnum ActiveCharacter { get; private set; }                 // Player whose turn it is to play
-        public int CurrentRound { get; private set; }
+        public int CurrentRound { get; private set; } = 1;
 
         // private list for simplified turn management
         private int _currentIndex = 0;              // Index of current active player
