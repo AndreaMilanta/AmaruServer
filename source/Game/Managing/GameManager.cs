@@ -162,7 +162,9 @@ namespace AmaruServer.Game.Managing
 
         public void HandlePlayerMessage(Message mex)
         {
-            // Logical switch on mex type  
+            if (mex is null)
+                return;
+            // Logical switch on mex type 
             if (mex is ActionMessage)
             {
                 ActionMessage aMex = (ActionMessage)mex;
