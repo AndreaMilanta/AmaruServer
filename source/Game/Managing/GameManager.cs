@@ -20,7 +20,7 @@ namespace AmaruServer.Game.Managing
     public class GameManager : Loggable
     {
         public readonly int Id;
-        Dictionary<CharacterEnum, User> _userDict = new Dictionary<CharacterEnum, User>();
+        public Dictionary<CharacterEnum, User> _userDict = new Dictionary<CharacterEnum, User>();
         public ValidationVisitor ValidationVisitor { get; private set; }
         public ExecutionVisitor ExecutionVisitor { get; private set; }
         public bool GameHasFinished { get; set; }
