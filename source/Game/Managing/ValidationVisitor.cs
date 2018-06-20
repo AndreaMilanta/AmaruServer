@@ -3,7 +3,7 @@
 using AmaruCommon.Exceptions;
 using AmaruCommon.Constants;
 using AmaruCommon.Actions;
-using AmaruCommon.GameAssets.Player;
+using AmaruCommon.GameAssets.Players;
 using AmaruCommon.GameAssets.Cards;
 
 namespace AmaruServer.Game.Managing

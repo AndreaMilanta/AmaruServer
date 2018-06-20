@@ -2,7 +2,7 @@
 
 using AmaruCommon.Constants;
 using AmaruCommon.Actions;
-using AmaruCommon.GameAssets.Player;
+using AmaruCommon.GameAssets.Players;
 using AmaruCommon.GameAssets.Cards;
 using AmaruCommon.GameAssets.Cards.Properties.Abilities;
 using AmaruCommon.GameAssets.Characters;

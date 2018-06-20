@@ -3,7 +3,7 @@
 using AmaruCommon.Actions.Targets;
 using AmaruCommon.GameAssets.Cards.Properties.Attacks;
 using AmaruCommon.GameAssets.Cards.Properties;
-using AmaruCommon.GameAssets.Player;
+using AmaruCommon.GameAssets.Players;
 using AmaruCommon.GameAssets.Characters;
 using AmaruCommon.GameAssets.Cards.Properties.Abilities;
 using AmaruCommon.GameAssets.Cards.Properties.SpellAbilities;
@@ -11,7 +11,7 @@ using AmaruCommon.GameAssets.Cards.Properties.CreatureEffects;
 
 namespace AmaruServer.Game.Managing
 {
-    public class AttacksVisitor : IPropertyVisitor
+    public class AttacksVisitor : PropertyVisitor
     {
         private GameManager GameManager { get; set; }
         private Player Caller { get; set; }
@@ -42,12 +42,12 @@ namespace AmaruServer.Game.Managing
             throw new NotImplementedException();
         }
 
-        int IPropertyVisitor.Visit(SimpleAttack attack)
+        int PropertyVisitor.Visit(SimpleAttack attack)
         {
             throw new NotImplementedException();
         }
 
-        int IPropertyVisitor.Visit(ImperiaAttack attack)
+        int PropertyVisitor.Visit(ImperiaAttack attack)
         {
             throw new NotImplementedException();
         }

@@ -1,4 +1,4 @@
-﻿using AmaruCommon.GameAssets.Player;
+﻿using AmaruCommon.GameAssets.Players;
 using AmaruServer.Game.Managing;
 using ClientServer.Messages;
 using System;
