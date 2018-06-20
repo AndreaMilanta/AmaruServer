@@ -5,6 +5,10 @@ using AmaruCommon.Actions;
 using AmaruCommon.GameAssets.Player;
 using AmaruCommon.GameAssets.Cards;
 using AmaruCommon.GameAssets.Cards.Properties.Abilities;
+using AmaruCommon.GameAssets.Characters;
+using System.Linq;
+using AmaruCommon.Communication.Messages;
+using AmaruCommon.Responses;
 
 namespace AmaruServer.Game.Managing
 {
@@ -33,17 +37,26 @@ namespace AmaruServer.Game.Managing
 
         public void Visit(MoveCreatureAction action)
         {
-            throw new NotImplementedException();
+            Player p = GameManager.GetPlayer(action.Caller);
+            CreatureCard creature = p.MoveACreatureFromPlace(action.PlayedCardId, action.Place);
+            foreach (CharacterEnum target in GameManager._userDict.Keys.ToList())
+                GameManager._userDict[target].Write(new ResponseMessage(new MoveCreatureResponse(action.Caller,creature,action.Place,action.TablePos)));
         }
 
         public void Visit(PlayACreatureFromHandAction action)
         {
-            throw new NotImplementedException();
+            Player p = GameManager.GetPlayer(action.Caller);
+            CreatureCard creature = p.PlayACreatureFromHand(action.PlayedCardId, action.Place);
+            foreach (CharacterEnum target in GameManager._userDict.Keys.ToList())
+                GameManager._userDict[target].Write(new ResponseMessage(new PlayACreatureResponse(action.Caller, creature, action.Place, action.TablePos)));
         }
 
         public void Visit(PlayASpellFromHandAction action)
         {
-            throw new NotImplementedException();
+            Player p = GameManager.GetPlayer(action.Caller);
+            SpellCard spell = p.PlayASpellFromHand(action.PlayedCardId, action.Targets);
+            foreach (CharacterEnum target in GameManager._userDict.Keys.ToList())
+                GameManager._userDict[target].Write(new ResponseMessage(new PlayASpellResponse(action.Caller,spell,action.Targets)));
         }
 
         public void Visit(EndTurnAction action)
