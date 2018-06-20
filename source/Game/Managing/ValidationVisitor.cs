@@ -49,17 +49,17 @@ namespace AmaruServer.Game.Managing
 
         public void Visit(MoveCreatureAction action)
         {
-            throw new NotImplementedException();
+            /// Check validity
         }
 
         public void Visit(PlayACreatureFromHandAction action)
         {
-            throw new NotImplementedException();
+            /// Check validity
         }
 
         public void Visit(PlayASpellFromHandAction action)
         {
-            throw new NotImplementedException();
+            /// Check validity
         }
 
         public void Visit(EndTurnAction action)
