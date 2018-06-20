@@ -150,7 +150,7 @@ namespace AmaruServer.Game.Managing
 
             _userDict[ActiveCharacter].Write(new ResponseMessage(new NewTurnResponse(CurrentRound, ActiveCharacter, _userDict[ActiveCharacter].Player.Mana, drawnCard, Modified, damage)));
             foreach (CharacterEnum target in CharacterManager.Instance.Others(ActiveCharacter))
-                _userDict[ActiveCharacter].Write(new ResponseMessage(new NewTurnResponse(CurrentRound, ActiveCharacter, _userDict[ActiveCharacter].Player.Mana, drawnCard != null, Modified, damage)));
+                _userDict[target].Write(new ResponseMessage(new NewTurnResponse(CurrentRound, ActiveCharacter, _userDict[ActiveCharacter].Player.Mana, drawnCard != null, Modified, damage)));
         }
 
         public void StartMainTurn()
