@@ -130,7 +130,7 @@ namespace AmaruServer.Game.Managing
                     damage = 1;
 
             // Give mana
-            _userDict[ActiveCharacter].Player.Mana += CurrentRound;
+            _userDict[ActiveCharacter].Player.Mana += CurrentRound * AmaruConstants.MANA_TURN_FACTOR;
 
             // Add EP and execute onturnstart for each card on table
             OnTurnStartVisitor OTSVisitor = new OnTurnStartVisitor(_userDict[ActiveCharacter].Player);
