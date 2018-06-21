@@ -71,7 +71,7 @@ namespace AmaruServer.Networking
             //per ogni giocatore in generale voglio sapere:
             List<EnemyInfo> enemyInfo = new List<EnemyInfo>();
 
-            myEnemiesDict = GameManager._userDict;
+            myEnemiesDict = new Dictionary<CharacterEnum, User>( GameManager._userDict);
             myEnemiesDict.Remove(CharacterEnum.AMARU);
             foreach (User target in myEnemiesDict.Values)
             {
