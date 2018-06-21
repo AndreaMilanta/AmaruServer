@@ -2,12 +2,11 @@
 
 using AmaruCommon.Actions.Targets;
 using AmaruCommon.GameAssets.Cards.Properties.Attacks;
-using AmaruCommon.GameAssets.Cards.Properties;
-using AmaruCommon.GameAssets.Players;
-using AmaruCommon.GameAssets.Characters;
 using AmaruCommon.GameAssets.Cards.Properties.Abilities;
 using AmaruCommon.GameAssets.Cards.Properties.SpellAbilities;
 using AmaruCommon.GameAssets.Cards.Properties.CreatureEffects;
+using AmaruCommon.GameAssets.Cards.Properties;
+using AmaruCommon.GameAssets.Players;
 
 namespace AmaruServer.Game.Managing
 {

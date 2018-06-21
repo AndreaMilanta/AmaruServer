@@ -1,4 +1,6 @@
-﻿using AmaruCommon.GameAssets.Players;
+﻿using AmaruCommon.Actions;
+using AmaruCommon.Communication.Messages;
+using AmaruCommon.GameAssets.Players;
 using AmaruServer.Game.Managing;
 using ClientServer.Messages;
 using System;
@@ -33,6 +35,8 @@ namespace AmaruServer.Networking
 
         public override Message ReadSync(int timeout_s)
         {
+            return new ActionMessage(new EndTurnAction(AmaruCommon.GameAssets.Characters.CharacterEnum.AMARU, -1, GameManager.IsMainTurn));
+            Player.PlayACreatureFromHand(Player.Hand[0].Id,AmaruCommon.Constants.Place.OUTER);
             return null;
         }
 

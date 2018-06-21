@@ -30,7 +30,7 @@ namespace AmaruServer.Game.Managing
         // private list for simplified turn management
         private int _currentIndex = 0;              // Index of current active player
         private List<CharacterEnum> _turnList;  // List of players in order of turn
-        private bool _isMainTurn;
+        public bool IsMainTurn { get; private set; }
 
 
         public GameManager(int id, Dictionary<CharacterEnum, User> clientsDict) : base(AmaruConstants.GAME_PREFIX + id)
@@ -120,7 +120,7 @@ namespace AmaruServer.Game.Managing
         public void StartTurn()
         {
             Log("Start turn for " + ActiveCharacter.ToString());
-            _isMainTurn = false;
+            IsMainTurn = false;
 
             // Draw card
             int damage = 0;
@@ -156,7 +156,7 @@ namespace AmaruServer.Game.Managing
         public void StartMainTurn()
         {
             Log("Start main turn for " + ActiveCharacter.ToString());
-            _isMainTurn = true;
+            IsMainTurn = true;
             foreach (CharacterEnum target in _userDict.Keys.ToList())
                 _userDict[target].Write(new ResponseMessage(new MainTurnResponse()));
         }
