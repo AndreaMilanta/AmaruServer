@@ -51,7 +51,6 @@ namespace AmaruServer.Game.Managing
                 if (_turnList.Last() != CharacterEnum.AMARU)
                     _turnList.Add(CharacterEnum.AMARU);
 
-                _userDict.Add(CharacterEnum.AMARU, new AIUser(AmaruConstants.GAME_PREFIX + id));
             }
             catch(Exception e) { LogException(e); throw e; }
         }
@@ -68,6 +67,8 @@ namespace AmaruServer.Game.Managing
                 // Init Players
                 foreach (CharacterEnum c in _userDict.Keys)                       // Default draw
                     _userDict[c].SetPlayer(new Player(c, AmaruConstants.GAME_PREFIX + Id), this);
+                _userDict.Add(CharacterEnum.AMARU, new AIUser(AmaruConstants.GAME_PREFIX + Id));
+                    _userDict[CharacterEnum.AMARU].SetPlayer(new AmaruPlayer(AmaruConstants.GAME_PREFIX + Id), this);
 
                 // Draw cards 
                 foreach (CharacterEnum c in _userDict.Keys)                       // Default draw
