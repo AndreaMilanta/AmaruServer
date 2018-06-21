@@ -21,14 +21,14 @@ namespace AmaruServer.Networking
     public class AIUser : User
     {
         MessageHandler messageHandler = null;
-        Queue<Message> listOfActions;
+        Queue<PlayerAction> listOfActions;
         LimitedList<LimitedList<CreatureCard>> OtherPlayersOuterField;
         LimitedList<LimitedList<CreatureCard>> OtherPlayersInnerField;
         private Dictionary<CharacterEnum, User> myEnemiesDict;
 
         public AIUser(string logger) : base(logger)
         {
-            listOfActions = new Queue<Message>();
+            listOfActions = new Queue<PlayerAction>();
             OtherPlayersInnerField = new LimitedList<LimitedList<CreatureCard>>(4);
             OtherPlayersOuterField = new LimitedList<LimitedList<CreatureCard>>(4);
             
@@ -50,23 +50,63 @@ namespace AmaruServer.Networking
                 {
                     if (((NewTurnResponse)responseReceived).ActivePlayer == AmaruCommon.GameAssets.Characters.CharacterEnum.AMARU)
                     {
-                        listOfActions.Enqueue(new ActionMessage(new EndTurnAction(AmaruCommon.GameAssets.Characters.CharacterEnum.AMARU, -1, GameManager.IsMainTurn)));
+                        listOfActions.Enqueue(new EndTurnAction(CharacterEnum.AMARU, -1, GameManager.IsMainTurn));
                         
                     }
                 }
                 if(responseReceived is MainTurnResponse)
-                {  
-                       //think()
-                    listOfActions.Enqueue(new ActionMessage(new EndTurnAction(AmaruCommon.GameAssets.Characters.CharacterEnum.AMARU, -1, GameManager.IsMainTurn)));
+                {
+                    think();
+                    listOfActions.Enqueue(new EndTurnAction(CharacterEnum.AMARU, -1, GameManager.IsMainTurn));
                     
                 }
             }
         }
 
+        private void think()
+        {
+            Dictionary<CharEnumerator, ValuesEnumerator> valuesPerPlayer;
+            //per ogni giocatore in generale voglio sapere:
+            List<EnemyInfo> enemyInfo = new List<EnemyInfo>();
+
+            myEnemiesDict = GameManager._userDict;
+            myEnemiesDict.Remove(CharacterEnum.AMARU);
+            foreach (User target in myEnemiesDict.Values)
+            {
+                //inutile prendere l'asEnemy immagino
+                enemyInfo.Add(target.Player.AsEnemy);
+                OtherPlayersOuterField.Add(target.Player.AsEnemy.Outer);
+                OtherPlayersInnerField.Add(target.Player.AsEnemy.Inner);
+            }
+            LimitedList<Card> myCards = GameManager._userDict[CharacterEnum.AMARU].Player.Hand;
+            foreach (Card c in myCards)
+            {
+                if (c.Cost <= Player.Mana)
+                {
+                    if (c is CreatureCard)
+                    {
+                        if (Player.Outer.Count<= Player.Outer.MaxSize)
+                        {
+                            listOfActions.Enqueue(new PlayACreatureFromHandAction(CharacterEnum.AMARU, c.Id, Place.OUTER, Player.Outer.Count));
+                        }
+                        else if (Player.Inner.Count <= Player.Inner.MaxSize)
+                        {
+                            listOfActions.Enqueue(new PlayACreatureFromHandAction(CharacterEnum.AMARU, c.Id, Place.INNER, Player.Outer.Count));
+                        }
+                        
+                    }
+                
+                }
+            }
+            //calcola vita sui campi di ciascun giocatoer
+            //calcola chi ha più vita e chi meno
+            //somma due punti per ciascuna carta viva
+
+        }
 
         public override Message ReadSync(int timeout_s)
         {
-            return listOfActions.Dequeue();
+            return new ActionMessage(listOfActions.Dequeue());
         }
 
         public override void ReadASync(bool continuous)
@@ -75,6 +115,10 @@ namespace AmaruServer.Networking
         }
 
         public override void Close(Message notification = null)
+        {
+
+        }
+        internal class ValuesEnumerator
         {
 
         }
