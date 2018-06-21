@@ -85,36 +85,30 @@ namespace AmaruServer.Networking
             }
             LimitedList<Card> myCards =Player.Hand;
             LimitedList<CreatureCard> myWarZone = Player.Outer;
-            int tempMana = Player.Mana;
-            Log(tempMana.ToString());
+            LimitedList<CreatureCard> myInnerZone = Player.Inner;
+
+            //This way it will try to play all possible cards
             foreach (Card c in myCards)
             {
-                Log(c.Name);
-                if (c.Cost <= tempMana)
+                try
                 {
                     if (c is CreatureCard)
                     {
-                        if (Player.Outer.Count<= Player.Outer.MaxSize)
-                        {
-                            PlayACreatureFromHandAction myIntention = new PlayACreatureFromHandAction(CharacterEnum.AMARU, c.Id, Place.OUTER, Player.Outer.Count);
-                            myIntention.Visit(myValidation);
-                            listOfActions.Enqueue(myIntention);
-                        }
-                        else if (Player.Inner.Count <= Player.Inner.MaxSize)
-                        {
-                            PlayACreatureFromHandAction myIntention = new PlayACreatureFromHandAction(CharacterEnum.AMARU, c.Id, Place.INNER, Player.Inner.Count);
-                            myIntention.Visit(myValidation);
-                            listOfActions.Enqueue(myIntention);
-                        }
-                        tempMana -= c.Cost;
+                        PlayACreatureFromHandAction myIntention = new PlayACreatureFromHandAction(CharacterEnum.AMARU, c.Id, Place.OUTER, Player.Outer.Count);
+                        myIntention.Visit(myValidation);
+                        listOfActions.Enqueue(myIntention);
                     }
-                    else
+                    else if (c is SpellCard)
                     {
-                        //lista null, bisogno di discutere
-                        listOfActions.Enqueue(new PlayASpellFromHandAction(CharacterEnum.AMARU, c.Id, null));
+                        PlayASpellFromHandAction myIntention = new PlayASpellFromHandAction(CharacterEnum.AMARU, c.Id, null);
+                        myIntention.Visit(myValidation);
+                        listOfActions.Enqueue(myIntention);
                     }
                 }
+                catch (Exception e) { }
             }
+            /*
+            // attacco random 
             foreach (CreatureCard c in myWarZone){
                 int temp = c.Energy;
                 bool stop= false;
@@ -156,7 +150,9 @@ namespace AmaruServer.Networking
                     catch (Exception e) { }
 
                 }
+                
             }
+            */
         }
 
         public override Message ReadSync(int timeout_s)

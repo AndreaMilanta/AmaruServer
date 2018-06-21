@@ -5,6 +5,8 @@ using AmaruCommon.Constants;
 using AmaruCommon.Actions;
 using AmaruCommon.GameAssets.Players;
 using AmaruCommon.GameAssets.Cards;
+using AmaruCommon.Actions.Targets;
+using System.Collections.Generic;
 
 namespace AmaruServer.Game.Managing
 {
@@ -74,13 +76,58 @@ namespace AmaruServer.Game.Managing
 
         public override void Visit(PlayACreatureFromHandAction action)
         {
+            // Check caller player is alive and it is its main turn
+            Player caller = this.GameManager.GetPlayer(action.Caller);
+            if (!caller.IsAlive || GameManager.ActiveCharacter != action.Caller || !GameManager.IsMainTurn)
+                throw new CallerCannotPlayException();
 
+            //Check if caller player has enough CPs to play the card
+            Card cardPlaying = caller.GetCardFromId(action.PlayedCardId, Place.HAND);
+            if (cardPlaying.Cost > caller.Mana)
+            {
+                throw new NotEnoughManaAvailableException();
+            }
+
+            //check if the Card is a Creature
+            if (!(cardPlaying is CreatureCard))
+            {
+                throw new InvalidCardTypeException();
+            }
+
+            //Check that target place has enough room
+            if ((action.Place == Place.INNER && caller.Inner.Count >= AmaruConstants.INNER_MAX_SIZE) ||
+                (action.Place == Place.OUTER && caller.Outer.Count >= AmaruConstants.OUTER_MAX_SIZE))
+                throw new TargetPlaceFullException(action.Place);
 
         }
 
         public override void Visit(PlayASpellFromHandAction action)
         {
-            /// Check validity
+            // Check caller player is alive and it is its main turn
+            Player caller = this.GameManager.GetPlayer(action.Caller);
+            if (!caller.IsAlive || GameManager.ActiveCharacter != action.Caller || !GameManager.IsMainTurn)
+                throw new CallerCannotPlayException();
+
+            //Check if caller player has enough CPs to play the card
+            Card cardPlaying = caller.GetCardFromId(action.PlayedCardId, Place.HAND);
+            if (cardPlaying.Cost > caller.Mana)
+            {
+                throw new NotEnoughManaAvailableException();
+            }
+
+            //check if the Card is a Creature
+            if (!(cardPlaying is SpellCard))
+            {
+                throw new InvalidCardTypeException();
+            }
+
+            //Check if target is alive, if the spell has a target or more than one target
+            List<Target> target = action.Targets;
+            if (action.Targets != null)
+            {
+                //HACK HACK HACK
+            }
+
         }
 
         public override void Visit(EndTurnAction action)
