@@ -50,7 +50,7 @@ namespace AmaruServer.Networking
                 if (responseReceived is NewTurnResponse)
                 {
                     myTurn = true;
-                    if (((NewTurnResponse)responseReceived).ActivePlayer == AmaruCommon.GameAssets.Characters.CharacterEnum.AMARU)
+                    if (((NewTurnResponse)responseReceived).ActivePlayer ==CharacterEnum.AMARU)
                     {
                         listOfActions.Enqueue(new EndTurnAction(CharacterEnum.AMARU, -1, GameManager.IsMainTurn));
                         
@@ -58,14 +58,14 @@ namespace AmaruServer.Networking
                 }
                 if(myTurn && (responseReceived is MainTurnResponse))
                 {
-                    think();
+                    Think();
                     listOfActions.Enqueue(new EndTurnAction(CharacterEnum.AMARU, -1, GameManager.IsMainTurn));
                     myTurn = false;
                 }
             }
         }
 
-        private void think()
+        private void Think()
         {
             Dictionary<CharEnumerator, ValuesEnumerator> valuesPerPlayer;
             //per ogni giocatore in generale voglio sapere:
@@ -81,9 +81,10 @@ namespace AmaruServer.Networking
                 OtherPlayersInnerField.Add(target.Player.AsEnemy.Inner);
             }
             LimitedList<Card> myCards = GameManager._userDict[CharacterEnum.AMARU].Player.Hand;
+            int tempMana = Player.Mana;
             foreach (Card c in myCards)
             {
-                if (c.Cost <= Player.Mana)
+                if (c.Cost <= tempMana)
                 {
                     if (c is CreatureCard)
                     {
@@ -95,7 +96,7 @@ namespace AmaruServer.Networking
                         {
                             listOfActions.Enqueue(new PlayACreatureFromHandAction(CharacterEnum.AMARU, c.Id, Place.INNER, Player.Outer.Count));
                         }
-                        
+                        tempMana -= c.Cost;
                     }
                 
                 }
