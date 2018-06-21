@@ -17,16 +17,16 @@ namespace AmaruServer.Game.Managing
     /// Visitor for execution of actions
     /// Also takes care of sending responses
     /// </summary>
-    public class ExecutionVisitor : IActionVisitor
+    public class ExecutionVisitor : ActionVisitor
     {
         private GameManager GameManager { get; set; }
 
-        public ExecutionVisitor(GameManager gameManager)
+        public ExecutionVisitor(GameManager gameManager) : base(AmaruConstants.GAME_PREFIX + gameManager.Id)
         {
             this.GameManager = gameManager;
         }
 
-        public void Visit(AttackPlayerAction action)
+        public override void Visit(AttackPlayerAction action)
         {
             Player target = GameManager.GetPlayer(action.Target.Character);
             Player caller = GameManager.GetPlayer(action.Caller);
@@ -36,7 +36,7 @@ namespace AmaruServer.Game.Managing
             target.Health -= playedCard.Attack.Visit(attackVisitor);
         }
 
-        public void Visit(MoveCreatureAction action)
+        public override void Visit(MoveCreatureAction action)
         {
             Player p = GameManager.GetPlayer(action.Caller);
             CreatureCard creature = p.MoveACreatureFromPlace(action.PlayedCardId, action.Place);
@@ -44,7 +44,7 @@ namespace AmaruServer.Game.Managing
                 GameManager._userDict[target].Write(new ResponseMessage(new MoveCreatureResponse(action.Caller,creature,action.Place,action.TablePos)));
         }
 
-        public void Visit(PlayACreatureFromHandAction action)
+        public override void Visit(PlayACreatureFromHandAction action)
         {
             OnCardPlayedVisitor visitor = new OnCardPlayedVisitor(GameManager);
             Player p = GameManager.GetPlayer(action.Caller);
@@ -54,7 +54,7 @@ namespace AmaruServer.Game.Managing
                 GameManager._userDict[target].Write(new ResponseMessage(new PlayACreatureResponse(action.Caller, creature, action.Place, action.TablePos)));
         }
 
-        public void Visit(PlayASpellFromHandAction action)
+        public override void Visit(PlayASpellFromHandAction action)
         {
             OnCardPlayedVisitor visitor = new OnCardPlayedVisitor(GameManager);
             Player p = GameManager.GetPlayer(action.Caller);
@@ -67,7 +67,7 @@ namespace AmaruServer.Game.Managing
                 GameManager._userDict[kvp.Key].Write(new ResponseMessage(kvp.Value));
         }
 
-        public void Visit(EndTurnAction action)
+        public override void Visit(EndTurnAction action)
         {
             if (action.IsMainTurn) {
                 GameManager.NextTurn();
@@ -75,6 +75,11 @@ namespace AmaruServer.Game.Managing
             }
             else
                 GameManager.StartMainTurn();
+        }
+
+        public override void Visit(AttackCreatureAction action)
+        {
+            throw new NotImplementedException();
         }
     }
 }

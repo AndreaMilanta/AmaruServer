@@ -12,17 +12,17 @@ namespace AmaruServer.Game.Managing
     /// Visitor to check validity of action
     /// </summary>
     /// <exception cref="InvalidActionException">thrown when action is not valid</exception>
-    public class ValidationVisitor : IActionVisitor
+    public class ValidationVisitor : ActionVisitor
     {
         private GameManager GameManager { get; set; }
 
-        public ValidationVisitor(GameManager gameManager)
+        public ValidationVisitor(GameManager gameManager) : base(AmaruConstants.GAME_PREFIX + gameManager.Id)
         {
             this.GameManager = gameManager;
         }
 
         // Attack from card to player
-        public void Visit(AttackPlayerAction action)
+        public override void Visit(AttackPlayerAction action)
         {
             // Check target player is alive
             Player target = this.GameManager.GetPlayer(action.Target.Character);
@@ -47,7 +47,7 @@ namespace AmaruServer.Game.Managing
                 throw new PlayerCannotBeTargetedException();
         }
 
-        public void Visit(MoveCreatureAction action)
+        public override void Visit(MoveCreatureAction action)
         {
             // Check caller player is alive and it is not its main turn
             Player caller = this.GameManager.GetPlayer(action.Caller);
@@ -72,18 +72,23 @@ namespace AmaruServer.Game.Managing
 
         }
 
-        public void Visit(PlayACreatureFromHandAction action)
+        public override void Visit(PlayACreatureFromHandAction action)
         {
 
 
         }
 
-        public void Visit(PlayASpellFromHandAction action)
+        public override void Visit(PlayASpellFromHandAction action)
         {
             /// Check validity
         }
 
-        public void Visit(EndTurnAction action)
+        public override void Visit(EndTurnAction action)
+        {
+            
+        }
+
+        public override void Visit(AttackCreatureAction action)
         {
             
         }
