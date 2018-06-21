@@ -7,6 +7,7 @@ using AmaruCommon.GameAssets.Cards.Properties.SpellAbilities;
 using AmaruCommon.GameAssets.Cards.Properties.CreatureEffects;
 using AmaruCommon.GameAssets.Cards.Properties;
 using AmaruCommon.GameAssets.Players;
+using AmaruCommon.Constants;
 
 namespace AmaruServer.Game.Managing
 {
@@ -24,8 +25,9 @@ namespace AmaruServer.Game.Managing
         /// <param name="gameManager"></param>
         /// <param name="caller"></param>
         /// <param name="target"></param>
-        public AttacksVisitor(GameManager gameManager, Player caller, Target target)
+        public AttacksVisitor(GameManager gameManager, Player caller, Target target) : base(AmaruConstants.GAME_PREFIX + gameManager.Id)
         {
+            
             this.Caller = caller;
             if (target is CardTarget)
                 CardTarget = (CardTarget)target;

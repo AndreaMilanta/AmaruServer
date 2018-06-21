@@ -67,7 +67,7 @@ namespace AmaruServer.Game.Managing
 
                 // Init Players
                 foreach (CharacterEnum c in _userDict.Keys)                       // Default draw
-                    _userDict[c].SetPlayer(new Player(c), this);
+                    _userDict[c].SetPlayer(new Player(c, AmaruConstants.GAME_PREFIX + Id), this);
 
                 // Draw cards 
                 foreach (CharacterEnum c in _userDict.Keys)                       // Default draw
@@ -133,7 +133,7 @@ namespace AmaruServer.Game.Managing
             _userDict[ActiveCharacter].Player.Mana += CurrentRound * AmaruConstants.MANA_TURN_FACTOR;
 
             // Add EP and execute onturnstart for each card on table
-            OnTurnStartVisitor OTSVisitor = new OnTurnStartVisitor(_userDict[ActiveCharacter].Player);
+            OnTurnStartVisitor OTSVisitor = new OnTurnStartVisitor(_userDict[ActiveCharacter].Player, AmaruConstants.GAME_PREFIX + Id);
             List<Card> Modified = new List<Card>();
             foreach (CreatureCard card in _userDict[ActiveCharacter].Player.Inner)
             {

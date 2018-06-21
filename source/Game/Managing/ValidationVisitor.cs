@@ -29,9 +29,9 @@ namespace AmaruServer.Game.Managing
             if (!target.IsAlive)
                 throw new TargetPlayerIsDeadException();
 
-            // Check caller player is alive and it is its turn
+            // Check caller player is alive and it is its main turn
             Player caller = this.GameManager.GetPlayer(action.Caller);
-            if (!caller.IsAlive || GameManager.ActiveCharacter != action.Caller)
+            if (!caller.IsAlive || GameManager.ActiveCharacter != action.Caller || !GameManager.IsMainTurn)
                 throw new CallerCannotPlayException();
 
             // Check playedCard can attack and has enough EP
@@ -49,12 +49,33 @@ namespace AmaruServer.Game.Managing
 
         public void Visit(MoveCreatureAction action)
         {
-            /// Check validity
+            // Check caller player is alive and it is not its main turn
+            Player caller = this.GameManager.GetPlayer(action.Caller);
+            if (!caller.IsAlive || GameManager.ActiveCharacter != action.Caller || GameManager.IsMainTurn)
+                throw new CallerCannotPlayException();
+
+            // Check card exists and is in proper position
+            Place from;
+            if (action.Place == Place.INNER)
+                from = Place.OUTER;
+            else if (action.Place == Place.OUTER)
+                from = Place.INNER;
+            else
+                throw new InvalidCardLocationException();
+            if(caller.GetCardFromId(action.PlayedCardId, from) == null)
+                throw new CardNotAvailableException();
+
+            // Check that target place has enough room
+            if ((action.Place == Place.INNER && caller.Inner.Count >= AmaruConstants.INNER_MAX_SIZE) ||
+                (action.Place == Place.OUTER && caller.Outer.Count >= AmaruConstants.OUTER_MAX_SIZE))
+                throw new TargetPlaceFullException(action.Place);
+
         }
 
         public void Visit(PlayACreatureFromHandAction action)
         {
-            /// Check validity
+
+
         }
 
         public void Visit(PlayASpellFromHandAction action)

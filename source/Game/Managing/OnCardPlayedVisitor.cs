@@ -1,9 +1,12 @@
 ﻿using AmaruCommon.Actions.Targets;
+using AmaruCommon.Constants;
 using AmaruCommon.GameAssets.Cards.Properties;
 using AmaruCommon.GameAssets.Cards.Properties.Abilities;
 using AmaruCommon.GameAssets.Cards.Properties.Attacks;
 using AmaruCommon.GameAssets.Cards.Properties.CreatureEffects;
 using AmaruCommon.GameAssets.Cards.Properties.SpellAbilities;
+using AmaruCommon.GameAssets.Characters;
+using AmaruCommon.Responses;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,8 +19,10 @@ namespace AmaruServer.Game.Managing
     {
         private GameManager GameManager { get; set; }
         public List<Target> Targets { get; set; }
+        private Dictionary<CharacterEnum,Response> _successiveResponse = new Dictionary<CharacterEnum, Response>();
+        public Dictionary<CharacterEnum,Response> SuccessiveResponse { get { Dictionary<CharacterEnum,Response> sr = _successiveResponse; _successiveResponse.Clear(); return sr; } }
 
-        public OnCardPlayedVisitor(GameManager gameManager)
+        public OnCardPlayedVisitor(GameManager gameManager) : base (AmaruConstants.GAME_PREFIX + gameManager.Id)
         {
             this.GameManager = gameManager;
         }
@@ -127,8 +132,11 @@ namespace AmaruServer.Game.Managing
             return 0;
         }
 
-        public override int Visit(GainCPAbility gainCPAbility)
+        public override int Visit(GainCPAbility ability)
         {
+            Player.Mana += ability.cp;
+            foreach (CharacterEnum c in CharacterManager.Instance.Characters)
+                _successiveResponse.Add(c, new PlayerModifiedResponse(Player.Character, Player.Mana, Player.Health));
             return 0;
         }
 
@@ -157,8 +165,11 @@ namespace AmaruServer.Game.Managing
             return 0;
         }
 
-        public override int Visit(GiveHPSpellAbility giveHPSpellAbility)
+        public override int Visit(GiveHPSpellAbility ability)
         {
+            Player.Mana += ability.numHP;
+            foreach (CharacterEnum c in CharacterManager.Instance.Characters)
+                _successiveResponse.Add(c, new PlayerModifiedResponse(Player.Character, Player.Mana, Player.Health));
             return 0;
         }
 

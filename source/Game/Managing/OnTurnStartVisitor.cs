@@ -15,7 +15,7 @@ namespace AmaruServer.Game.Managing
     {
         public List<Card> ModifiedCard { get; private set; }
 
-        public OnTurnStartVisitor(Player player, Card card = null)
+        public OnTurnStartVisitor(Player player, string logger, Card card = null) : base (logger)
         {
             this.Player = player;
             this.Card = card;

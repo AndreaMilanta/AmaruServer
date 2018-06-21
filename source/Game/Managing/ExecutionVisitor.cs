@@ -9,6 +9,7 @@ using AmaruCommon.GameAssets.Characters;
 using System.Linq;
 using AmaruCommon.Communication.Messages;
 using AmaruCommon.Responses;
+using System.Collections.Generic;
 
 namespace AmaruServer.Game.Managing
 {
@@ -62,6 +63,8 @@ namespace AmaruServer.Game.Managing
             spell.Visit(visitor, p);
             foreach (CharacterEnum target in GameManager._userDict.Keys.ToList())
                 GameManager._userDict[target].Write(new ResponseMessage(new PlayASpellResponse(action.Caller,spell,action.Targets)));
+            foreach (KeyValuePair<CharacterEnum,Response> kvp in visitor.SuccessiveResponse)
+                GameManager._userDict[kvp.Key].Write(new ResponseMessage(kvp.Value));
         }
 
         public void Visit(EndTurnAction action)
