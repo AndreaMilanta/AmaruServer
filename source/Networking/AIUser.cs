@@ -27,6 +27,7 @@ namespace AmaruServer.Networking
         LimitedList<LimitedList<CreatureCard>> OtherPlayersOuterField;
         LimitedList<LimitedList<CreatureCard>> OtherPlayersInnerField;
         private Dictionary<CharacterEnum, User> myEnemiesDict;
+        ValidationVisitor myValidation;
 
         public AIUser(string logger) : base(logger)
         {
@@ -41,6 +42,7 @@ namespace AmaruServer.Networking
             this.Player = player;
             this.GameManager = gameManager;
             this.messageHandler = this.GameManager.HandlePlayerMessage;
+            this.myValidation = new ValidationVisitor(gameManager);
         }
 
         public override void Write(Message mex)
@@ -94,11 +96,15 @@ namespace AmaruServer.Networking
                     {
                         if (Player.Outer.Count<= Player.Outer.MaxSize)
                         {
-                            listOfActions.Enqueue(new PlayACreatureFromHandAction(CharacterEnum.AMARU, c.Id, Place.OUTER, Player.Outer.Count));
+                            PlayACreatureFromHandAction myIntention = new PlayACreatureFromHandAction(CharacterEnum.AMARU, c.Id, Place.OUTER, Player.Outer.Count);
+                            myIntention.Visit(myValidation);
+                            listOfActions.Enqueue(myIntention);
                         }
                         else if (Player.Inner.Count <= Player.Inner.MaxSize)
                         {
-                            listOfActions.Enqueue(new PlayACreatureFromHandAction(CharacterEnum.AMARU, c.Id, Place.INNER, Player.Inner.Count));
+                            PlayACreatureFromHandAction myIntention = new PlayACreatureFromHandAction(CharacterEnum.AMARU, c.Id, Place.INNER, Player.Inner.Count);
+                            myIntention.Visit(myValidation);
+                            listOfActions.Enqueue(myIntention);
                         }
                         tempMana -= c.Cost;
                     }
@@ -123,12 +129,16 @@ namespace AmaruServer.Networking
                             CharacterEnum myTarget = (CharacterEnum)rnd.Next(4);
                             if (action >= 0.10)
                             {
-                                listOfActions.Enqueue(new AttackPlayerAction(CharacterEnum.AMARU, c.Id, Property.ATTACK, new PlayerTarget(myTarget)));
+                                AttackPlayerAction myIntention = new AttackPlayerAction(CharacterEnum.AMARU, c.Id, Property.ATTACK, new PlayerTarget(myTarget));
+                                myIntention.Visit(myValidation);
+                                listOfActions.Enqueue(myIntention);
                                 temp -= c.Attack.Cost;
                             }
                             else
                             {
-                                listOfActions.Enqueue(new AttackCreatureAction(CharacterEnum.AMARU, c.Id, Property.ATTACK, new CardTarget(myTarget, myEnemiesDict[myTarget].Player.Outer[rnd.Next(6)])));
+                                AttackCreatureAction myIntention = new AttackCreatureAction(CharacterEnum.AMARU, c.Id, Property.ATTACK, new CardTarget(myTarget, myEnemiesDict[myTarget].Player.Outer[rnd.Next(6)]));
+                                myIntention.Visit(myValidation);
+                                listOfActions.Enqueue(myIntention);
                                 temp -= c.Attack.Cost;
                             }
                         }
