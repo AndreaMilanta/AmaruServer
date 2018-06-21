@@ -20,7 +20,7 @@ namespace AmaruServer.Networking
 {
     public class AIUser : User
     {
-        private bool myTurn;
+        private bool myTurn= false;
         MessageHandler messageHandler = null;
         Queue<PlayerAction> listOfActions;
         LimitedList<LimitedList<CreatureCard>> OtherPlayersOuterField;
@@ -49,15 +49,17 @@ namespace AmaruServer.Networking
                 Response responseReceived = ((ResponseMessage)mex).Response;
                 if (responseReceived is NewTurnResponse)
                 {
-                    myTurn = true;
+                    
                     if (((NewTurnResponse)responseReceived).ActivePlayer ==CharacterEnum.AMARU)
                     {
+                        Log("AI: MyTurn");
+                        myTurn = true;
                         listOfActions.Enqueue(new EndTurnAction(CharacterEnum.AMARU, -1, GameManager.IsMainTurn));
                         
                     }
-                }
-                if(myTurn && (responseReceived is MainTurnResponse))
+                } else if(myTurn && (responseReceived is MainTurnResponse))
                 {
+                    Log("OI");
                     Think();
                     listOfActions.Enqueue(new EndTurnAction(CharacterEnum.AMARU, -1, GameManager.IsMainTurn));
                     myTurn = false;
@@ -82,8 +84,10 @@ namespace AmaruServer.Networking
             }
             LimitedList<Card> myCards = GameManager._userDict[CharacterEnum.AMARU].Player.Hand;
             int tempMana = Player.Mana;
+            Log(tempMana.ToString());
             foreach (Card c in myCards)
             {
+                Log(c.Name);
                 if (c.Cost <= tempMana)
                 {
                     if (c is CreatureCard)
@@ -94,7 +98,7 @@ namespace AmaruServer.Networking
                         }
                         else if (Player.Inner.Count <= Player.Inner.MaxSize)
                         {
-                            listOfActions.Enqueue(new PlayACreatureFromHandAction(CharacterEnum.AMARU, c.Id, Place.INNER, Player.Outer.Count));
+                            listOfActions.Enqueue(new PlayACreatureFromHandAction(CharacterEnum.AMARU, c.Id, Place.INNER, Player.Inner.Count));
                         }
                         tempMana -= c.Cost;
                     }
