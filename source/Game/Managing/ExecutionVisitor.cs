@@ -76,5 +76,10 @@ namespace AmaruServer.Game.Managing
             else
                 GameManager.StartMainTurn();
         }
+
+        public void Visit(AttackCreatureAction attackCreatureAction)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
