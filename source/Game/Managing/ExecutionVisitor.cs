@@ -38,10 +38,11 @@ namespace AmaruServer.Game.Managing
 
         public override void Visit(MoveCreatureAction action)
         {
+            Log("card moved to " + action.Place.ToString());
             Player p = GameManager.GetPlayer(action.Caller);
             CreatureCard creature = p.MoveACreatureFromPlace(action.PlayedCardId, action.Place);
             foreach (CharacterEnum target in GameManager._userDict.Keys.ToList())
-                GameManager._userDict[target].Write(new ResponseMessage(new MoveCreatureResponse(action.Caller,creature,action.Place,action.TablePos)));
+                GameManager._userDict[target].Write(new ResponseMessage(new MoveCreatureResponse(action.Caller, creature, action.Place, action.TablePos)));
         }
 
         public override void Visit(PlayACreatureFromHandAction action)
