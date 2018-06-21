@@ -7,6 +7,7 @@ using AmaruCommon.GameAssets.Players;
 using AmaruCommon.GameAssets.Cards;
 using AmaruCommon.Actions.Targets;
 using System.Collections.Generic;
+using AmaruCommon.GameAssets.Cards.Properties.SpellAbilities;
 
 namespace AmaruServer.Game.Managing
 {
@@ -71,7 +72,6 @@ namespace AmaruServer.Game.Managing
             if ((action.Place == Place.INNER && caller.Inner.Count >= AmaruConstants.INNER_MAX_SIZE) ||
                 (action.Place == Place.OUTER && caller.Outer.Count >= AmaruConstants.OUTER_MAX_SIZE))
                 throw new TargetPlaceFullException(action.Place);
-
         }
 
         public override void Visit(PlayACreatureFromHandAction action)
@@ -98,7 +98,6 @@ namespace AmaruServer.Game.Managing
             if ((action.Place == Place.INNER && caller.Inner.Count >= AmaruConstants.INNER_MAX_SIZE) ||
                 (action.Place == Place.OUTER && caller.Outer.Count >= AmaruConstants.OUTER_MAX_SIZE))
                 throw new TargetPlaceFullException(action.Place);
-
         }
 
         public override void Visit(PlayASpellFromHandAction action)
@@ -123,11 +122,24 @@ namespace AmaruServer.Game.Managing
 
             //Check if target is alive, if the spell has a target or more than one target
             List<Target> target = action.Targets;
-            if (action.Targets != null)
-            {
-                //HACK HACK HACK
+            SpellAbility effect = ((SpellCard)cardPlaying).Effect;
+            int numTarget = effect.NumTarget;
+            KindOfTarget myType = effect.kindOfTarget; 
+            if ((target == null && numTarget !=0) ||target.Count > numTarget) {
+                //Check targets are not immune, and that the right number of target has been chosen. BUT it depends on the card!ù
+                throw new InvalidTargetException();
             }
-
+            foreach (Target t in target)
+            {
+                if (t is PlayerTarget && myType != KindOfTarget.PLAYER && myType != KindOfTarget.MIXED)
+                {
+                    throw new InvalidTargetException();
+                }
+                if( t is CardTarget && myType != KindOfTarget.MIXED && myType != KindOfTarget.CREATURE)
+                {
+                    throw new InvalidTargetException();
+                }
+            }
         }
 
         public override void Visit(EndTurnAction action)
@@ -137,7 +149,21 @@ namespace AmaruServer.Game.Managing
 
         public override void Visit(AttackCreatureAction action)
         {
+            // Check caller player is alive and it is its main turn
+            Player caller = this.GameManager.GetPlayer(action.Caller);
+            if (!caller.IsAlive || GameManager.ActiveCharacter != action.Caller || !GameManager.IsMainTurn)
+                throw new CallerCannotPlayException();
+
+            // Check playedCard can attack and has enough EP
+            if (caller.GetCardFromId(action.PlayedCardId, Place.OUTER) == null &&
+               (caller.GetCardFromId(action.PlayedCardId, Place.INNER) == null && caller.InnerAttackAllowed))
+                throw new InvalidCardLocationException();
+            CreatureCard card = (CreatureCard)(caller.GetCardFromId(action.PlayedCardId, Place.OUTER) ?? caller.GetCardFromId(action.PlayedCardId, Place.INNER));
+            if (card.Energy < card.Attack.Cost)
+                throw new NotEnoughEPAvailableException();
             
+            //check ShieldMaiden, immunità non so se c'è, creatura è presente?
+           
         }
     }
 }
