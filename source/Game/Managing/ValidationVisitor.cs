@@ -8,6 +8,7 @@ using AmaruCommon.GameAssets.Cards;
 using AmaruCommon.Actions.Targets;
 using System.Collections.Generic;
 using AmaruCommon.GameAssets.Cards.Properties.SpellAbilities;
+using AmaruCommon.GameAssets.Cards.Properties.CreatureEffects;
 
 namespace AmaruServer.Game.Managing
 {
@@ -124,20 +125,44 @@ namespace AmaruServer.Game.Managing
             List<Target> target = action.Targets;
             SpellAbility effect = ((SpellCard)cardPlaying).Effect;
             int numTarget = effect.NumTarget;
-            KindOfTarget myType = effect.kindOfTarget; 
+            KindOfTarget acceptableTypeOfTarget = effect.kindOfTarget; 
             if ((target == null && numTarget !=0) ||target.Count > numTarget) {
                 //Check targets are not immune, and that the right number of target has been chosen. BUT it depends on the card!ù
                 throw new InvalidTargetException();
             }
             foreach (Target t in target)
             {
-                if (t is PlayerTarget && myType != KindOfTarget.PLAYER && myType != KindOfTarget.MIXED)
+                if (t is PlayerTarget && acceptableTypeOfTarget != KindOfTarget.PLAYER && acceptableTypeOfTarget != KindOfTarget.MIXED)
                 {
                     throw new InvalidTargetException();
                 }
-                if( t is CardTarget && myType != KindOfTarget.MIXED && myType != KindOfTarget.CREATURE)
+                if( t is CardTarget && acceptableTypeOfTarget != KindOfTarget.MIXED && acceptableTypeOfTarget != KindOfTarget.CREATURE)
                 {
                     throw new InvalidTargetException();
+                }
+                if (t is PlayerTarget  && GameManager._userDict[((PlayerTarget)t).Character].Player.IsImmune)
+                {
+                    throw new InvalidTargetException();
+                }
+                if (t is CardTarget) 
+                {
+                    CardTarget cardTarget = (CardTarget)t;
+                    Card cardOuter= GameManager._userDict[((CardTarget)t).Character].Player.GetCardFromId(cardTarget.CardId, Place.OUTER);
+                    Card cardInner = GameManager._userDict[((CardTarget)t).Character].Player.GetCardFromId(cardTarget.CardId, Place.INNER);
+                    if (cardOuter != null && cardOuter is CreatureCard)
+                    {
+                        if (((CreatureCard) cardOuter).creatureEffect is ImmunityCreatureEffect)
+                        {
+                            throw new InvalidTargetException();
+                        }
+                    }
+                    if (cardInner != null && cardInner is CreatureCard)
+                    {
+                        if (((CreatureCard)cardInner).creatureEffect is ImmunityCreatureEffect)
+                        {
+                            throw new InvalidTargetException();
+                        }
+                    }
                 }
             }
         }
