@@ -92,10 +92,5 @@ namespace AmaruServer.Game.Managing
         {
             
         }
-
-        public void Visit(AttackCreatureAction attackCreatureAction)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

@@ -128,7 +128,7 @@ namespace AmaruServer.Game.Managing
             throw new NotImplementedException();
         }
 
-        public override int Visit(DamageWithPDAbility damageWithPDAbility)
+        public override int Visit(DamageWithPDAbility bility)
         {
             throw new NotImplementedException();
         }
@@ -138,117 +138,117 @@ namespace AmaruServer.Game.Managing
             throw new NotImplementedException();
         }
 
-        public override int Visit(GainCPAbility gainCPAbility)
+        public override int Visit(GainCPAbility ability)
         {
             throw new NotImplementedException();
         }
 
-        public override int Visit(DuplicatorSpellAbility duplicatorSpellAbility)
+        public override int Visit(DuplicatorSpellAbility ability)
         {
             throw new NotImplementedException();
         }
 
-        public override int Visit(AddEPAndDrawSpellAbility addEPAndDrawSpellAbility)
+        public override int Visit(AddEPAndDrawSpellAbility ability)
         {
             throw new NotImplementedException();
         }
 
-        public override int Visit(PDDamageToCreatureSpellAbility pDDamageToCreatureSpellAbility)
+        public override int Visit(PDDamageToCreatureSpellAbility ability)
         {
             throw new NotImplementedException();
         }
 
-        public override int Visit(ResurrectSpecificCreatureSpellAbility resurrectSpecificCreatureSpellAbility)
+        public override int Visit(ResurrectSpecificCreatureSpellAbility ability)
         {
             throw new NotImplementedException();
         }
 
-        public override int Visit(ResurrectOrReturnToHandSpellAbility resurrectOrReturnToHandSpellAbility)
+        public override int Visit(ResurrectOrReturnToHandSpellAbility ability)
         {
             throw new NotImplementedException();
         }
 
-        public override int Visit(GiveHPSpellAbility giveHPSpellAbility)
+        public override int Visit(GiveHPSpellAbility ability)
         {
             throw new NotImplementedException();
         }
 
-        public override int Visit(GainCpSpellAbility gainCpSpellAbility)
+        public override int Visit(GainCpSpellAbility ability)
         {
             throw new NotImplementedException();
         }
 
-        public override int Visit(AttackFromInnerSpellAbility attackFromInnerSpellAbility)
+        public override int Visit(AttackFromInnerSpellAbility ability)
         {
             throw new NotImplementedException();
         }
 
-        public override int Visit(DealDamageDependingOnPDNumberSpellAbility dealDamageDependingOnPDNumberSpellAbility)
+        public override int Visit(DealDamageDependingOnPDNumberSpellAbility ability)
         {
             throw new NotImplementedException();
         }
 
-        public override int Visit(DealDamageToEverythingSpellAbility dealDamageToEverythingSpellAbility)
+        public override int Visit(DealDamageToEverythingSpellAbility ability)
         {
             throw new NotImplementedException();
         }
 
-        public override int Visit(DealTotDamageToTotTargetsSpellAbility dealTotDamageToTotTargetsSpellAbility)
+        public override int Visit(DealTotDamageToTotTargetsSpellAbility ability)
         {
             throw new NotImplementedException();
         }
 
-        public override int Visit(DamagePDToAllCreaturesOfTargetPlayerSpellAbility damagePDToAllCreaturesOfTargetPlayerSpellAbility)
+        public override int Visit(DamagePDToAllCreaturesOfTargetPlayerSpellAbility ability)
         {
             throw new NotImplementedException();
         }
 
-        public override int Visit(DealDamageDependingOnMAXHPSpeelAbility dealDamageDependingOnMAXHPSpeelAbility)
+        public override int Visit(DealDamageDependingOnMAXHPSpeelAbility ability)
         {
             throw new NotImplementedException();
         }
 
-        public override int Visit(AttackEqualToHPSpellAbility attackEqualToHPSpellAbility)
+        public override int Visit(AttackEqualToHPSpellAbility ability)
         {
             throw new NotImplementedException();
         }
 
-        public override int Visit(HalveDamageIfPDEffect halveDamageIfPDEffect)
+        public override int Visit(HalveDamageIfPDEffect effect)
         {
             throw new NotImplementedException();
         }
 
-        public override int Visit(CostLessForPDEffect costLessForPDEffect)
+        public override int Visit(CostLessForPDEffect effect)
         {
             throw new NotImplementedException();
         }
 
-        public override int Visit(GainHPForDamageEffect gainHPForDamageEffect)
+        public override int Visit(GainHPForDamageEffect effect)
         {
             throw new NotImplementedException();
         }
 
-        public override int Visit(IfKillGainHPEffect ifKillGainHPEffect)
+        public override int Visit(IfKillGainHPEffect effect)
         {
             throw new NotImplementedException();
         }
 
-        public override int Visit(GainAdditionalEPEffect gainAdditionalEPEffect)
+        public override int Visit(GainAdditionalEPEffect effect)
         {
             throw new NotImplementedException();
         }
 
-        public override int Visit(GainCPForCardPlayedEffect gainCPForCardPlayed)
+        public override int Visit(GainCPForCardPlayedEffect effect)
         {
             throw new NotImplementedException();
         }
 
-        public override int Visit(DrawCardAndAttack drawCardAndAttack)
+        public override int Visit(DrawCardAndAttack attack)
         {
             throw new NotImplementedException();
         }
 
-        public override int Visit(AttackBuffInSpecificZoneEffect attackBuffInSpecificZoneEffect)
+        public override int Visit(AttackBuffInSpecificZoneEffect effect)
         {
             throw new NotImplementedException();
         }

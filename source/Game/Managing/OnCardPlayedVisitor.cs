@@ -134,9 +134,6 @@ namespace AmaruServer.Game.Managing
 
         public override int Visit(GainCPAbility ability)
         {
-            Player.Mana += ability.cp;
-            foreach (CharacterEnum c in CharacterManager.Instance.Characters)
-                _successiveResponse.Add(c, new PlayerModifiedResponse(Player.Character, Player.Mana, Player.Health));
             return 0;
         }
 
@@ -173,8 +170,11 @@ namespace AmaruServer.Game.Managing
             return 0;
         }
 
-        public override int Visit(GainCpSpellAbility gainCpSpellAbility)
+        public override int Visit(GainCpSpellAbility ability)
         {
+            Player.Mana += ability.numCP;
+            foreach (CharacterEnum c in CharacterManager.Instance.Characters)
+                _successiveResponse.Add(c, new PlayerModifiedResponse(Player.Character, Player.Mana, Player.Health));
             return 0;
         }
 
