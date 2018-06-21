@@ -2,6 +2,7 @@
 using AmaruCommon.Communication.Messages;
 using AmaruCommon.Constants;
 using AmaruCommon.GameAssets.Cards;
+using AmaruCommon.GameAssets.Characters;
 using AmaruCommon.GameAssets.Players;
 using AmaruCommon.Responses;
 using AmaruServer.Game.Managing;
@@ -23,13 +24,14 @@ namespace AmaruServer.Networking
         Queue<Message> listOfActions;
         LimitedList<LimitedList<CreatureCard>> OtherPlayersOuterField;
         LimitedList<LimitedList<CreatureCard>> OtherPlayersInnerField;
+        private Dictionary<CharacterEnum, User> myEnemiesDict;
+
         public AIUser(string logger) : base(logger)
         {
             listOfActions = new Queue<Message>();
             OtherPlayersInnerField = new LimitedList<LimitedList<CreatureCard>>(4);
             OtherPlayersOuterField = new LimitedList<LimitedList<CreatureCard>>(4);
-
-
+            
         }
 
         public override void SetPlayer(Player player, GameManager gameManager)
@@ -48,30 +50,19 @@ namespace AmaruServer.Networking
                 {
                     if (((NewTurnResponse)responseReceived).ActivePlayer == AmaruCommon.GameAssets.Characters.CharacterEnum.AMARU)
                     {
-                        if (!GameManager.IsMainTurn)
-                        {
-                            listOfActions.Enqueue(new ActionMessage(new EndTurnAction(AmaruCommon.GameAssets.Characters.CharacterEnum.AMARU, -1, GameManager.IsMainTurn)));
-                        }
-                        else if (GameManager.IsMainTurn)
-                        {
-
-                            listOfActions.Enqueue(new ActionMessage(new EndTurnAction(AmaruCommon.GameAssets.Characters.CharacterEnum.AMARU, -1, GameManager.IsMainTurn)));
-                            //think()
-                        }
+                        listOfActions.Enqueue(new ActionMessage(new EndTurnAction(AmaruCommon.GameAssets.Characters.CharacterEnum.AMARU, -1, GameManager.IsMainTurn)));
+                        
                     }
+                }
+                if(responseReceived is MainTurnResponse)
+                {  
+                       //think()
+                    listOfActions.Enqueue(new ActionMessage(new EndTurnAction(AmaruCommon.GameAssets.Characters.CharacterEnum.AMARU, -1, GameManager.IsMainTurn)));
+                    
                 }
             }
         }
 
-        private void think()
-        {
-            foreach(User target in GameManager._userDict.Values)
-            {
-                //inutile prendere l'asEnemy immagino
-                OtherPlayersOuterField.Add(target.Player.AsEnemy.Outer);
-                OtherPlayersInnerField.Add(target.Player.AsEnemy.Inner);
-            }
-        }
 
         public override Message ReadSync(int timeout_s)
         {
@@ -87,6 +78,5 @@ namespace AmaruServer.Networking
         {
 
         }
-
     }
 }
