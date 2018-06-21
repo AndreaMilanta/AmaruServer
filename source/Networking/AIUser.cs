@@ -20,6 +20,7 @@ namespace AmaruServer.Networking
 {
     public class AIUser : User
     {
+        private bool myTurn;
         MessageHandler messageHandler = null;
         Queue<PlayerAction> listOfActions;
         LimitedList<LimitedList<CreatureCard>> OtherPlayersOuterField;
@@ -48,17 +49,18 @@ namespace AmaruServer.Networking
                 Response responseReceived = ((ResponseMessage)mex).Response;
                 if (responseReceived is NewTurnResponse)
                 {
+                    myTurn = true;
                     if (((NewTurnResponse)responseReceived).ActivePlayer == AmaruCommon.GameAssets.Characters.CharacterEnum.AMARU)
                     {
                         listOfActions.Enqueue(new EndTurnAction(CharacterEnum.AMARU, -1, GameManager.IsMainTurn));
                         
                     }
                 }
-                if(responseReceived is MainTurnResponse)
+                if(myTurn && (responseReceived is MainTurnResponse))
                 {
                     think();
                     listOfActions.Enqueue(new EndTurnAction(CharacterEnum.AMARU, -1, GameManager.IsMainTurn));
-                    
+                    myTurn = false;
                 }
             }
         }
