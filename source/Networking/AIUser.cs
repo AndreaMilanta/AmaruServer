@@ -1,4 +1,5 @@
 ﻿using AmaruCommon.Actions;
+using AmaruCommon.Actions.Targets;
 using AmaruCommon.Communication.Messages;
 using AmaruCommon.Constants;
 using AmaruCommon.GameAssets.Cards;
@@ -52,14 +53,12 @@ namespace AmaruServer.Networking
                     
                     if (((NewTurnResponse)responseReceived).ActivePlayer ==CharacterEnum.AMARU)
                     {
-                        Log("AI: MyTurn");
                         myTurn = true;
                         listOfActions.Enqueue(new EndTurnAction(CharacterEnum.AMARU, -1, GameManager.IsMainTurn));
                         
                     }
                 } else if(myTurn && (responseReceived is MainTurnResponse))
                 {
-                    Log("OI");
                     Think();
                     listOfActions.Enqueue(new EndTurnAction(CharacterEnum.AMARU, -1, GameManager.IsMainTurn));
                     myTurn = false;
@@ -82,7 +81,8 @@ namespace AmaruServer.Networking
                 OtherPlayersOuterField.Add(target.Player.AsEnemy.Outer);
                 OtherPlayersInnerField.Add(target.Player.AsEnemy.Inner);
             }
-            LimitedList<Card> myCards = GameManager._userDict[CharacterEnum.AMARU].Player.Hand;
+            LimitedList<Card> myCards =Player.Hand;
+            LimitedList<CreatureCard> myWarZone = Player.Outer;
             int tempMana = Player.Mana;
             Log(tempMana.ToString());
             foreach (Card c in myCards)
@@ -102,13 +102,51 @@ namespace AmaruServer.Networking
                         }
                         tempMana -= c.Cost;
                     }
-                
+                    else
+                    {
+                        //lista null, bisogno di discutere
+                        listOfActions.Enqueue(new PlayASpellFromHandAction(CharacterEnum.AMARU, c.Id, null));
+                    }
                 }
             }
-            //calcola vita sui campi di ciascun giocatoer
-            //calcola chi ha più vita e chi meno
-            //somma due punti per ciascuna carta viva
+            foreach (CreatureCard c in myWarZone){
+                int temp = c.Energy;
+                bool stop= false;
+                Random rnd = new Random();
+                while (temp == 0 || stop)
+                {
+                    try
+                    {
+                        double action = rnd.NextDouble();
+                        if (action <= 0.50)
+                        {
+                            CharacterEnum myTarget = (CharacterEnum)rnd.Next(4);
+                            if (action >= 0.10)
+                            {
+                                listOfActions.Enqueue(new AttackPlayerAction(CharacterEnum.AMARU, c.Id, Property.ATTACK, new PlayerTarget(myTarget)));
+                                temp -= c.Attack.Cost;
+                            }
+                            else
+                            {
+                                listOfActions.Enqueue(new AttackCreatureAction(CharacterEnum.AMARU, c.Id, Property.ATTACK, new CardTarget(myTarget, myEnemiesDict[myTarget].Player.Outer[rnd.Next(6)])));
+                                temp -= c.Attack.Cost;
+                            }
+                        }
+                        else if (action >= 0.85)
+                        {
+                            //non fare nulla
+                            break;
+                        }
+                        else
+                        {
+                            //abilità
+                            //temp -= c.Ability.Cost;
+                        }
+                    }
+                    catch (Exception e) { }
 
+                }
+            }
         }
 
         public override Message ReadSync(int timeout_s)
