@@ -32,8 +32,15 @@ namespace AmaruServer.Game.Managing
             Player caller = GameManager.GetPlayer(action.Caller);
             CreatureCard playedCard = (CreatureCard)(caller.GetCardFromId(action.PlayedCardId, Place.INNER) ?? caller.GetCardFromId(action.PlayedCardId, Place.OUTER));
             playedCard.Energy -= playedCard.Attack.Cost;
-            AttacksVisitor attackVisitor = new AttacksVisitor(GameManager, caller, action.Target);
-            target.Health -= playedCard.Attack.Visit(attackVisitor);
+            AttacksVisitor attackVisitor = new AttacksVisitor(GameManager, caller, action.Target, playedCard);
+            int attackPower = playedCard.Attack.Visit(attackVisitor);
+            target.Health -= attackPower;
+
+            foreach (CharacterEnum dest in GameManager._userDict.Keys.ToList())
+                GameManager._userDict[dest].Write(new ResponseMessage(new AttackPlayerResponse(action.Caller, action.Target.Character, playedCard, target.Health)));
+
+            foreach (KeyValuePair<CharacterEnum, Response> kvp in attackVisitor.SuccessiveResponse)
+                GameManager._userDict[kvp.Key].Write(new ResponseMessage(kvp.Value));
         }
 
         public override void Visit(MoveCreatureAction action)

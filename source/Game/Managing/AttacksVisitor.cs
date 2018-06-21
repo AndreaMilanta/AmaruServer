@@ -8,6 +8,11 @@ using AmaruCommon.GameAssets.Cards.Properties.CreatureEffects;
 using AmaruCommon.GameAssets.Cards.Properties;
 using AmaruCommon.GameAssets.Players;
 using AmaruCommon.Constants;
+using AmaruCommon.GameAssets.Cards;
+using System.Collections.Generic;
+using AmaruCommon.GameAssets.Characters;
+using AmaruCommon.Responses;
+using System.Linq;
 
 namespace AmaruServer.Game.Managing
 {
@@ -17,7 +22,10 @@ namespace AmaruServer.Game.Managing
         private Player Caller { get; set; }
         private PlayerTarget PlayerTarget { get; set; } = null;
         private CardTarget CardTarget { get; set; } = null;
+        private CreatureCard Attacker;
 
+        private Dictionary<CharacterEnum, Response> _successiveResponse = new Dictionary<CharacterEnum, Response>();
+        public Dictionary<CharacterEnum, Response> SuccessiveResponse { get { Dictionary<CharacterEnum, Response> sr = _successiveResponse; _successiveResponse.Clear(); return sr; } }
         /// <summary>
         /// Handles attack procedures.
         /// Does NOT take care of reducing card EP
@@ -25,7 +33,7 @@ namespace AmaruServer.Game.Managing
         /// <param name="gameManager"></param>
         /// <param name="caller"></param>
         /// <param name="target"></param>
-        public AttacksVisitor(GameManager gameManager, Player caller, Target target) : base(AmaruConstants.GAME_PREFIX + gameManager.Id)
+        public AttacksVisitor(GameManager gameManager, Player caller, Target target, CreatureCard attacker) : base(AmaruConstants.GAME_PREFIX + gameManager.Id)
         {
             
             this.Caller = caller;
@@ -33,6 +41,9 @@ namespace AmaruServer.Game.Managing
                 CardTarget = (CardTarget)target;
             if (target is PlayerTarget)
                 PlayerTarget = (PlayerTarget)target;
+
+            this.GameManager = gameManager;
+            this.Attacker = attacker;
         }
         public override int Visit(SimpleAttack attack)
         {
@@ -40,17 +51,25 @@ namespace AmaruServer.Game.Managing
         }
         public override int Visit(ImperiaAttack attack)
         {
-            throw new NotImplementedException();
+            return Attacker.Health;
         }
 
         public override int Visit(GainCPAttack attack)
         {
-            throw new NotImplementedException();
+            Caller.Mana += attack.Cp;
+            foreach(CharacterEnum c in GameManager._userDict.Keys.ToList()) {
+                _successiveResponse.Add(c, new PlayerModifiedResponse(Caller.Character, Caller.Mana, Caller.Health));
+            }
+            return attack.Power;
         }
 
         public override int Visit(GainHPAttack attack)
         {
-            throw new NotImplementedException();
+            Caller.Health += attack.Hp;
+            foreach (CharacterEnum c in GameManager._userDict.Keys.ToList()) {
+                _successiveResponse.Add(c, new PlayerModifiedResponse(Caller.Character, Caller.Mana, Caller.Health));
+            }
+            return attack.Power;
         }
 
         public override int Visit(KrumAttack attack)
