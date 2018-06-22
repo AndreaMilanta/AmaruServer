@@ -53,6 +53,7 @@
     <Compile Include="source\Game\Tools\GameFactory.cs" />
     <Compile Include="source\Networking\AIUser.cs" />
     <Compile Include="source\Networking\ConnectionManager.cs" />
+    <Compile Include="source\Networking\EmptyUser.cs" />
     <Compile Include="source\Networking\MainServer.cs" />
     <Compile Include="source\Networking\User.cs" />
     <Compile Include="source\Program.cs" />

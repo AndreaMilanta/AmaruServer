@@ -32,6 +32,21 @@ namespace AmaruServer.Game.Managing
         private List<CharacterEnum> _turnList;  // List of players in order of turn
         public bool IsMainTurn { get; private set; }
 
+        /// <summary>
+        /// Constructor for AI
+        /// Attenzione a settare bene di chi è il turno (ActiveCharacter) -- ADESSO è CharacterEnum.AMARU
+        /// </summary>
+        /// <param name="players">!!!Lista già clonata ricorsivamente!!!!</param>
+        /// <param name="logger">Nome del logger dell'AI (consiglio "AILogger"</param>
+        public GameManager(List<Player> players, string logger) : base(logger)
+        {
+            _userDict = new Dictionary<CharacterEnum, User>();
+            foreach (Player p in players)
+                _userDict.Add(p.Character, new EmptyUser(p, logger));
+            this.ValidationVisitor = new ValidationVisitor(this);
+            this.ExecutionVisitor = new ExecutionVisitor(this);
+            this.ActiveCharacter = CharacterEnum.AMARU;
+        }
 
         public GameManager(int id, Dictionary<CharacterEnum, User> clientsDict) : base(AmaruConstants.GAME_PREFIX + id)
         {
