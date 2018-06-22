@@ -24,17 +24,12 @@ namespace AmaruServer.Networking
         private bool myTurn= false;
         MessageHandler messageHandler = null;
         Queue<PlayerAction> listOfActions;
-        LimitedList<LimitedList<CreatureCard>> OtherPlayersOuterField;
-        LimitedList<LimitedList<CreatureCard>> OtherPlayersInnerField;
         private Dictionary<CharacterEnum, User> myEnemiesDict;
         ValidationVisitor myValidation;
 
         public AIUser(string logger) : base(logger)
         {
-            listOfActions = new Queue<PlayerAction>();
-            OtherPlayersInnerField = new LimitedList<LimitedList<CreatureCard>>(4);
-            OtherPlayersOuterField = new LimitedList<LimitedList<CreatureCard>>(4);
-            
+            listOfActions = new Queue<PlayerAction>();            
         }
 
         public override void SetPlayer(Player player, GameManager gameManager)
@@ -72,17 +67,15 @@ namespace AmaruServer.Networking
         {
             Dictionary<CharEnumerator, ValuesEnumerator> valuesPerPlayer;
             //per ogni giocatore in generale voglio sapere:
-            List<EnemyInfo> enemyInfo = new List<EnemyInfo>();
+            List<Player> playerToClone = new List<Player>();
 
             myEnemiesDict = new Dictionary<CharacterEnum, User>( GameManager._userDict);
-            myEnemiesDict.Remove(CharacterEnum.AMARU);
-            foreach (User target in myEnemiesDict.Values)
+            foreach (User user in myEnemiesDict.Values)
             {
-                //inutile prendere l'asEnemy immagino
-                enemyInfo.Add(target.Player.AsEnemy);
-                OtherPlayersOuterField.Add(target.Player.AsEnemy.Outer);
-                OtherPlayersInnerField.Add(target.Player.AsEnemy.Inner);
+                playerToClone.Add(user.Player);
             }
+            GameManager gm = new GameManager(playerToClone, "AILogger");
+
             LimitedList<Card> myCards =Player.Hand;
             LimitedList<CreatureCard> myWarZone = Player.Outer;
             LimitedList<CreatureCard> myInnerZone = Player.Inner;
@@ -108,7 +101,7 @@ namespace AmaruServer.Networking
                 catch {
                 }
             }
-            /*
+            
             // attacco random 
             foreach (CreatureCard c in myWarZone){
                 int temp = c.Energy;
@@ -148,12 +141,12 @@ namespace AmaruServer.Networking
                             //temp -= c.Ability.Cost;
                         }
                     }
-                    catch (Exception e) { }
+                    catch { }
 
                 }
                 
             }
-            */
+
         }
 
         public override Message ReadSync(int timeout_s)
