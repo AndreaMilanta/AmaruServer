@@ -69,12 +69,15 @@ namespace AmaruServer.Networking
                             discontentment = ValueGoalDiscontentment(toIterate);
                             listOfActions.Enqueue(pair.Value);
                             gain = true;
+                            Log("DENTRO");
                         }
                         else
                         {
+                            Log("Fuori");
                             gain = false;
                         }
                     }
+                    Log("SCS");
                     listOfActions.Enqueue(new EndTurnAction(CharacterEnum.AMARU, -1, GameManager.IsMainTurn));
                 }
             }
@@ -189,7 +192,6 @@ namespace AmaruServer.Networking
                     allAcceptablePlayerTarget.Add(new PlayerTarget(pair.Key));
                 }
             }
-
             //inizializzo tutti i target possibili per un attacco
             foreach (CreatureCard c in myWarZone)
             {
@@ -210,7 +212,6 @@ namespace AmaruServer.Networking
                         Log(c.Name);
                         Log(cTarget.Card.Name);
                     }
-
                 }
                 foreach (PlayerTarget pTarget in allAcceptablePlayerTarget)
                 {
@@ -231,7 +232,7 @@ namespace AmaruServer.Networking
                 }
             }
             listPossibleActions = listPossibleActions.OrderByDescending(x => x.Key).ToList();
-            return (listPossibleActions[0]);
+            return listPossibleActions[0];
         }
 
         public override Message ReadSync(int timeout_s)
@@ -263,7 +264,7 @@ namespace AmaruServer.Networking
                 else
                 {
                     //Perdo Punti per ogni giocatore vivo
-                    value -= 20;
+                    value += 20;
                 }
             }
 
