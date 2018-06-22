@@ -149,18 +149,18 @@ namespace AmaruServer.Game.Managing
             _userDict[ActiveCharacter].Player.Mana += CurrentRound * AmaruConstants.MANA_TURN_FACTOR;
 
             // Add EP and execute onturnstart for each card on table
-            OnTurnStartVisitor OTSVisitor = new OnTurnStartVisitor(_userDict[ActiveCharacter].Player, AmaruConstants.GAME_PREFIX + Id);
+            OnTurnStartVisitor OTSVisitor = new OnTurnStartVisitor(ActiveCharacter, AmaruConstants.GAME_PREFIX + Id);
             List<Card> Modified = new List<Card>();
             foreach (CreatureCard card in _userDict[ActiveCharacter].Player.Inner)
             {
                 card.Energy++;
-                card.Visit(OTSVisitor, _userDict[ActiveCharacter].Player, null);
+                card.Visit(OTSVisitor, ActiveCharacter, null);
                 Modified.Add(card);
             }
             foreach (CreatureCard card in _userDict[ActiveCharacter].Player.Outer)
             {
                 card.Energy++;
-                card.Visit(OTSVisitor, _userDict[ActiveCharacter].Player, null);
+                card.Visit(OTSVisitor, ActiveCharacter, null);
                 Modified.Add(card);
             }
 

@@ -7,6 +7,7 @@ using AmaruCommon.GameAssets.Cards.Properties.Abilities;
 using AmaruCommon.GameAssets.Cards.Properties.Attacks;
 using AmaruCommon.GameAssets.Cards.Properties.CreatureEffects;
 using AmaruCommon.GameAssets.Cards.Properties.SpellAbilities;
+using AmaruCommon.GameAssets.Characters;
 using AmaruCommon.GameAssets.Players;
 
 namespace AmaruServer.Game.Managing
@@ -15,10 +16,10 @@ namespace AmaruServer.Game.Managing
     {
         public List<Card> ModifiedCard { get; private set; }
 
-        public OnTurnStartVisitor(Player player, string logger, Card card = null) : base (logger)
+        public OnTurnStartVisitor(CharacterEnum player, string logger, Card card = null) : base (logger)
         {
-            this.Player = player;
-            this.Card = card;
+            this.Owner = player;
+            this.OwnerCard = card;
             this.ModifiedCard = new List<Card>();
         }
 
