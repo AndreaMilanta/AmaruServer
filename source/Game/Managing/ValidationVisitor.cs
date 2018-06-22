@@ -103,7 +103,7 @@ namespace AmaruServer.Game.Managing
 
         public override void Visit(PlayASpellFromHandAction action)
         {
-            
+            /*
             // Check caller player is alive and it is its main turn
             Player caller = this.GameManager.GetPlayer(action.Caller);
             if (!caller.IsAlive || GameManager.ActiveCharacter != action.Caller || !GameManager.IsMainTurn)
@@ -165,7 +165,7 @@ namespace AmaruServer.Game.Managing
                         }
                     }
                 }
-            }
+            }//*/
             
         }
 
