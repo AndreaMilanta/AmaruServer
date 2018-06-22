@@ -59,7 +59,7 @@ namespace AmaruServer.Game.Managing
             OnCardPlayedVisitor visitor = new OnCardPlayedVisitor(GameManager);
             Player p = GameManager.GetPlayer(action.Caller);
             CreatureCard creature = p.PlayACreatureFromHand(action.PlayedCardId, action.Place);
-            creature.Visit(visitor, p);
+            creature.Visit(visitor, p.Character);
             foreach (CharacterEnum target in GameManager._userDict.Keys.ToList())
                 GameManager._userDict[target].Write(new ResponseMessage(new PlayACreatureResponse(action.Caller, creature, action.Place, action.TablePos)));
         }
@@ -70,7 +70,7 @@ namespace AmaruServer.Game.Managing
             Player p = GameManager.GetPlayer(action.Caller);
             SpellCard spell = p.PlayASpellFromHand(action.PlayedCardId);
             visitor.Targets = action.Targets;
-            spell.Visit(visitor, p);
+            spell.Visit(visitor, p.Character);
             foreach (CharacterEnum target in GameManager._userDict.Keys.ToList())
                 GameManager._userDict[target].Write(new ResponseMessage(new PlayASpellResponse(action.Caller,spell,action.Targets)));
             foreach (KeyValuePair<CharacterEnum,Response> kvp in visitor.SuccessiveResponse)

@@ -6,6 +6,7 @@ using AmaruCommon.GameAssets.Cards.Properties.Attacks;
 using AmaruCommon.GameAssets.Cards.Properties.CreatureEffects;
 using AmaruCommon.GameAssets.Cards.Properties.SpellAbilities;
 using AmaruCommon.GameAssets.Characters;
+using AmaruCommon.GameAssets.Players;
 using AmaruCommon.Responses;
 using System;
 using System.Collections.Generic;
@@ -164,17 +165,19 @@ namespace AmaruServer.Game.Managing
 
         public override int Visit(GiveHPSpellAbility ability)
         {
-            Player.Mana += ability.numHP;
+            Player owner = GameManager._userDict[Owner].Player;
+            owner.Health += ability.numHP;
             foreach (CharacterEnum c in CharacterManager.Instance.Characters)
-                _successiveResponse.Add(c, new PlayerModifiedResponse(Player.Character, Player.Mana, Player.Health));
+                _successiveResponse.Add(c, new PlayerModifiedResponse(owner.Character, owner.Mana, owner.Health));
             return 0;
         }
 
         public override int Visit(GainCpSpellAbility ability)
         {
-            Player.Mana += ability.numCP;
+            Player owner = GameManager._userDict[Owner].Player;
+            owner.Mana += ability.numCP;
             foreach (CharacterEnum c in CharacterManager.Instance.Characters)
-                _successiveResponse.Add(c, new PlayerModifiedResponse(Player.Character, Player.Mana, Player.Health));
+                _successiveResponse.Add(c, new PlayerModifiedResponse(owner.Character, owner.Mana, owner.Health));
             return 0;
         }
 
