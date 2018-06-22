@@ -113,87 +113,100 @@ namespace AmaruServer.Networking
 
         private void Think()
         {
-            //per ogni giocatore in generale voglio sapere:
-            List<Player> playerToClone = new List<Player>();
+            GameManager toUse = createGameManagerAndStuff(this.GameManager);
+            Player me = toUse._userDict[CharacterEnum.AMARU].Player;
+            LimitedList<Card> myCards = me.Hand;
+            LimitedList<CreatureCard> myWarZone = me.Outer;
+            LimitedList<CreatureCard> myInnerZone = me.Inner;
 
-            myEnemiesDict = new Dictionary<CharacterEnum, User>( GameManager._userDict);
-            foreach (User user in myEnemiesDict.Values)
-            {
-                playerToClone.Add(user.Player);
-            }
-            GameManager FakeGM = new GameManager(playerToClone, "AILogger");
-
-            LimitedList<Card> myCards =Player.Hand;
-            LimitedList<CreatureCard> myWarZone = Player.Outer;
-            LimitedList<CreatureCard> myInnerZone = Player.Inner;
-
-            //This way it will try to play all possible cards
+            //Inizializzo tutte le azioni posisbili legate alle carte in mano
+            List<KeyValuePair<Double, PlayerAction>> listPossibleActions = new List<KeyValuePair<double, PlayerAction>>();
             foreach (Card c in myCards)
             {
                 try
                 {
                     if (c is CreatureCard)
                     {
+                        GameManager toUseTemp = createGameManagerAndStuff(toUse);
                         PlayACreatureFromHandAction myIntention = new PlayACreatureFromHandAction(CharacterEnum.AMARU, c.Id, Place.OUTER, Player.Outer.Count);
-                        myIntention.Visit(myValidation);
-                        listOfActions.Enqueue(myIntention);
+                        myIntention.Visit(toUseTemp.ValidationVisitor);
+                        myIntention.Visit(toUseTemp.ExecutionVisitor);
+                        Double valueOfGoal = ValueGoalDiscontentment(toUseTemp);
+                        listPossibleActions.Add(new KeyValuePair<Double,PlayerAction>(valueOfGoal,myIntention));
                     }
                     else if (c is SpellCard)
                     {
-
-                        //Amaru ha solo spell senza target
+                        //Amaru ha solo spell senza target CREDO
+                        GameManager toUseTemp = createGameManagerAndStuff(toUse);
                         PlayASpellFromHandAction myIntention = new PlayASpellFromHandAction(CharacterEnum.AMARU, c.Id, null);
-                        myIntention.Visit(myValidation);
-                        listOfActions.Enqueue(myIntention);
+                        myIntention.Visit(toUseTemp.ValidationVisitor);
+                        myIntention.Visit(toUseTemp.ExecutionVisitor);
+                        Double valueOfGoal = ValueGoalDiscontentment(toUseTemp);
+                        listPossibleActions.Add(new KeyValuePair<Double, PlayerAction>(valueOfGoal, myIntention));
                     }
                 }
-                catch {
+                catch {}
+
+            }
+
+            // inizializzo struttura dati di possibili target per un attacco, potando la ricerca delle azioni evidentemente impossibili
+            List<CardTarget> allAcceptableTargets = new List<CardTarget>();
+            List<PlayerTarget> allAcceptablePlayerTarget = new List<PlayerTarget>();
+            foreach (KeyValuePair<CharacterEnum,User> pair in toUse._userDict.ToArray())
+            {
+                Player player = pair.Value.Player;
+                foreach (CreatureCard cd in player.Outer)
+                {
+                    allAcceptableTargets.Add(new CardTarget(pair.Key,cd));
+                }
+                if (!pair.Value.Player.IsShieldMaidenProtected)
+                {
+                    foreach (CreatureCard cd in player.Inner)
+                    {
+                        allAcceptableTargets.Add(new CardTarget(pair.Key,cd));
+                    }
+                }
+                if(!player.IsShieldUpProtected && !player.IsImmune)
+                {
+                    allAcceptablePlayerTarget.Add(new PlayerTarget(pair.Key));
                 }
             }
-            
-            // attacco random 
-            foreach (CreatureCard c in myWarZone){
-                int temp = c.Energy;
-                bool stop= false;
-                Random rnd = new Random();
-                while (temp == 0 || stop)
+
+            //inizializzo tutti i target possibili per un attacco
+            foreach (CreatureCard c in myWarZone)
+            {
+                foreach (CardTarget cTarget in allAcceptableTargets)
                 {
                     try
                     {
-                        double action = rnd.NextDouble();
-                        if (action <= 0.50)
-                        {
-                            CharacterEnum myTarget = (CharacterEnum)rnd.Next(4);
-                            if (action >= 0.10)
-                            {
-                                AttackPlayerAction myIntention = new AttackPlayerAction(CharacterEnum.AMARU, c.Id, Property.ATTACK, new PlayerTarget(myTarget));
-                                myIntention.Visit(myValidation);
-                                listOfActions.Enqueue(myIntention);
-                                temp -= c.Attack.Cost;
-                            }
-                            else
-                            {
-                                AttackCreatureAction myIntention = new AttackCreatureAction(CharacterEnum.AMARU, c.Id, Property.ATTACK, new CardTarget(myTarget, myEnemiesDict[myTarget].Player.Outer[rnd.Next(6)]));
-                                myIntention.Visit(myValidation);
-                                listOfActions.Enqueue(myIntention);
-                                temp -= c.Attack.Cost;
-                            }
-                        }
-                        else if (action >= 0.85)
-                        {
-                            //non fare nulla
-                            break;
-                        }
-                        else
-                        {
-                            //abilità
-                            //temp -= c.Ability.Cost;
-                        }
+                        GameManager toUseTemp = createGameManagerAndStuff(toUse);
+                        AttackCreatureAction myIntention = new AttackCreatureAction(CharacterEnum.AMARU, c.Id, Property.ATTACK, cTarget);
+                        myIntention.Visit(toUseTemp.ValidationVisitor);
+                        myIntention.Visit(toUseTemp.ExecutionVisitor);
+                        Double valueOfGoal = ValueGoalDiscontentment(toUseTemp);
+                        listPossibleActions.Add(new KeyValuePair<Double, PlayerAction>(valueOfGoal, myIntention));
                     }
                     catch { }
 
                 }
-                
+                foreach (PlayerTarget pTarget in allAcceptablePlayerTarget)
+                {
+                    try
+                    {
+                        GameManager toUseTemp = createGameManagerAndStuff(toUse);
+                        AttackPlayerAction myIntention = new AttackPlayerAction(CharacterEnum.AMARU, c.Id, Property.ATTACK, pTarget);
+                        myIntention.Visit(toUseTemp.ValidationVisitor);
+                        myIntention.Visit(toUseTemp.ExecutionVisitor);
+                        Double valueOfGoal = ValueGoalDiscontentment(toUseTemp);
+                        listPossibleActions.Add(new KeyValuePair<Double, PlayerAction>(valueOfGoal, myIntention));
+                    }
+                    catch { }
+                }
+            }
+            foreach (KeyValuePair<double,PlayerAction> pair in listPossibleActions)
+            {
+                Log("value" + pair.Key + "action " +
+                    "\n Caller:" + pair.Value.Caller + "_ " + Player.GetCardFromId(pair.Value.PlayedCardId, Place.HAND));
             }
 
         }
@@ -273,6 +286,21 @@ namespace AmaruServer.Networking
             }
             hp /= t;
             return hp;
+        }
+
+
+           private GameManager createGameManagerAndStuff(GameManager m)
+        {
+            //per ogni giocatore in generale voglio sapere:
+            List<Player> playerToClone = new List<Player>();
+
+            myEnemiesDict = new Dictionary<CharacterEnum, User>(GameManager._userDict);
+            foreach (User user in myEnemiesDict.Values)
+            {
+                playerToClone.Add(new Player(user.Player));
+            }
+            GameManager FakeGM = new GameManager(playerToClone, "AILogger");
+            return FakeGM;
         }
     }
 }
