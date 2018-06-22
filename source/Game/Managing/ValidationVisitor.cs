@@ -9,6 +9,7 @@ using AmaruCommon.Actions.Targets;
 using System.Collections.Generic;
 using AmaruCommon.GameAssets.Cards.Properties.SpellAbilities;
 using AmaruCommon.GameAssets.Cards.Properties.CreatureEffects;
+using AmaruCommon.GameAssets.Characters;
 
 namespace AmaruServer.Game.Managing
 {
@@ -103,7 +104,11 @@ namespace AmaruServer.Game.Managing
 
         public override void Visit(PlayASpellFromHandAction action)
         {
-            /*
+            // Ignore check if caller not AMARU
+            // TODO: Remove
+            if (action.Caller != CharacterEnum.AMARU)
+                return;
+            
             // Check caller player is alive and it is its main turn
             Player caller = this.GameManager.GetPlayer(action.Caller);
             if (!caller.IsAlive || GameManager.ActiveCharacter != action.Caller || !GameManager.IsMainTurn)
@@ -166,7 +171,6 @@ namespace AmaruServer.Game.Managing
                     }
                 }
             }//*/
-            
         }
 
         public override void Visit(EndTurnAction action)
