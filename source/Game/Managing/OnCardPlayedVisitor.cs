@@ -206,11 +206,6 @@ namespace AmaruServer.Game.Managing
             return 0;
         }
 
-        public override int Visit(DealDamageDependingOnMAXHPSpeelAbility dealDamageDependingOnMAXHPSpeelAbility)
-        {
-            return 0;
-        }
-
         public override int Visit(AttackEqualToHPSpellAbility attackEqualToHPSpellAbility)
         {
             return 0;
@@ -262,6 +257,11 @@ namespace AmaruServer.Game.Managing
         }
 
         public override int Visit(DoubleHPAbility doubleHPAbility)
+        {
+            return 0;
+        }
+
+        public override int Visit(DealDamageDependingOnMAXHPSpellAbility dealDamageDependingOnMAXHPSpellAbility)
         {
             return 0;
         }

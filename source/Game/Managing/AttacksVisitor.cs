@@ -229,11 +229,6 @@ namespace AmaruServer.Game.Managing
             throw new NotImplementedException();
         }
 
-        public override int Visit(DealDamageDependingOnMAXHPSpeelAbility ability)
-        {
-            throw new NotImplementedException();
-        }
-
         public override int Visit(AttackEqualToHPSpellAbility ability)
         {
             throw new NotImplementedException();
@@ -285,6 +280,11 @@ namespace AmaruServer.Game.Managing
         }
 
         public override int Visit(DoubleHPAbility doubleHPAbility)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override int Visit(DealDamageDependingOnMAXHPSpellAbility dealDamageDependingOnMAXHPSpellAbility)
         {
             throw new NotImplementedException();
         }
