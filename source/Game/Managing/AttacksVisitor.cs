@@ -65,9 +65,16 @@ namespace AmaruServer.Game.Managing
 
         public override int Visit(GainHPAttack attack)
         {
-            Caller.Health += attack.Hp;
-            foreach (CharacterEnum c in GameManager._userDict.Keys.ToList()) {
-                _successiveResponse.Add(c, new PlayerModifiedResponse(Caller.Character, Caller.Mana, Caller.Health));
+            if (attack.ToCreature) {
+                Attacker.Health += attack.Hp;
+                //TODO: CREATURE MODIFIED RESPONSE
+            }
+            else {
+                Caller.Health += attack.Hp;
+
+                foreach (CharacterEnum c in GameManager._userDict.Keys.ToList()) {
+                    _successiveResponse.Add(c, new PlayerModifiedResponse(Caller.Character, Caller.Mana, Caller.Health));
+                }
             }
             return attack.Power;
         }
