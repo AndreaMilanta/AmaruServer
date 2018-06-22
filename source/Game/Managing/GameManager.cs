@@ -199,26 +199,16 @@ namespace AmaruServer.Game.Managing
         {
             if (mex is null)
                 return;
-            // Logical switch on mex type 
-            if (mex is ActionMessage)
+            ActionMessage aMex = (ActionMessage)mex;
+            try
             {
-                ActionMessage aMex = (ActionMessage)mex;
-                try
-                {
-                    aMex.Action.Visit(this.ValidationVisitor);
-                    aMex.Action.Visit(this.ExecutionVisitor);
-                }
-                catch (Exception)
-                {
-                    LogError("Invalid action attempted");
-                    // TODO send response to INVALID ACTION
-                }
+                aMex.Action.Visit(this.ValidationVisitor);
+                aMex.Action.Visit(this.ExecutionVisitor);
             }
-            //*/
-            // Default
-            else
+            catch (Exception)
             {
-                Log("Unknown Message received (ignored)");
+                LogError("Invalid action attempted");
+                // TODO send response to INVALID ACTION
             }
         }
 

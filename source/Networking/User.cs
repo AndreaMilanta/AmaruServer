@@ -9,6 +9,7 @@ using AmaruCommon.GameAssets.Players;
 using AmaruCommon.Exceptions;
 using AmaruServer.Constants;
 using AmaruServer.Game.Managing;
+using static ClientServer.Communication.ClientTCP;
 
 namespace AmaruServer.Networking
 {
@@ -22,6 +23,8 @@ namespace AmaruServer.Networking
         // Player Stuff
         public Player Player { get; protected set; }
         protected GameManager GameManager { get; set; }
+
+        private MessageHandler HandleActionMessage;
 
         public User(string logger) : base(logger)
         {
@@ -42,6 +45,12 @@ namespace AmaruServer.Networking
             {
                 this.Close();
             }
+        }
+
+        public override Message ReadSync(int timeout_s)
+        {
+            this.HandleUserMessage(base.ReadSync(timeout_s));
+            return null;
         }
 
         /// <summary>
@@ -85,6 +94,10 @@ namespace AmaruServer.Networking
                 mex = (ShutdownMessage)mex;
                 ConnectionManager.Instance.DropUser(this);
             }
+            else if (mex is ActionMessage)
+            {
+                this.HandleActionMessage((ActionMessage)mex);
+            }
             // Default
             else
             {
@@ -96,7 +109,7 @@ namespace AmaruServer.Networking
         {
             this.Player = player;
             this.GameManager = gameManager;
-            Client.HandleASyncMessage = GameManager.HandlePlayerMessage;
+            this.HandleActionMessage = GameManager.HandlePlayerMessage;
         }
     }
 }
