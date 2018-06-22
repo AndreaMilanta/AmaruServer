@@ -222,7 +222,7 @@ namespace AmaruServer.Game.Managing
             throw new NotImplementedException();
         }
 
-        public override int Visit(DealDamageDependingOnMAXHPSpeelAbility ability)
+        public override int Visit(DealDamageDependingOnMAXHPSpellAbility ability)
         {
             throw new NotImplementedException();
         }

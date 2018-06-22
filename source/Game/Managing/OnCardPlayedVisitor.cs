@@ -206,7 +206,7 @@ namespace AmaruServer.Game.Managing
             return 0;
         }
 
-        public override int Visit(DealDamageDependingOnMAXHPSpeelAbility dealDamageDependingOnMAXHPSpeelAbility)
+        public override int Visit(DealDamageDependingOnMAXHPSpellAbility dealDamageDependingOnMAXHPSpeelAbility)
         {
             return 0;
         }
