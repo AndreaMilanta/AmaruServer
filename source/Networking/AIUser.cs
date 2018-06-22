@@ -105,7 +105,8 @@ namespace AmaruServer.Networking
                         listOfActions.Enqueue(myIntention);
                     }
                 }
-                catch (Exception e) { }
+                catch {
+                }
             }
             /*
             // attacco random 
