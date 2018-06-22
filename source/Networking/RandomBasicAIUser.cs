@@ -19,16 +19,16 @@ using static ClientServer.Communication.ClientTCP;
 
 namespace AmaruServer.Networking
 {
-    public class AIUser : User
+    public class RandomBasicAIUser : User
     {
-        private bool myTurn= false;
+        private bool myTurn = false;
         MessageHandler messageHandler = null;
         Queue<PlayerAction> listOfActions;
         List<PlayerAction> listOfPossibleActions;
         private Dictionary<CharacterEnum, User> myEnemiesDict;
         ValidationVisitor myValidation;
 
-        public AIUser(string logger) : base(logger)
+        public RandomBasicAIUser(string logger) : base(logger)
         {
             listOfActions = new Queue<PlayerAction>();
             listOfPossibleActions = new List<PlayerAction>();
@@ -48,15 +48,16 @@ namespace AmaruServer.Networking
                 Response responseReceived = ((ResponseMessage)mex).Response;
                 if (responseReceived is NewTurnResponse)
                 {
-                    
+
                     if (((NewTurnResponse)responseReceived).ActivePlayer == CharacterEnum.AMARU)
                     {
                         myTurn = true;
                         thinkToMove();
                         listOfActions.Enqueue(new EndTurnAction(CharacterEnum.AMARU, -1, GameManager.IsMainTurn));
-                        
+
                     }
-                } else if(myTurn && (responseReceived is MainTurnResponse))
+                }
+                else if (myTurn && (responseReceived is MainTurnResponse))
                 {
                     Think();
                     listOfActions.Enqueue(new EndTurnAction(CharacterEnum.AMARU, -1, GameManager.IsMainTurn));
@@ -71,6 +72,7 @@ namespace AmaruServer.Networking
             LimitedList<CreatureCard> outer = Player.Outer;
             List<int> moved = new List<int>();
             int countOuter = outer.Count;
+            Dictionary<CharEnumerator, ValuesEnumerator> valuesPerPlayer;
             //per ogni giocatore in generale voglio sapere:
             List<Player> playerToClone = new List<Player>();
 
@@ -113,17 +115,18 @@ namespace AmaruServer.Networking
 
         private void Think()
         {
+            Dictionary<CharEnumerator, ValuesEnumerator> valuesPerPlayer;
             //per ogni giocatore in generale voglio sapere:
             List<Player> playerToClone = new List<Player>();
 
-            myEnemiesDict = new Dictionary<CharacterEnum, User>( GameManager._userDict);
+            myEnemiesDict = new Dictionary<CharacterEnum, User>(GameManager._userDict);
             foreach (User user in myEnemiesDict.Values)
             {
                 playerToClone.Add(user.Player);
             }
             GameManager FakeGM = new GameManager(playerToClone, "AILogger");
 
-            LimitedList<Card> myCards =Player.Hand;
+            LimitedList<Card> myCards = Player.Hand;
             LimitedList<CreatureCard> myWarZone = Player.Outer;
             LimitedList<CreatureCard> myInnerZone = Player.Inner;
 
@@ -147,24 +150,26 @@ namespace AmaruServer.Networking
                         listOfActions.Enqueue(myIntention);
                     }
                 }
-                catch {
+                catch
+                {
                 }
             }
-            
+
             // attacco random 
-            foreach (CreatureCard c in myWarZone){
+            foreach (CreatureCard c in myWarZone)
+            {
                 int temp = c.Energy;
-                bool stop= false;
+                bool stop = false;
                 Random rnd = new Random();
                 while (temp == 0 || stop)
                 {
                     try
                     {
                         double action = rnd.NextDouble();
-                        if (action <= 0.50)
+                        if (action <= 0.70)
                         {
                             CharacterEnum myTarget = (CharacterEnum)rnd.Next(4);
-                            if (action >= 0.10)
+                            if (action >= 0.25)
                             {
                                 AttackPlayerAction myIntention = new AttackPlayerAction(CharacterEnum.AMARU, c.Id, Property.ATTACK, new PlayerTarget(myTarget));
                                 myIntention.Visit(myValidation);
@@ -173,7 +178,7 @@ namespace AmaruServer.Networking
                             }
                             else
                             {
-                                AttackCreatureAction myIntention = new AttackCreatureAction(CharacterEnum.AMARU, c.Id, Property.ATTACK, new CardTarget(myTarget, myEnemiesDict[myTarget].Player.Outer[rnd.Next(6)]));
+                                AttackCreatureAction myIntention = new AttackCreatureAction(CharacterEnum.AMARU, c.Id, Property.ATTACK, new CardTarget(myTarget, myEnemiesDict[myTarget].Player.Outer[Player.Outer.Count]));
                                 myIntention.Visit(myValidation);
                                 listOfActions.Enqueue(myIntention);
                                 temp -= c.Attack.Cost;
@@ -193,7 +198,7 @@ namespace AmaruServer.Networking
                     catch { }
 
                 }
-                
+
             }
 
         }
@@ -212,67 +217,10 @@ namespace AmaruServer.Networking
         {
 
         }
-        public double ValueGoalDiscontentment(GameManager gm)
+        internal class ValuesEnumerator
         {
-            double value = 0;
-            List<Player> lp = new List<Player>();
-            Player me = gm._userDict[CharacterEnum.AMARU].Player;
-            gm._userDict.Remove(CharacterEnum.AMARU);
-            foreach (User p in gm._userDict.Values){
-                Player player = p.Player;
-                if (player.IsAlive)
-                {
-                    lp.Add(p.Player);
-                }
-                else
-                {
-                    //Perdo Punti per ogni giocatore vivo
-                    value -= 20;
-                }
-            }
 
-            //Somma vita mia e delle mie creature, il mio mana (moltiplicato per 2 per dargli più valore)
-            value += me.Health;
-            value += calculateHpOnField(me);
-            value += me.Outer.Count;
-            value += me.Inner.Count;
-            value += me.Mana*2;
-
-            //sommo la vita degli altri e la deviazione standard, la vita media nei loro campi e la deviazione standard
-            List<double> listHpField = new List<double>();
-            List<double> listHpPlayers = new List<double>();
-            foreach (Player p in lp)
-            {
-                listHpField.Add(calculateHpOnField(p));
-                listHpPlayers.Add(p.Health);
-            }
-            double meanHp = listHpPlayers.Average();
-            double meanHpField = listHpField.Average();
-
-            value -= meanHpField;
-            value -= meanHp;
-            value -= Tools.calculateStd(listHpPlayers);
-            value -= Tools.calculateStd(listHpField);
-
-            return value;
-        }
-
-        private double calculateHpOnField(Player p)
-        {
-            double hp = 0;
-            int t = 0;
-            foreach (CreatureCard c in p.Outer)
-            {
-                hp += c.Health;
-                t += 1;
-            }
-            foreach (CreatureCard c in p.Inner)
-            {
-                hp += c.Health;
-                t += 1;
-            }
-            hp /= t;
-            return hp;
         }
     }
 }
+
