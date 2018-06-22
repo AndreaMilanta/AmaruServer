@@ -62,24 +62,24 @@
     <Compile Include="source\Tester.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\AmaruCommon\AmaruCommon.csproj">
-      <Project>{69180a16-63dc-4552-b45f-8448f3da7f1e}</Project>
-      <Name>AmaruCommon</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ClientServer\ClientServer.csproj">
-      <Project>{d7408f4d-2b8b-4fe1-ad5c-060e10e51ad0}</Project>
-      <Name>ClientServer</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Logging\Logging.csproj">
-      <Project>{5126f598-36fe-40d0-8bde-006a681ce886}</Project>
-      <Name>Logging</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="source\Exceptions\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\AmaruCommon\AmaruCommon.csproj">
+      <Project>{fe7d5080-3e54-437d-8967-200dec40f71c}</Project>
+      <Name>AmaruCommon</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ClientServer\ClientServer.csproj">
+      <Project>{e29aaa49-242a-4860-9946-4a7c57d0afea}</Project>
+      <Name>ClientServer</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Logging\Logging.csproj">
+      <Project>{258a9514-1bdf-4cbd-8431-5b531b10e9cb}</Project>
+      <Name>Logging</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -24,14 +24,12 @@ namespace AmaruServer.Networking
         private bool myTurn= false;
         MessageHandler messageHandler = null;
         Queue<PlayerAction> listOfActions;
-        List<PlayerAction> listOfPossibleActions;
         private Dictionary<CharacterEnum, User> myEnemiesDict;
         ValidationVisitor myValidation;
 
         public AIUser(string logger) : base(logger)
         {
             listOfActions = new Queue<PlayerAction>();
-            listOfPossibleActions = new List<PlayerAction>();
         }
 
         public override void SetPlayer(Player player, GameManager gameManager)
@@ -54,13 +52,30 @@ namespace AmaruServer.Networking
                         myTurn = true;
                         thinkToMove();
                         listOfActions.Enqueue(new EndTurnAction(CharacterEnum.AMARU, -1, GameManager.IsMainTurn));
-                        
                     }
                 } else if(myTurn && (responseReceived is MainTurnResponse))
                 {
-                    Think();
-                    listOfActions.Enqueue(new EndTurnAction(CharacterEnum.AMARU, -1, GameManager.IsMainTurn));
                     myTurn = false;
+                    Log("Start to think");
+                    GameManager toIterate = createGameManagerAndStuff(this.GameManager);
+                    double discontentment = ValueGoalDiscontentment(toIterate);
+                    bool gain = true;
+                    while (gain)
+                    {
+                        KeyValuePair<Double,PlayerAction> pair = Think(toIterate);
+                        if (discontentment > pair.Key)
+                        {
+                            pair.Value.Visit(toIterate.ExecutionVisitor);
+                            discontentment = ValueGoalDiscontentment(toIterate);
+                            listOfActions.Enqueue(pair.Value);
+                            gain = true;
+                        }
+                        else
+                        {
+                            gain = false;
+                        }
+                    }
+                    listOfActions.Enqueue(new EndTurnAction(CharacterEnum.AMARU, -1, GameManager.IsMainTurn));
                 }
             }
         }
@@ -92,7 +107,7 @@ namespace AmaruServer.Networking
                 {
                     MoveCreatureAction moveCreatureAction = new MoveCreatureAction(CharacterEnum.AMARU, cd.Id, Place.OUTER, 0);
                     moveCreatureAction.Visit(myValidation);
-                    listOfPossibleActions.Add(moveCreatureAction);
+                    listOfActions.Enqueue(moveCreatureAction);
                 }
                 catch { }
 
@@ -111,9 +126,9 @@ namespace AmaruServer.Networking
             */
         }
 
-        private void Think()
+        private KeyValuePair<Double,PlayerAction> Think(GameManager gm)
         {
-            GameManager toUse = createGameManagerAndStuff(this.GameManager);
+            GameManager toUse = createGameManagerAndStuff(gm);
             Player me = toUse._userDict[CharacterEnum.AMARU].Player;
             LimitedList<Card> myCards = me.Hand;
             LimitedList<CreatureCard> myWarZone = me.Outer;
@@ -145,7 +160,10 @@ namespace AmaruServer.Networking
                         listPossibleActions.Add(new KeyValuePair<Double, PlayerAction>(valueOfGoal, myIntention));
                     }
                 }
-                catch {}
+                catch (Exception e){
+                    Log("Eccezione "+ e.ToString());
+                    Log(c.Name);
+                        }
 
             }
 
@@ -186,7 +204,12 @@ namespace AmaruServer.Networking
                         Double valueOfGoal = ValueGoalDiscontentment(toUseTemp);
                         listPossibleActions.Add(new KeyValuePair<Double, PlayerAction>(valueOfGoal, myIntention));
                     }
-                    catch { }
+                    catch (Exception e)
+                    {
+                        Log("Eccezione " + e.ToString());
+                        Log(c.Name);
+                        Log(cTarget.Card.Name);
+                    }
 
                 }
                 foreach (PlayerTarget pTarget in allAcceptablePlayerTarget)
@@ -200,15 +223,15 @@ namespace AmaruServer.Networking
                         Double valueOfGoal = ValueGoalDiscontentment(toUseTemp);
                         listPossibleActions.Add(new KeyValuePair<Double, PlayerAction>(valueOfGoal, myIntention));
                     }
-                    catch { }
+                    catch (Exception e)
+                    {
+                        Log("Eccezione Player" + e.ToString());
+                        Log(c.Name);
+                    }
                 }
             }
-            foreach (KeyValuePair<double,PlayerAction> pair in listPossibleActions)
-            {
-                Log("value" + pair.Key + "action " +
-                    "\n Caller:" + pair.Value.Caller + "_ " + Player.GetCardFromId(pair.Value.PlayedCardId, Place.HAND));
-            }
-
+            listPossibleActions = listPossibleActions.OrderByDescending(x => x.Key).ToList();
+            return (listPossibleActions[0]);
         }
 
         public override Message ReadSync(int timeout_s)
@@ -250,6 +273,7 @@ namespace AmaruServer.Networking
             value += me.Outer.Count;
             value += me.Inner.Count;
             value += me.Mana*2;
+            Log(value.ToString());
 
             //sommo la vita degli altri e la deviazione standard, la vita media nei loro campi e la deviazione standard
             List<double> listHpField = new List<double>();
@@ -259,14 +283,17 @@ namespace AmaruServer.Networking
                 listHpField.Add(calculateHpOnField(p));
                 listHpPlayers.Add(p.Health);
             }
-            double meanHp = listHpPlayers.Average();
-            double meanHpField = listHpField.Average();
+            double meanHp = Tools.calculateAverage(listHpPlayers);
+            double meanHpField = Tools.calculateAverage(listHpField);
 
-            value -= meanHpField;
             value -= meanHp;
+            Log(value.ToString());
+            value -= meanHpField;
+            Log(value.ToString());
             value -= Tools.calculateStd(listHpPlayers);
+            Log(value.ToString());
             value -= Tools.calculateStd(listHpField);
-
+            Log(value.ToString());
             return value;
         }
 
@@ -284,13 +311,16 @@ namespace AmaruServer.Networking
                 hp += c.Health;
                 t += 1;
             }
+            if (t == 0)
+            {
+                return 0;
+            }
             hp /= t;
             return hp;
         }
 
 
-           private GameManager createGameManagerAndStuff(GameManager m)
-        {
+           private GameManager createGameManagerAndStuff(GameManager m){
             //per ogni giocatore in generale voglio sapere:
             List<Player> playerToClone = new List<Player>();
 
@@ -300,6 +330,8 @@ namespace AmaruServer.Networking
                 playerToClone.Add(new Player(user.Player));
             }
             GameManager FakeGM = new GameManager(playerToClone, "AILogger");
+            //myTurn = true quando sono in movimento, altrimenti vale false.
+            FakeGM.IsMainTurn = !myTurn;
             return FakeGM;
         }
     }
