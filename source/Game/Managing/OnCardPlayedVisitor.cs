@@ -255,7 +255,12 @@ namespace AmaruServer.Game.Managing
 
         public override int Visit(ImmunityCreatureEffect immunityCreatureEffect)
         {
-            throw new NotImplementedException();
+            return 0;
+        }
+
+        public override int Visit(DoubleHPAbility doubleHPAbility)
+        {
+            return 0;
         }
     }
 }

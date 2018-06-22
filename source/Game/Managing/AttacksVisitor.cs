@@ -276,5 +276,10 @@ namespace AmaruServer.Game.Managing
         {
             throw new NotImplementedException();
         }
+
+        public override int Visit(DoubleHPAbility doubleHPAbility)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
