@@ -30,7 +30,7 @@ namespace AmaruServer.Game.Managing
         // private list for simplified turn management
         private int _currentIndex = 0;              // Index of current active player
         private List<CharacterEnum> _turnList;  // List of players in order of turn
-        public bool IsMainTurn { get; private set; }
+        public bool IsMainTurn { get; set; }
 
         /// <summary>
         /// Constructor for AI
@@ -82,7 +82,7 @@ namespace AmaruServer.Game.Managing
                 // Init Players
                 foreach (CharacterEnum c in _userDict.Keys)                       // Default draw
                     _userDict[c].SetPlayer(new Player(c, AmaruConstants.GAME_PREFIX + Id), this);
-                _userDict.Add(CharacterEnum.AMARU, new AIUser(AmaruConstants.GAME_PREFIX + Id));
+                _userDict.Add(CharacterEnum.AMARU, new AIUser("AI_"+AmaruConstants.GAME_PREFIX + Id));
                     _userDict[CharacterEnum.AMARU].SetPlayer(new AmaruPlayer(AmaruConstants.GAME_PREFIX + Id), this);
 
                 // Draw cards 
