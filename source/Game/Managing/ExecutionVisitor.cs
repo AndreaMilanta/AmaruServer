@@ -89,7 +89,29 @@ namespace AmaruServer.Game.Managing
 
         public override void Visit(AttackCreatureAction action)
         {
-            throw new NotImplementedException();
+            Player target = GameManager.GetPlayer(action.Target.Character);
+            Player caller = GameManager.GetPlayer(action.Caller);
+            CreatureCard attackedCard = (CreatureCard)(target.GetCardFromId(action.Target.CardId, Place.INNER) ?? target.GetCardFromId(action.Target.CardId, Place.OUTER));
+            CreatureCard playedCard = (CreatureCard)(caller.GetCardFromId(action.PlayedCardId, Place.INNER) ?? caller.GetCardFromId(action.PlayedCardId, Place.OUTER));
+            playedCard.Energy -= playedCard.Attack.Cost;
+            AttacksVisitor attackVisitor = new AttacksVisitor(GameManager, caller, action.Target, playedCard);
+            int attackPower = playedCard.Attack.Visit(attackVisitor);
+            attackedCard.Health -= attackPower;
+
+            //handle death
+            if (attackedCard.Health <= 0) {
+                (target.GetCardFromId(attackedCard.Id, Place.INNER) == null ? target.Outer : target.Inner).Remove(attackedCard);
+
+                GameManager.Graveyard.Add(attackedCard);
+            }
+
+            foreach (CharacterEnum dest in GameManager._userDict.Keys.ToList())
+                GameManager._userDict[dest].Write(new ResponseMessage(new AttackCreatureResponse(action.Caller, action.Target.Character, playedCard, attackedCard)));
+
+            foreach (KeyValuePair<CharacterEnum, Response> kvp in attackVisitor.SuccessiveResponse) {
+                Log("Player " + kvp.Key.ToString() + " recieved a successive response");
+                GameManager._userDict[kvp.Key].Write(new ResponseMessage(kvp.Value));
+            }
         }
     }
 }
