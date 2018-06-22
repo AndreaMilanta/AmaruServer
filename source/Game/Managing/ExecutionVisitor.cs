@@ -39,8 +39,10 @@ namespace AmaruServer.Game.Managing
             foreach (CharacterEnum dest in GameManager._userDict.Keys.ToList())
                 GameManager._userDict[dest].Write(new ResponseMessage(new AttackPlayerResponse(action.Caller, action.Target.Character, playedCard, target.Health)));
 
-            foreach (KeyValuePair<CharacterEnum, Response> kvp in attackVisitor.SuccessiveResponse)
+            foreach (KeyValuePair<CharacterEnum, Response> kvp in attackVisitor.SuccessiveResponse) {
+                Log("Player " + kvp.Key.ToString() + " recieved a successive response");
                 GameManager._userDict[kvp.Key].Write(new ResponseMessage(kvp.Value));
+            }
         }
 
         public override void Visit(MoveCreatureAction action)

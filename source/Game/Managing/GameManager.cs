@@ -193,7 +193,7 @@ namespace AmaruServer.Game.Managing
                     aMex.Action.Visit(this.ValidationVisitor);
                     aMex.Action.Visit(this.ExecutionVisitor);
                 }
-                catch (InvalidActionException)
+                catch (Exception)
                 {
                     LogError("Invalid action attempted");
                     // TODO send response to INVALID ACTION

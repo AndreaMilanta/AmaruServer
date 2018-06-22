@@ -25,7 +25,7 @@ namespace AmaruServer.Game.Managing
         private CreatureCard Attacker;
 
         private Dictionary<CharacterEnum, Response> _successiveResponse = new Dictionary<CharacterEnum, Response>();
-        public Dictionary<CharacterEnum, Response> SuccessiveResponse { get { Dictionary<CharacterEnum, Response> sr = _successiveResponse; _successiveResponse.Clear(); return sr; } }
+        public Dictionary<CharacterEnum, Response> SuccessiveResponse { get { Dictionary<CharacterEnum, Response> sr = _successiveResponse;  return sr; }  set { _successiveResponse.Clear(); } }
         /// <summary>
         /// Handles attack procedures.
         /// Does NOT take care of reducing card EP
@@ -79,7 +79,7 @@ namespace AmaruServer.Game.Managing
 
         public override int Visit(PoisonAttack attack)
         {
-            throw new NotImplementedException();
+            return attack.Power;
         }
 
         public override int Visit(SalazarAttack attack)
