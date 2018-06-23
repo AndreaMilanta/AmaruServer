@@ -169,7 +169,7 @@ namespace AmaruServer.Game.Managing
             throw new NotImplementedException();
         }
 
-        public override int Visit(DamageWithPDAbility bility)
+        public override int Visit(DamageWithPDAbility ability)
         {
             throw new NotImplementedException();
         }
