@@ -22,6 +22,14 @@ namespace AmaruServer.Game.Managing
         private Player Caller { get; set; }
         private PlayerTarget PlayerTarget { get; set; } = null;
         private CardTarget CardTarget { get; set; } = null;
+        public Target Target {
+            set {
+                if (value is CardTarget)
+                    CardTarget = (CardTarget)value;
+                if (value is PlayerTarget)
+                    PlayerTarget = (PlayerTarget)value;
+            }}
+
         private CreatureCard Attacker;
 
         private Dictionary<CharacterEnum, Response> _successiveResponse = new Dictionary<CharacterEnum, Response>();
@@ -37,11 +45,7 @@ namespace AmaruServer.Game.Managing
         {
             
             this.Caller = caller;
-            if (target is CardTarget)
-                CardTarget = (CardTarget)target;
-            if (target is PlayerTarget)
-                PlayerTarget = (PlayerTarget)target;
-
+            this.Target = target;
             this.GameManager = gameManager;
             this.Attacker = attacker;
         }
@@ -86,6 +90,15 @@ namespace AmaruServer.Game.Managing
 
         public override int Visit(PoisonAttack attack)
         {
+            if (CardTarget != null) { 
+            CreatureCard targetCard = (CreatureCard)(GameManager._userDict[CardTarget.Character].Player.GetCardFromId(CardTarget.CardId, Place.INNER) ?? GameManager._userDict[CardTarget.Character].Player.GetCardFromId(CardTarget.CardId, Place.OUTER));
+                if (targetCard.Health - attack.Power > 0) {
+                    targetCard.PoisonDamage += attack.Power;
+                    foreach (CharacterEnum c in GameManager._userDict.Keys.ToList())
+                        _successiveResponse.Add(c, new CardsModifiedResponse(targetCard));
+                }
+            }
+        
             return attack.Power;
         }
 
@@ -280,11 +293,6 @@ namespace AmaruServer.Game.Managing
         }
 
         public override int Visit(DoubleHPAbility doubleHPAbility)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override int Visit(DealDamageDependingOnMAXHPSpellAbility dealDamageDependingOnMAXHPSpellAbility)
         {
             throw new NotImplementedException();
         }

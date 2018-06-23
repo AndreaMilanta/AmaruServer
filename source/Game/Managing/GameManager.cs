@@ -226,14 +226,10 @@ namespace AmaruServer.Game.Managing
             }
             catch (Exception e)
             {
-                foreach (CharacterEnum c in _userDict.Keys)
-                {
-                    Log(c.ToString());
-                }
-                LogException(e);
                 LogError("Invalid action attempted");
+                LogException(e);
 
-                // TODO send response to INVALID ACTION
+
             }
         }
 

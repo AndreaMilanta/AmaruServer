@@ -10,6 +10,7 @@ using System.Linq;
 using AmaruCommon.Communication.Messages;
 using AmaruCommon.Responses;
 using System.Collections.Generic;
+using AmaruCommon.Actions.Targets;
 
 namespace AmaruServer.Game.Managing
 {
@@ -108,6 +109,28 @@ namespace AmaruServer.Game.Managing
             foreach (CharacterEnum dest in GameManager._userDict.Keys.ToList())
                 GameManager._userDict[dest].Write(new ResponseMessage(new AttackCreatureResponse(action.Caller, action.Target.Character, playedCard, attackedCard)));
 
+            foreach (KeyValuePair<CharacterEnum, Response> kvp in attackVisitor.SuccessiveResponse) {
+                Log("Player " + kvp.Key.ToString() + " recieved a successive response");
+                GameManager._userDict[kvp.Key].Write(new ResponseMessage(kvp.Value));
+            }
+        }
+
+        public override void Visit(UseAbilityAction action)
+        {
+            Player caller = GameManager.GetPlayer(action.Caller);
+            CreatureCard playedCard = (CreatureCard)(caller.GetCardFromId(action.PlayedCardId, Place.INNER) ?? caller.GetCardFromId(action.PlayedCardId, Place.OUTER));
+            playedCard.Energy -= playedCard.Attack.Cost;
+            AttacksVisitor attackVisitor = new AttacksVisitor(GameManager, caller, null, playedCard);
+            if (action.Targets == null)
+                playedCard.Visit(attackVisitor, caller.Character, playedCard.Ability);
+            else
+            {
+                foreach (Target t in action.Targets)
+                {
+                    attackVisitor.Target = t;
+                    playedCard.Visit(attackVisitor, caller.Character, playedCard.Ability);
+                }
+            }
             foreach (KeyValuePair<CharacterEnum, Response> kvp in attackVisitor.SuccessiveResponse) {
                 Log("Player " + kvp.Key.ToString() + " recieved a successive response");
                 GameManager._userDict[kvp.Key].Write(new ResponseMessage(kvp.Value));
