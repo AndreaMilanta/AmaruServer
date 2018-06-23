@@ -90,10 +90,15 @@ namespace AmaruServer.Game.Managing
 
         public override int Visit(PoisonAttack attack)
         {
-            CreatureCard targetCard = (CreatureCard)(GameManager._userDict[CardTarget.Character].Player.GetCardFromId(CardTarget.CardId, Place.INNER) ?? GameManager._userDict[CardTarget.Character].Player.GetCardFromId(CardTarget.CardId, Place.INNER));
-            targetCard.PoisonDamage += attack.Power;
-            foreach (CharacterEnum c in GameManager._userDict.Keys.ToList())
-                _successiveResponse.Add(c, new CardsModifiedResponse(targetCard));
+            if (CardTarget != null) { 
+            CreatureCard targetCard = (CreatureCard)(GameManager._userDict[CardTarget.Character].Player.GetCardFromId(CardTarget.CardId, Place.INNER) ?? GameManager._userDict[CardTarget.Character].Player.GetCardFromId(CardTarget.CardId, Place.OUTER));
+                if (targetCard.Health - attack.Power > 0) {
+                    targetCard.PoisonDamage += attack.Power;
+                    foreach (CharacterEnum c in GameManager._userDict.Keys.ToList())
+                        _successiveResponse.Add(c, new CardsModifiedResponse(targetCard));
+                }
+            }
+        
             return attack.Power;
         }
 

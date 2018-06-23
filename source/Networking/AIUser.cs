@@ -50,12 +50,13 @@ namespace AmaruServer.Networking
                     if (((NewTurnResponse)responseReceived).ActivePlayer == CharacterEnum.AMARU)
                     {
                         myTurn = true;
-                        thinkToMove();
+                        //thinkToMove();
                         listOfActions.Enqueue(new EndTurnAction(CharacterEnum.AMARU, -1, GameManager.IsMainTurn));
                     }
                 } else if(myTurn && (responseReceived is MainTurnResponse))
                 {
                     myTurn = false;
+                    /*
                     Log("Start to think");
                     GameManager toIterate = createGameManagerAndStuff(this.GameManager);
                     double discontentment = ValueGoalDiscontentment(toIterate);
@@ -78,6 +79,7 @@ namespace AmaruServer.Networking
                         }
                     }
                     Log("SCS");
+                    */
                     listOfActions.Enqueue(new EndTurnAction(CharacterEnum.AMARU, -1, GameManager.IsMainTurn));
                 }
             }
