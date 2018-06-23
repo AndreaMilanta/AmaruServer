@@ -44,6 +44,9 @@ namespace AmaruServer.Game.Managing
                 Log("Player " + kvp.Key.ToString() + " recieved a successive response");
                 GameManager._userDict[kvp.Key].Write(new ResponseMessage(kvp.Value));
             }
+
+            if (!target.IsAlive)
+                GameManager.KillPlayer(caller.Character, target.Character);
         }
 
         public override void Visit(MoveCreatureAction action)
@@ -76,6 +79,7 @@ namespace AmaruServer.Game.Managing
                 GameManager._userDict[target].Write(new ResponseMessage(new PlayASpellResponse(action.Caller,spell,action.Targets)));
             foreach (KeyValuePair<CharacterEnum,Response> kvp in visitor.SuccessiveResponse)
                 GameManager._userDict[kvp.Key].Write(new ResponseMessage(kvp.Value));
+            // visitor must take care of players which he kills
         }
 
         public override void Visit(EndTurnAction action)
@@ -113,6 +117,9 @@ namespace AmaruServer.Game.Managing
                 Log("Player " + kvp.Key.ToString() + " recieved a successive response");
                 GameManager._userDict[kvp.Key].Write(new ResponseMessage(kvp.Value));
             }
+
+            if (!target.IsAlive)
+                GameManager.KillPlayer(caller.Character, target.Character);
         }
 
         public override void Visit(UseAbilityAction action)
@@ -135,6 +142,7 @@ namespace AmaruServer.Game.Managing
                 Log("Player " + kvp.Key.ToString() + " recieved a successive response");
                 GameManager._userDict[kvp.Key].Write(new ResponseMessage(kvp.Value));
             }
+            // visitor must take care of players which he kills
         }
     }
 }
