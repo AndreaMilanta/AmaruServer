@@ -196,5 +196,9 @@ namespace AmaruServer.Game.Managing
             //check ShieldMaiden, immunità non so se c'è, creatura è presente?
            
         }
+
+        public override void Visit(UseAbilityAction useAbilityAction)
+        {
+        }
     }
 }
