@@ -71,7 +71,9 @@ namespace AmaruServer.Game.Managing
         {
             if (attack.ToCreature) {
                 Attacker.Health += attack.Hp;
-                //TODO: CREATURE MODIFIED RESPONSE
+                foreach (CharacterEnum c in GameManager._userDict.Keys.ToList()) {
+                    _successiveResponse.Add(c, new CardsModifiedResponse(Attacker));
+                }
             }
             else {
                 Caller.Health += attack.Hp;
