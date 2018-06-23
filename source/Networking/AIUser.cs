@@ -24,7 +24,6 @@ namespace AmaruServer.Networking
         private bool myTurn= false;
         MessageHandler messageHandler = null;
         Queue<PlayerAction> listOfActions;
-        private Dictionary<CharacterEnum, User> myEnemiesDict;
         ValidationVisitor myValidation;
 
         public AIUser(string logger) : base(logger)
@@ -45,35 +44,51 @@ namespace AmaruServer.Networking
             {
                 Response responseReceived = ((ResponseMessage)mex).Response;
                 if (responseReceived is NewTurnResponse)
-                {
-                    
+                {   
                     if (((NewTurnResponse)responseReceived).ActivePlayer == CharacterEnum.AMARU)
                     {
                         myTurn = true;
-                        thinkToMove();
+                        
+                        //thinkToMove();
                         listOfActions.Enqueue(new EndTurnAction(CharacterEnum.AMARU, -1, GameManager.IsMainTurn));
                     }
                 } else if(myTurn && (responseReceived is MainTurnResponse))
                 {
                     myTurn = false;
-                    Log("Start to think");
                     GameManager toIterate = createGameManagerAndStuff(this.GameManager);
                     double discontentment = ValueGoalDiscontentment(toIterate);
+                    Log("Start to think");
+                    foreach (Card c in Player.Hand)
+                    {
+                        Log(c.Name);
+                    }
                     bool gain = true;
                     while (gain)
                     {
                         KeyValuePair<Double,PlayerAction> pair = Think(toIterate);
-                        if (discontentment > pair.Key)
+                        if(pair.Key == Double.MinValue)
                         {
-                            pair.Value.Visit(toIterate.ExecutionVisitor);
-                            discontentment = ValueGoalDiscontentment(toIterate);
-                            listOfActions.Enqueue(pair.Value);
-                            gain = true;
-                            Log("DENTRO");
+                            gain = false;
+                            continue;
+                        }
+                        Log("discontentment: " + discontentment + " new Value: " + pair.Key);
+ //                       Log(toIterate._userDict[CharacterEnum.AMARU].Player.GetCardFromId(pair.Value.PlayedCardId, Place.HAND).Name.ToString());
+                        if (discontentment < pair.Key)
+                        {
+                            try
+                            {
+                                pair.Value.Visit(toIterate.ExecutionVisitor);
+                                discontentment = ValueGoalDiscontentment(toIterate);
+                                listOfActions.Enqueue(pair.Value);
+                                gain = true;
+                            } catch (Exception e)
+                            {
+                                Log(e.ToString());
+                            }
                         }
                         else
                         {
-                            Log("Fuori");
+                            Log("No vantaggio");
                             gain = false;
                         }
                     }
@@ -90,14 +105,6 @@ namespace AmaruServer.Networking
             List<int> moved = new List<int>();
             int countOuter = outer.Count;
             //per ogni giocatore in generale voglio sapere:
-            List<Player> playerToClone = new List<Player>();
-
-            myEnemiesDict = new Dictionary<CharacterEnum, User>(GameManager._userDict);
-            foreach (User user in myEnemiesDict.Values)
-            {
-                playerToClone.Add(user.Player);
-            }
-            GameManager FakeGM = new GameManager(playerToClone, "AILogger");
 
             LimitedList<Card> myCards = Player.Hand;
             LimitedList<CreatureCard> myWarZone = Player.Outer;
@@ -195,6 +202,11 @@ namespace AmaruServer.Networking
             //inizializzo tutti i target possibili per un attacco
             foreach (CreatureCard c in myWarZone)
             {
+                if (c.Energy == 0 || c.Attack is null)
+                {
+                    continue;
+                }
+                Log("Nome " + c.Name + " Energy: " + c.Energy + " Attack " + (c.Attack is null));
                 foreach (CardTarget cTarget in allAcceptableTargets)
                 {
                     try
@@ -232,11 +244,21 @@ namespace AmaruServer.Networking
                 }
             }
             listPossibleActions = listPossibleActions.OrderByDescending(x => x.Key).ToList();
+            if (listPossibleActions.Count > 0) {
+                Log(listPossibleActions[0].ToString());
             return listPossibleActions[0];
+            }
+            else
+            {
+                return new KeyValuePair<double, PlayerAction>(Double.MinValue,new EndTurnAction(CharacterEnum.AMARU,-1,false));
+            }
+
         }
 
         public override Message ReadSync(int timeout_s)
+
         {
+            System.Threading.Thread.Sleep(1500);
             return new ActionMessage(listOfActions.Dequeue());
         }
 
@@ -254,27 +276,29 @@ namespace AmaruServer.Networking
             double value = 0;
             List<Player> lp = new List<Player>();
             Player me = gm._userDict[CharacterEnum.AMARU].Player;
-            gm._userDict.Remove(CharacterEnum.AMARU);
-            foreach (User p in gm._userDict.Values){
-                Player player = p.Player;
+            foreach (KeyValuePair<CharacterEnum,User> p in gm._userDict.ToList()){
+                if(p.Key == CharacterEnum.AMARU)
+                {
+                    continue;
+                }
+                Player player = p.Value.Player;
                 if (player.IsAlive)
                 {
-                    lp.Add(p.Player);
+                    lp.Add(player);
                 }
                 else
                 {
-                    //Perdo Punti per ogni giocatore vivo
+                    //Se sto per uccidere un giocatore lo faccio, valutando bene la situazione in cui un giocatore è morto
                     value += 20;
                 }
             }
 
             //Somma vita mia e delle mie creature, il mio mana (moltiplicato per 2 per dargli più valore)
             value += me.Health;
-            value += calculateHpOnField(me);
+            value += calculateHpOnField(me)*(me.Outer.Count+me.Inner.Count);
             value += me.Outer.Count;
             value += me.Inner.Count;
-            value += me.Mana*2;
-            Log(value.ToString());
+            value += me.Mana;
 
             //sommo la vita degli altri e la deviazione standard, la vita media nei loro campi e la deviazione standard
             List<double> listHpField = new List<double>();
@@ -287,14 +311,10 @@ namespace AmaruServer.Networking
             double meanHp = Tools.calculateAverage(listHpPlayers);
             double meanHpField = Tools.calculateAverage(listHpField);
 
-            value -= meanHp;
-            Log(value.ToString());
+            value -= meanHp*2;
             value -= meanHpField;
-            Log(value.ToString());
             value -= Tools.calculateStd(listHpPlayers);
-            Log(value.ToString());
             value -= Tools.calculateStd(listHpField);
-            Log(value.ToString());
             return value;
         }
 
@@ -323,15 +343,7 @@ namespace AmaruServer.Networking
 
            private GameManager createGameManagerAndStuff(GameManager m){
             //per ogni giocatore in generale voglio sapere:
-            List<Player> playerToClone = new List<Player>();
-
-            myEnemiesDict = new Dictionary<CharacterEnum, User>(GameManager._userDict);
-            foreach (User user in myEnemiesDict.Values)
-            {
-                playerToClone.Add(new Player(user.Player));
-            }
-            GameManager FakeGM = new GameManager(playerToClone, "AILogger");
-            //myTurn = true quando sono in movimento, altrimenti vale false.
+            GameManager FakeGM = new GameManager(m, "AILogger");
             FakeGM.IsMainTurn = !myTurn;
             return FakeGM;
         }

@@ -38,11 +38,30 @@ namespace AmaruServer.Game.Managing
         /// </summary>
         /// <param name="players">!!!Lista già clonata ricorsivamente!!!!</param>
         /// <param name="logger">Nome del logger dell'AI (consiglio "AILogger"</param>
-        public GameManager(List<Player> players, string logger) : base(logger)
+        public GameManager(GameManager gameManager, string logger) : base(logger)
         {
-            _userDict = new Dictionary<CharacterEnum, User>();
-            foreach (Player p in players)
+
+            //per ogni giocatore in generale voglio sapere:
+            /*
+            List<Player> playerToClone = new List<Player>();
+            foreach (User user in playerToClone)
+            {
+                playerToClone.Add(new Player(user.Player));
+            }
+            foreach (Player p in playerToClone)
                 _userDict.Add(p.Character, new EmptyUser(p, logger));
+            */
+            foreach (CreatureCard c in gameManager.Graveyard)
+            {
+                this.Graveyard.Add(((CreatureCard)c).clone());
+            }
+            this._userDict = new Dictionary<CharacterEnum, User>();
+            foreach (User user in gameManager._userDict.Values)
+            {
+                this._userDict.Add(user.Player.Character, new EmptyUser(new Player(user.Player), "FAKELOGGER"));
+            }
+
+            this.GameHasFinished = gameManager.GameHasFinished;
             this.ValidationVisitor = new ValidationVisitor(this);
             this.ExecutionVisitor = new ExecutionVisitor(this);
             this.ActiveCharacter = CharacterEnum.AMARU;
@@ -205,9 +224,15 @@ namespace AmaruServer.Game.Managing
                 aMex.Action.Visit(this.ValidationVisitor);
                 aMex.Action.Visit(this.ExecutionVisitor);
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                foreach (CharacterEnum c in _userDict.Keys)
+                {
+                    Log(c.ToString());
+                }
+                LogException(e);
                 LogError("Invalid action attempted");
+
                 // TODO send response to INVALID ACTION
             }
         }

@@ -19,6 +19,7 @@ using static ClientServer.Communication.ClientTCP;
 
 namespace AmaruServer.Networking
 {
+    //DEVI RIVEDere la costruzione dei game manager, ci ho messo gamemanager this come argomento senza pensarci mezzo secondo
     public class RandomBasicAIUser : User
     {
         private bool myTurn = false;
@@ -81,7 +82,7 @@ namespace AmaruServer.Networking
             {
                 playerToClone.Add(user.Player);
             }
-            GameManager FakeGM = new GameManager(playerToClone, "AILogger");
+            GameManager FakeGM = new GameManager(this.GameManager, "AILogger");
 
             LimitedList<Card> myCards = Player.Hand;
             LimitedList<CreatureCard> myWarZone = Player.Outer;
@@ -124,7 +125,7 @@ namespace AmaruServer.Networking
             {
                 playerToClone.Add(user.Player);
             }
-            GameManager FakeGM = new GameManager(playerToClone, "AILogger");
+            GameManager FakeGM = new GameManager(this.GameManager, "AILogger");
 
             LimitedList<Card> myCards = Player.Hand;
             LimitedList<CreatureCard> myWarZone = Player.Outer;
