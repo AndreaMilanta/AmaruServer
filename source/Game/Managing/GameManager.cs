@@ -229,7 +229,6 @@ namespace AmaruServer.Game.Managing
                 LogError("Invalid action attempted");
                 LogException(e);
 
-
             }
         }
 
