@@ -122,6 +122,7 @@ namespace AmaruServer.Game.Managing
 
         public override int Visit(GainHPAbility ability)
         {
+            Log(OwnerCard.Name + " used GainHPAbility");
             ((CreatureCard)OwnerCard).Health += ability.Hp;
             foreach (CharacterEnum c in GameManager.UserDict.Keys.ToList())
                 _successiveResponse.Add(c, new CardsModifiedResponse((CreatureCard)OwnerCard));
@@ -155,6 +156,7 @@ namespace AmaruServer.Game.Managing
 
         public override int Visit(KillIfPDAbility ability)
         {
+            Log(OwnerCard.Name + " used KillIfPDAbility");
             List<CreatureCard> DeadCards = new List<CreatureCard>();
             foreach (CardTarget t in CardTargets)
             {
@@ -182,6 +184,7 @@ namespace AmaruServer.Game.Managing
 
         public override int Visit(DamageDependingOnCreatureNumberAbility ability)
         {
+            Log(OwnerCard.Name + " used DamageDependingOnCreatureNumberAbility");
             int attackPower = ability.myZone == Place.INNER ? GameManager.UserDict[Owner].Player.Inner.Count : GameManager.UserDict[Owner].Player.Outer.Count;
             // Case target is Creature
             if (Targets[0] is CardTarget)
@@ -206,6 +209,7 @@ namespace AmaruServer.Game.Managing
 
         public override int Visit(BonusAttackDependingOnHealthAbility ability)
         {
+            Log(OwnerCard.Name + " used BonusAttackDependingOnHealthAbilit");
             List<CreatureCard> targets = new List<CreatureCard>();
             foreach (CardTarget ct in CardTargets)
             {
@@ -219,6 +223,7 @@ namespace AmaruServer.Game.Managing
 
         public override int Visit(DamageWithPDAbility ability)
         {
+            Log(OwnerCard.Name + " used DamageWithPDAbility");
             List<CreatureCard> mods = new List<CreatureCard>();
             foreach (CardTarget ct in CardTargets)
             {
@@ -234,6 +239,7 @@ namespace AmaruServer.Game.Managing
 
         public override int Visit(GiveEPAbility ability)
         {
+            Log(OwnerCard.Name + " used GiveEPAbility");
             List<CreatureCard> mods = new List<CreatureCard>();
             foreach (CardTarget ct in CardTargets)
             {
@@ -247,6 +253,7 @@ namespace AmaruServer.Game.Managing
 
         public override int Visit(GainCPAbility ability)
         {
+            Log(OwnerCard.Name + " used GainCPAbility");
             List<PlayerMod> mods = new List<PlayerMod>();
             foreach (PlayerTarget pt in PlayerTargets) {
                 Player player = GameManager.UserDict[pt.Character].Player;
