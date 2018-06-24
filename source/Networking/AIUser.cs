@@ -280,6 +280,7 @@ namespace AmaruServer.Networking
                     allAcceptablePlayerTarget.Add(new PlayerTarget(pair.Key));
                 }
             }
+
             //inizializzo tutti i target possibili per un attacco
             foreach (CreatureCard c in myWarZone)
             {
