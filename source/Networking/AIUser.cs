@@ -51,7 +51,7 @@ namespace AmaruServer.Networking
             //Addictive values
             public const double ShieldAndInnerZone = -2.0;
             public const double ShieldMaidenPresentLowHPInnerZone = 4.0;
-            public const double CanAttackInnerZone = -2.5;
+            public const double CanAttackInnerZone = -6;
             public const double LowHPOuterZone =  -4.0;
 
             //Multiplicative Values
