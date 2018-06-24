@@ -143,7 +143,7 @@ namespace AmaruServer.Game.Managing
                 catch (Exception e)
                 {
                     LogException(e);
-                    KillPlayer(ActiveCharacter);
+                    KillPlayer4Turn(ActiveCharacter);
                     _userDict.Remove(ActiveCharacter);
                     foreach (CharacterEnum target in _userDict.Keys.ToList())
                         _userDict[target].Write(new PlayerKilledMessage(ActiveCharacter, true));
@@ -182,6 +182,10 @@ namespace AmaruServer.Game.Managing
                 card.Visit(OTSVisitor, ActiveCharacter, null);
                 Modified.Add(card);
             }
+
+            // Disable immunity
+            if (_userDict[ActiveCharacter].Player.IsImmune)
+                _userDict[ActiveCharacter].Player.IsImmune = false;
 
             _userDict[ActiveCharacter].Write(new ResponseMessage(new NewTurnResponse(CurrentRound, ActiveCharacter, _userDict[ActiveCharacter].Player.Mana, drawnCard, Modified, damage)));
             foreach (CharacterEnum target in CharacterManager.Instance.Others(ActiveCharacter))
@@ -226,8 +230,8 @@ namespace AmaruServer.Game.Managing
             }
             catch (Exception e)
             {
-                LogError("Invalid action attempted");
-                LogException(e);
+                //LogError("Invalid action attempted");
+                //LogException(e);
 
             }
         }
@@ -245,7 +249,34 @@ namespace AmaruServer.Game.Managing
             return ActiveCharacter;
         }
 
-        public void KillPlayer(CharacterEnum deadChar)
+        /// <summary>
+        /// Handles a player death
+        /// Takes care of notifying everyone
+        /// </summary>
+        /// <param name="killer"></param>
+        /// <param name="deadChar"></param>
+        public void KillPlayer(CharacterEnum killer, CharacterEnum deadChar)
+        {     
+            List<Card> drawnCards = new List<Card>();
+            if (killer != CharacterEnum.AMARU)
+            {
+                if (deadChar == CharacterEnum.AMARU)
+                {
+                    _userDict[killer].Player.IsImmune = true;
+                    drawnCards.Add(_userDict[killer].Player.Draw());
+                }
+                drawnCards.Add(_userDict[killer].Player.Draw());
+            }
+            KillPlayer4Turn(deadChar);
+            _userDict[ActiveCharacter].Write(new ResponseMessage(new PlayerKilledResponse(killer, deadChar, _userDict[killer].Player.IsImmune, drawnCards)));
+            foreach (CharacterEnum target in CharacterManager.Instance.Others(ActiveCharacter))
+                _userDict[target].Write(new ResponseMessage(new PlayerKilledResponse(killer, deadChar, _userDict[killer].Player.IsImmune, drawnCards.Count)));
+            if (_turnList.Count == 1)
+                foreach (CharacterEnum target in _userDict.Keys)
+                    _userDict[target].Write(new ResponseMessage(new GameFinishedResponse(_turnList[0])));
+        }
+
+        private void KillPlayer4Turn(CharacterEnum deadChar)
         {
             // Adapt current player index
             if (_turnList.FindIndex(c => c == deadChar) < _currentIndex)
@@ -258,10 +289,10 @@ namespace AmaruServer.Game.Managing
             {
                 _turnList.Remove(deadChar);
                 // Handle two players left (must remove first AMARU before currentIndex)
-                if (_turnList.Exists(c => c == CharacterEnum.AMARU) && _turnList.Count <= 4)     
+                if (_turnList.Exists(c => c == CharacterEnum.AMARU) && _turnList.Count == 4)     
                 {
                     int tempIndex = _currentIndex;
-                    while (_turnList[tempIndex] == CharacterEnum.AMARU)
+                    while (_turnList[tempIndex] != CharacterEnum.AMARU)
                         tempIndex = tempIndex == 0 ? _turnList.Count - 1 : tempIndex - 1;
                     _turnList.RemoveAt(tempIndex);
                     if (tempIndex < _currentIndex)
