@@ -231,7 +231,8 @@ namespace AmaruServer.Game.Managing
             catch (Exception e)
             {
                 //LogError("Invalid action attempted");
-                //LogException(e);
+                if (ActiveCharacter != CharacterEnum.AMARU)
+                    LogException(e);
 
             }
         }

@@ -167,6 +167,7 @@ namespace AmaruServer.Game.Managing
             foreach (CardTarget t in CardTargets)
             {
                 CreatureCard deadCard = (CreatureCard)(GameManager.UserDict[t.Character].Player.GetCardFromId(t.CardId, Place.INNER) ?? GameManager.UserDict[t.Character].Player.GetCardFromId(t.CardId, Place.OUTER));
+                Log("Target is " + (deadCard.Name ?? "null") + " of " + t.Character.ToString());
                 deadCard.Health = 0;
                 DeadCards.Add(deadCard);
             }
@@ -263,14 +264,11 @@ namespace AmaruServer.Game.Managing
         public override int Visit(GainCPAbility ability)
         {
             Log(OwnerCard.Name + " used GainCPAbility");
-            List<PlayerMod> mods = new List<PlayerMod>();
-            foreach (PlayerTarget pt in PlayerTargets) {
-                Player player = GameManager.UserDict[pt.Character].Player;
-                player.Mana += ability.cp;
-                mods.Add(new PlayerMod(player.Character, player.Mana, player.Health));
-            }
+            Player caller = GameManager.UserDict[Owner].Player;
+            caller.Mana += ability.cp;
+            Log(Owner.ToString() + " gained " + caller.Mana + " CP");
             foreach (CharacterEnum c in GameManager.UserDict.Keys.ToList())
-                AddResponse(c, new PlayerModifiedResponse(mods));
+                AddResponse(c, new PlayerModifiedResponse(caller.Character, caller.Mana, caller.Health));
             return 0;
         }
 
