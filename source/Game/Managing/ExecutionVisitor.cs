@@ -37,12 +37,12 @@ namespace AmaruServer.Game.Managing
             int attackPower = playedCard.Attack.Visit(attackVisitor);
             target.Health -= attackPower;
 
-            foreach (CharacterEnum dest in GameManager._userDict.Keys.ToList())
-                GameManager._userDict[dest].Write(new ResponseMessage(new AttackPlayerResponse(action.Caller, action.Target.Character, playedCard, target.Health)));
+            foreach (CharacterEnum dest in GameManager.UserDict.Keys.ToList())
+                GameManager.UserDict[dest].Write(new ResponseMessage(new AttackPlayerResponse(action.Caller, action.Target.Character, playedCard, target.Health)));
 
             foreach (KeyValuePair<CharacterEnum, Response> kvp in attackVisitor.SuccessiveResponse) {
                 Log("Player " + kvp.Key.ToString() + " recieved a successive response");
-                GameManager._userDict[kvp.Key].Write(new ResponseMessage(kvp.Value));
+                GameManager.UserDict[kvp.Key].Write(new ResponseMessage(kvp.Value));
             }
 
             if (!target.IsAlive)
@@ -54,8 +54,8 @@ namespace AmaruServer.Game.Managing
             Log("card moved to " + action.Place.ToString());
             Player p = GameManager.GetPlayer(action.Caller);
             CreatureCard creature = p.MoveACreatureFromPlace(action.PlayedCardId, action.Place);
-            foreach (CharacterEnum target in GameManager._userDict.Keys.ToList())
-                GameManager._userDict[target].Write(new ResponseMessage(new MoveCreatureResponse(action.Caller, creature, action.Place, action.TablePos)));
+            foreach (CharacterEnum target in GameManager.UserDict.Keys.ToList())
+                GameManager.UserDict[target].Write(new ResponseMessage(new MoveCreatureResponse(action.Caller, creature, action.Place, action.TablePos)));
         }
 
         public override void Visit(PlayACreatureFromHandAction action)
@@ -64,8 +64,8 @@ namespace AmaruServer.Game.Managing
             Player p = GameManager.GetPlayer(action.Caller);
             CreatureCard creature = p.PlayACreatureFromHand(action.PlayedCardId, action.Place);
             creature.Visit(visitor, p.Character);
-            foreach (CharacterEnum target in GameManager._userDict.Keys.ToList())
-                GameManager._userDict[target].Write(new ResponseMessage(new PlayACreatureResponse(action.Caller, creature, action.Place, action.TablePos)));
+            foreach (CharacterEnum target in GameManager.UserDict.Keys.ToList())
+                GameManager.UserDict[target].Write(new ResponseMessage(new PlayACreatureResponse(action.Caller, creature, action.Place, action.TablePos)));
         }
 
         public override void Visit(PlayASpellFromHandAction action)
@@ -75,10 +75,10 @@ namespace AmaruServer.Game.Managing
             SpellCard spell = p.PlayASpellFromHand(action.PlayedCardId);
             visitor.Targets = action.Targets;
             spell.Visit(visitor, p.Character);
-            foreach (CharacterEnum target in GameManager._userDict.Keys.ToList())
-                GameManager._userDict[target].Write(new ResponseMessage(new PlayASpellResponse(action.Caller,spell,action.Targets)));
+            foreach (CharacterEnum target in GameManager.UserDict.Keys.ToList())
+                GameManager.UserDict[target].Write(new ResponseMessage(new PlayASpellResponse(action.Caller,spell,action.Targets)));
             foreach (KeyValuePair<CharacterEnum,Response> kvp in visitor.SuccessiveResponse)
-                GameManager._userDict[kvp.Key].Write(new ResponseMessage(kvp.Value));
+                GameManager.UserDict[kvp.Key].Write(new ResponseMessage(kvp.Value));
             // visitor must take care of players which he kills
         }
 
@@ -110,12 +110,12 @@ namespace AmaruServer.Game.Managing
                 GameManager.Graveyard.Add(attackedCard);
             }
 
-            foreach (CharacterEnum dest in GameManager._userDict.Keys.ToList())
-                GameManager._userDict[dest].Write(new ResponseMessage(new AttackCreatureResponse(action.Caller, action.Target.Character, playedCard, attackedCard)));
+            foreach (CharacterEnum dest in GameManager.UserDict.Keys.ToList())
+                GameManager.UserDict[dest].Write(new ResponseMessage(new AttackCreatureResponse(action.Caller, action.Target.Character, playedCard, attackedCard)));
 
             foreach (KeyValuePair<CharacterEnum, Response> kvp in attackVisitor.SuccessiveResponse) {
                 Log("Player " + kvp.Key.ToString() + " recieved a successive response");
-                GameManager._userDict[kvp.Key].Write(new ResponseMessage(kvp.Value));
+                GameManager.UserDict[kvp.Key].Write(new ResponseMessage(kvp.Value));
             }
 
             if (!target.IsAlive)
@@ -132,15 +132,12 @@ namespace AmaruServer.Game.Managing
                 playedCard.Visit(attackVisitor, caller.Character, playedCard.Ability);
             else
             {
-                foreach (Target t in action.Targets)
-                {
-                    attackVisitor.Target = t;
-                    playedCard.Visit(attackVisitor, caller.Character, playedCard.Ability);
-                }
+                attackVisitor.Targets = action.Targets;
+                playedCard.Visit(attackVisitor, caller.Character, playedCard.Ability);
             }
             foreach (KeyValuePair<CharacterEnum, Response> kvp in attackVisitor.SuccessiveResponse) {
                 Log("Player " + kvp.Key.ToString() + " recieved a successive response");
-                GameManager._userDict[kvp.Key].Write(new ResponseMessage(kvp.Value));
+                GameManager.UserDict[kvp.Key].Write(new ResponseMessage(kvp.Value));
             }
             // visitor must take care of players which he kills
         }

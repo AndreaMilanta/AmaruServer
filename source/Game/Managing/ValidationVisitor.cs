@@ -146,15 +146,15 @@ namespace AmaruServer.Game.Managing
                 {
                     throw new InvalidTargetException();
                 }
-                if (t is PlayerTarget  && GameManager._userDict[((PlayerTarget)t).Character].Player.IsImmune)
+                if (t is PlayerTarget  && GameManager.UserDict[((PlayerTarget)t).Character].Player.IsImmune)
                 {
                     throw new InvalidTargetException();
                 }
                 if (t is CardTarget) 
                 {
                     CardTarget cardTarget = (CardTarget)t;
-                    Card cardOuter= GameManager._userDict[((CardTarget)t).Character].Player.GetCardFromId(cardTarget.CardId, Place.OUTER);
-                    Card cardInner = GameManager._userDict[((CardTarget)t).Character].Player.GetCardFromId(cardTarget.CardId, Place.INNER);
+                    Card cardOuter= GameManager.UserDict[((CardTarget)t).Character].Player.GetCardFromId(cardTarget.CardId, Place.OUTER);
+                    Card cardInner = GameManager.UserDict[((CardTarget)t).Character].Player.GetCardFromId(cardTarget.CardId, Place.INNER);
                     if (cardOuter != null && cardOuter is CreatureCard)
                     {
                         if (((CreatureCard) cardOuter).creatureEffect is ImmunityCreatureEffect)

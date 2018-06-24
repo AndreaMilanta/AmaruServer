@@ -20,7 +20,7 @@ namespace AmaruServer.Game.Managing
     public class GameManager : Loggable
     {
         public readonly int Id;
-        public Dictionary<CharacterEnum, User> _userDict = new Dictionary<CharacterEnum, User>();
+        public Dictionary<CharacterEnum, User> UserDict = new Dictionary<CharacterEnum, User>();
         public ValidationVisitor ValidationVisitor { get; private set; }
         public ExecutionVisitor ExecutionVisitor { get; private set; }
         public bool GameHasFinished { get; set; }
@@ -55,10 +55,10 @@ namespace AmaruServer.Game.Managing
             {
                 this.Graveyard.Add(((CreatureCard)c).clone());
             }
-            this._userDict = new Dictionary<CharacterEnum, User>();
-            foreach (User user in gameManager._userDict.Values)
+            this.UserDict = new Dictionary<CharacterEnum, User>();
+            foreach (User user in gameManager.UserDict.Values)
             {
-                this._userDict.Add(user.Player.Character, new EmptyUser(new Player(user.Player), "FAKELOGGER"));
+                this.UserDict.Add(user.Player.Character, new EmptyUser(new Player(user.Player), "FAKELOGGER"));
             }
 
             this.GameHasFinished = gameManager.GameHasFinished;
@@ -71,14 +71,14 @@ namespace AmaruServer.Game.Managing
         {
             try {
                 Id = id;
-                this._userDict = clientsDict;
+                this.UserDict = clientsDict;
 
                 this.ValidationVisitor = new ValidationVisitor(this);
                 this.ExecutionVisitor = new ExecutionVisitor(this);
-                this.ActiveCharacter = this._userDict.Keys.ToArray()[0];
+                this.ActiveCharacter = this.UserDict.Keys.ToArray()[0];
                 this._turnList = new List<CharacterEnum>();
-                for (int i = 0; i < _userDict.Keys.ToArray().Length; i++) {
-                    _turnList.Add(_userDict.Keys.ToArray()[i]);
+                for (int i = 0; i < UserDict.Keys.ToArray().Length; i++) {
+                    _turnList.Add(UserDict.Keys.ToArray()[i]);
                     if (i % 2 == 1)
                         _turnList.Add(CharacterEnum.AMARU);
                 }
@@ -96,28 +96,28 @@ namespace AmaruServer.Game.Managing
                 Log("Game " + this.Id + " has started");
 
                 // Get disadvantaged players
-                List<CharacterEnum> disadvantaged = _userDict.Keys.ToList().Where(c => c != CharacterEnum.AMARU).ToList().GetRange(AmaruConstants.NUM_PLAYER - AmaruConstants.NUM_DISADVANTAGED, AmaruConstants.NUM_DISADVANTAGED);
+                List<CharacterEnum> disadvantaged = UserDict.Keys.ToList().Where(c => c != CharacterEnum.AMARU).ToList().GetRange(AmaruConstants.NUM_PLAYER - AmaruConstants.NUM_DISADVANTAGED, AmaruConstants.NUM_DISADVANTAGED);
 
                 // Init Players
-                foreach (CharacterEnum c in _userDict.Keys)                       // Default draw
-                    _userDict[c].SetPlayer(new Player(c, AmaruConstants.GAME_PREFIX + Id), this);
-                _userDict.Add(CharacterEnum.AMARU, new AIUser("AI_"+AmaruConstants.GAME_PREFIX + Id));
-                    _userDict[CharacterEnum.AMARU].SetPlayer(new AmaruPlayer(AmaruConstants.GAME_PREFIX + Id), this);
+                foreach (CharacterEnum c in UserDict.Keys)                       // Default draw
+                    UserDict[c].SetPlayer(new Player(c, AmaruConstants.GAME_PREFIX + Id), this);
+                UserDict.Add(CharacterEnum.AMARU, new AIUser("AI_"+AmaruConstants.GAME_PREFIX + Id));
+                    UserDict[CharacterEnum.AMARU].SetPlayer(new AmaruPlayer(AmaruConstants.GAME_PREFIX + Id), this);
 
                 // Draw cards 
-                foreach (CharacterEnum c in _userDict.Keys)                       // Default draw
-                    _userDict[c].Player.Draw(AmaruConstants.INITIAL_HAND_SIZE);
+                foreach (CharacterEnum c in UserDict.Keys)                       // Default draw
+                    UserDict[c].Player.Draw(AmaruConstants.INITIAL_HAND_SIZE);
                 foreach (CharacterEnum c in disadvantaged)                      // Extra draw for disadvantaged
-                    _userDict[c].Player.Draw(AmaruConstants.INITIAL_HAND_BONUS);
+                    UserDict[c].Player.Draw(AmaruConstants.INITIAL_HAND_BONUS);
 
                 // Send GameInitMessage to Users
-                foreach (CharacterEnum target in _userDict.Keys)
+                foreach (CharacterEnum target in UserDict.Keys)
                 {
                     Dictionary<CharacterEnum, EnemyInfo> enemies = new Dictionary<CharacterEnum, EnemyInfo>();
-                    OwnInfo own = _userDict[target].Player.AsOwn;
+                    OwnInfo own = UserDict[target].Player.AsOwn;
                     foreach (CharacterEnum c in CharacterManager.Instance.Others(target))
-                        enemies.Add(c, _userDict[c].Player.AsEnemy);
-                    _userDict[target].Write(new GameInitMessage(enemies, own, _turnList));
+                        enemies.Add(c, UserDict[c].Player.AsEnemy);
+                    UserDict[target].Write(new GameInitMessage(enemies, own, _turnList));
                 }
 
                 // Start turn
@@ -138,15 +138,15 @@ namespace AmaruServer.Game.Managing
             {
                 try
                 {
-                    HandlePlayerMessage(_userDict[ActiveCharacter].ReadSync(ServerConstants.ReadTimeout_ms));
+                    HandlePlayerMessage(UserDict[ActiveCharacter].ReadSync(ServerConstants.ReadTimeout_ms));
                 }
                 catch (Exception e)
                 {
                     LogException(e);
                     KillPlayer4Turn(ActiveCharacter);
-                    _userDict.Remove(ActiveCharacter);
-                    foreach (CharacterEnum target in _userDict.Keys.ToList())
-                        _userDict[target].Write(new PlayerKilledMessage(ActiveCharacter, true));
+                    UserDict.Remove(ActiveCharacter);
+                    foreach (CharacterEnum target in UserDict.Keys.ToList())
+                        UserDict[target].Write(new PlayerKilledMessage(ActiveCharacter, true));
                     NextTurn();
                 }
             }
@@ -159,24 +159,24 @@ namespace AmaruServer.Game.Managing
 
             // Draw card
             int damage = 0;
-            Card drawnCard = _userDict[ActiveCharacter].Player.Draw();
+            Card drawnCard = UserDict[ActiveCharacter].Player.Draw();
             if (drawnCard == null)                                         // Handle if deck is finished
-                if (_userDict[ActiveCharacter].Player.Deck.Count == 0)
+                if (UserDict[ActiveCharacter].Player.Deck.Count == 0)
                     damage = 1;
 
             // Give mana
-            _userDict[ActiveCharacter].Player.Mana += CurrentRound * AmaruConstants.MANA_TURN_FACTOR;
+            UserDict[ActiveCharacter].Player.Mana += CurrentRound * AmaruConstants.MANA_TURN_FACTOR;
 
             // Add EP and execute onturnstart for each card on table
             OnTurnStartVisitor OTSVisitor = new OnTurnStartVisitor(ActiveCharacter, AmaruConstants.GAME_PREFIX + Id);
             List<Card> Modified = new List<Card>();
-            foreach (CreatureCard card in _userDict[ActiveCharacter].Player.Inner)
+            foreach (CreatureCard card in UserDict[ActiveCharacter].Player.Inner)
             {
                 card.Energy++;
                 card.Visit(OTSVisitor, ActiveCharacter, null);
                 Modified.Add(card);
             }
-            foreach (CreatureCard card in _userDict[ActiveCharacter].Player.Outer)
+            foreach (CreatureCard card in UserDict[ActiveCharacter].Player.Outer)
             {
                 card.Energy++;
                 card.Visit(OTSVisitor, ActiveCharacter, null);
@@ -184,25 +184,25 @@ namespace AmaruServer.Game.Managing
             }
 
             // Disable immunity
-            if (_userDict[ActiveCharacter].Player.IsImmune)
-                _userDict[ActiveCharacter].Player.IsImmune = false;
+            if (UserDict[ActiveCharacter].Player.IsImmune)
+                UserDict[ActiveCharacter].Player.IsImmune = false;
 
-            _userDict[ActiveCharacter].Write(new ResponseMessage(new NewTurnResponse(CurrentRound, ActiveCharacter, _userDict[ActiveCharacter].Player.Mana, drawnCard, Modified, damage)));
+            UserDict[ActiveCharacter].Write(new ResponseMessage(new NewTurnResponse(CurrentRound, ActiveCharacter, UserDict[ActiveCharacter].Player.Mana, drawnCard, Modified, damage)));
             foreach (CharacterEnum target in CharacterManager.Instance.Others(ActiveCharacter))
-                _userDict[target].Write(new ResponseMessage(new NewTurnResponse(CurrentRound, ActiveCharacter, _userDict[ActiveCharacter].Player.Mana, drawnCard != null, Modified, damage)));
+                UserDict[target].Write(new ResponseMessage(new NewTurnResponse(CurrentRound, ActiveCharacter, UserDict[ActiveCharacter].Player.Mana, drawnCard != null, Modified, damage)));
         }
 
         public void StartMainTurn()
         {
             Log("Start main turn for " + ActiveCharacter.ToString());
             IsMainTurn = true;
-            foreach (CharacterEnum target in _userDict.Keys.ToList())
-                _userDict[target].Write(new ResponseMessage(new MainTurnResponse()));
+            foreach (CharacterEnum target in UserDict.Keys.ToList())
+                UserDict[target].Write(new ResponseMessage(new MainTurnResponse()));
         }
 
         public void Shutdown()
         {
-            foreach (User u in _userDict.Values)
+            foreach (User u in UserDict.Values)
                 u.Write(new ShutdownMessage());
         }
 
@@ -210,12 +210,12 @@ namespace AmaruServer.Game.Managing
         {
             if (Dest == CharacterEnum.AMARU)
                 return;
-            _userDict[Dest].Write(new ResponseMessage(response));
+            UserDict[Dest].Write(new ResponseMessage(response));
         }
 
         public Player GetPlayer(CharacterEnum character)
         {
-            return _userDict[character].Player;
+            return UserDict[character].Player;
         }
 
         public void HandlePlayerMessage(Message mex)
@@ -242,7 +242,7 @@ namespace AmaruServer.Game.Managing
             if (_currentIndex == 0)
                 CurrentRound++;
             this.ActiveCharacter = _turnList[_currentIndex];
-            this._userDict[this.ActiveCharacter].Player.ResetManaCount();
+            this.UserDict[this.ActiveCharacter].Player.ResetManaCount();
             Log("New Player: " + ActiveCharacter.ToString());
             Log("Current index: " + _currentIndex);
             
@@ -262,18 +262,18 @@ namespace AmaruServer.Game.Managing
             {
                 if (deadChar == CharacterEnum.AMARU)
                 {
-                    _userDict[killer].Player.IsImmune = true;
-                    drawnCards.Add(_userDict[killer].Player.Draw());
+                    UserDict[killer].Player.IsImmune = true;
+                    drawnCards.Add(UserDict[killer].Player.Draw());
                 }
-                drawnCards.Add(_userDict[killer].Player.Draw());
+                drawnCards.Add(UserDict[killer].Player.Draw());
             }
             KillPlayer4Turn(deadChar);
-            _userDict[ActiveCharacter].Write(new ResponseMessage(new PlayerKilledResponse(killer, deadChar, _userDict[killer].Player.IsImmune, drawnCards)));
+            UserDict[ActiveCharacter].Write(new ResponseMessage(new PlayerKilledResponse(killer, deadChar, UserDict[killer].Player.IsImmune, drawnCards)));
             foreach (CharacterEnum target in CharacterManager.Instance.Others(ActiveCharacter))
-                _userDict[target].Write(new ResponseMessage(new PlayerKilledResponse(killer, deadChar, _userDict[killer].Player.IsImmune, drawnCards.Count)));
+                UserDict[target].Write(new ResponseMessage(new PlayerKilledResponse(killer, deadChar, UserDict[killer].Player.IsImmune, drawnCards.Count)));
             if (_turnList.Count == 1)
-                foreach (CharacterEnum target in _userDict.Keys)
-                    _userDict[target].Write(new ResponseMessage(new GameFinishedResponse(_turnList[0])));
+                foreach (CharacterEnum target in UserDict.Keys)
+                    UserDict[target].Write(new ResponseMessage(new GameFinishedResponse(_turnList[0])));
         }
 
         private void KillPlayer4Turn(CharacterEnum deadChar)

@@ -29,6 +29,9 @@ namespace AmaruServer.Game.Managing
                 if (value is PlayerTarget)
                     PlayerTarget = (PlayerTarget)value;
             }}
+        public List<Target> Targets { private get; set; }
+        private List<CardTarget> CardTargets { get { return Targets.Where(t => t is CardTarget).Select(t => (CardTarget)t).ToList(); } }
+        private List<PlayerTarget> PlayerTargets { get { return Targets.Where(t => t is PlayerTarget).Select(t => (PlayerTarget)t).ToList(); } }
 
         private CreatureCard Attacker;
 
@@ -55,13 +58,13 @@ namespace AmaruServer.Game.Managing
         }
         public override int Visit(ImperiaAttack attack)
         {
-            return Attacker.Health;
+            return Attacker.Health + attack.BonusAttack;
         }
 
         public override int Visit(GainCPAttack attack)
         {
             Caller.Mana += attack.Cp;
-            foreach(CharacterEnum c in GameManager._userDict.Keys.ToList()) {
+            foreach(CharacterEnum c in GameManager.UserDict.Keys.ToList()) {
                 _successiveResponse.Add(c, new PlayerModifiedResponse(Caller.Character, Caller.Mana, Caller.Health));
             }
             return attack.Power;
@@ -71,14 +74,14 @@ namespace AmaruServer.Game.Managing
         {
             if (attack.ToCreature) {
                 Attacker.Health += attack.Hp;
-                foreach (CharacterEnum c in GameManager._userDict.Keys.ToList()) {
+                foreach (CharacterEnum c in GameManager.UserDict.Keys.ToList()) {
                     _successiveResponse.Add(c, new CardsModifiedResponse(Attacker));
                 }
             }
             else {
                 Caller.Health += attack.Hp;
 
-                foreach (CharacterEnum c in GameManager._userDict.Keys.ToList()) {
+                foreach (CharacterEnum c in GameManager.UserDict.Keys.ToList()) {
                     _successiveResponse.Add(c, new PlayerModifiedResponse(Caller.Character, Caller.Mana, Caller.Health));
                 }
             }
@@ -87,16 +90,17 @@ namespace AmaruServer.Game.Managing
 
         public override int Visit(KrumAttack attack)
         {
+            // Remember to include BonusAttack
             throw new NotImplementedException();
         }
 
         public override int Visit(PoisonAttack attack)
         {
             if (CardTarget != null) { 
-            CreatureCard targetCard = (CreatureCard)(GameManager._userDict[CardTarget.Character].Player.GetCardFromId(CardTarget.CardId, Place.INNER) ?? GameManager._userDict[CardTarget.Character].Player.GetCardFromId(CardTarget.CardId, Place.OUTER));
+            CreatureCard targetCard = (CreatureCard)(GameManager.UserDict[CardTarget.Character].Player.GetCardFromId(CardTarget.CardId, Place.INNER) ?? GameManager.UserDict[CardTarget.Character].Player.GetCardFromId(CardTarget.CardId, Place.OUTER));
                 if (targetCard.Health - attack.Power > 0) {
                     targetCard.PoisonDamage += attack.Power;
-                    foreach (CharacterEnum c in GameManager._userDict.Keys.ToList())
+                    foreach (CharacterEnum c in GameManager.UserDict.Keys.ToList())
                         _successiveResponse.Add(c, new CardsModifiedResponse(targetCard));
                 }
             }
@@ -106,17 +110,22 @@ namespace AmaruServer.Game.Managing
 
         public override int Visit(SalazarAttack attack)
         {
+            // Remember to include BonusAttack
             throw new NotImplementedException();
         }
 
         public override int Visit(SeribuAttack attack)
         {
+            // Remember to include BonusAttack
             throw new NotImplementedException();
         }
 
         public override int Visit(GainHPAbility ability)
         {
-            throw new NotImplementedException();
+            ((CreatureCard)OwnerCard).Health += ability.Hp;
+            foreach (CharacterEnum c in GameManager.UserDict.Keys.ToList())
+                _successiveResponse.Add(c, new CardsModifiedResponse((CreatureCard)OwnerCard));
+            return 0;
         }
 
         public override int Visit(ReturnToHandAbility returnToHandAbility)
@@ -144,9 +153,21 @@ namespace AmaruServer.Game.Managing
             throw new NotImplementedException();
         }
 
-        public override int Visit(KillIfPDAbility killIfPDAbility)
+        public override int Visit(KillIfPDAbility ability)
         {
-            throw new NotImplementedException();
+            List<CreatureCard> DeadCards = new List<CreatureCard>();
+            foreach (CardTarget t in CardTargets)
+            {
+                CreatureCard deadCard = (CreatureCard)(GameManager.UserDict[t.Character].Player.GetCardFromId(t.CardId, Place.INNER) ?? GameManager.UserDict[t.Character].Player.GetCardFromId(t.CardId, Place.OUTER));
+                deadCard.Health = 0;
+                DeadCards.Add(deadCard);
+            }
+            foreach (CharacterEnum c in GameManager.UserDict.Keys.ToList())
+            {
+                GameManager.UserDict[c].Player.Refresh();
+                _successiveResponse.Add(c, new CardsModifiedResponse(DeadCards));
+            }
+            return 0;
         }
 
         public override int Visit(SummonAbility summonAbility)
@@ -159,29 +180,82 @@ namespace AmaruServer.Game.Managing
             throw new NotImplementedException();
         }
 
-        public override int Visit(DamageDependingOnCreatureNumberAbility damageDependingOnCreatureNumberAbility)
+        public override int Visit(DamageDependingOnCreatureNumberAbility ability)
         {
-            throw new NotImplementedException();
+            int attackPower = ability.myZone == Place.INNER ? GameManager.UserDict[Owner].Player.Inner.Count : GameManager.UserDict[Owner].Player.Outer.Count;
+            // Case target is Creature
+            if (Targets[0] is CardTarget)
+            {
+                CardTarget t = (CardTarget)Targets[0];
+                CreatureCard targetCard = (CreatureCard)(GameManager.UserDict[t.Character].Player.GetCardFromId(t.CardId, Place.INNER) ?? GameManager.UserDict[t.Character].Player.GetCardFromId(t.CardId, Place.OUTER));
+                targetCard.Health -= attackPower;
+                foreach (CharacterEnum c in GameManager.UserDict.Keys.ToList())
+                    _successiveResponse.Add(c, new CardsModifiedResponse(targetCard));
+                GameManager.UserDict[t.Character].Player.Refresh();
+            }
+            // Case target is Player
+            else
+            {
+                Player targetPlayer = GameManager.UserDict[Targets[0].Character].Player;
+                targetPlayer.Health -= attackPower;
+                foreach (CharacterEnum c in GameManager.UserDict.Keys.ToList())
+                    _successiveResponse.Add(c, new PlayerModifiedResponse(targetPlayer.Character, targetPlayer.Mana, targetPlayer.Health));
+            }
+            return 0;
         }
 
-        public override int Visit(BonusAttackDependingOnHealthAbility bonusAttackDependingOnHealthAbility)
+        public override int Visit(BonusAttackDependingOnHealthAbility ability)
         {
-            throw new NotImplementedException();
+            List<CreatureCard> targets = new List<CreatureCard>();
+            foreach (CardTarget ct in CardTargets)
+            {
+                CreatureCard card = (CreatureCard)(GameManager.UserDict[ct.Character].Player.GetCardFromId(ct.CardId, Place.INNER) ?? GameManager.UserDict[ct.Character].Player.GetCardFromId(ct.CardId, Place.OUTER));
+                card.Attack.BonusAttack = (int)((float)card.Health / ability.myDivisor);
+            }
+            foreach (CharacterEnum c in GameManager.UserDict.Keys.ToList())
+                _successiveResponse.Add(c, new CardsModifiedResponse(targets));
+            return 0;
         }
 
         public override int Visit(DamageWithPDAbility ability)
         {
-            throw new NotImplementedException();
+            List<CreatureCard> mods = new List<CreatureCard>();
+            foreach (CardTarget ct in CardTargets)
+            {
+                CreatureCard targetCard = (CreatureCard)(GameManager.UserDict[ct.Character].Player.GetCardFromId(ct.CardId, Place.INNER) ?? GameManager.UserDict[ct.Character].Player.GetCardFromId(ct.CardId, Place.OUTER));
+                targetCard.Health -= ability.NumPD;
+                targetCard.PoisonDamage += ability.NumPD;
+                GameManager.GetPlayer(ct.Character).Refresh();
+            }
+            foreach (CharacterEnum c in GameManager.UserDict.Keys.ToList())
+                _successiveResponse.Add(c, new CardsModifiedResponse(mods));
+            return 0;
         }
 
         public override int Visit(GiveEPAbility ability)
         {
-            throw new NotImplementedException();
+            List<CreatureCard> mods = new List<CreatureCard>();
+            foreach (CardTarget ct in CardTargets)
+            {
+                CreatureCard targetCard = (CreatureCard)(GameManager.UserDict[ct.Character].Player.GetCardFromId(ct.CardId, Place.INNER) ?? GameManager.UserDict[ct.Character].Player.GetCardFromId(ct.CardId, Place.OUTER));
+                targetCard.Energy += ability.Ep;
+            }
+            foreach (CharacterEnum c in GameManager.UserDict.Keys.ToList())
+                _successiveResponse.Add(c, new CardsModifiedResponse(mods));
+            return 0;
         }
 
         public override int Visit(GainCPAbility ability)
         {
-            throw new NotImplementedException();
+            List<PlayerMod> mods = new List<PlayerMod>();
+            foreach (PlayerTarget pt in PlayerTargets) {
+                Player player = GameManager.UserDict[pt.Character].Player;
+                player.Mana += ability.cp;
+                mods.Add(new PlayerMod(player.Character, player.Mana, player.Health));
+            }
+            foreach (CharacterEnum c in GameManager.UserDict.Keys.ToList())
+                _successiveResponse.Add(c, new PlayerModifiedResponse(mods));
+            return 0;
         }
 
         public override int Visit(DuplicatorSpellAbility ability)

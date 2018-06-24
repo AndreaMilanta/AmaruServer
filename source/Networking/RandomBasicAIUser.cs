@@ -77,7 +77,7 @@ namespace AmaruServer.Networking
             //per ogni giocatore in generale voglio sapere:
             List<Player> playerToClone = new List<Player>();
 
-            myEnemiesDict = new Dictionary<CharacterEnum, User>(GameManager._userDict);
+            myEnemiesDict = new Dictionary<CharacterEnum, User>(GameManager.UserDict);
             foreach (User user in myEnemiesDict.Values)
             {
                 playerToClone.Add(user.Player);
@@ -120,7 +120,7 @@ namespace AmaruServer.Networking
             //per ogni giocatore in generale voglio sapere:
             List<Player> playerToClone = new List<Player>();
 
-            myEnemiesDict = new Dictionary<CharacterEnum, User>(GameManager._userDict);
+            myEnemiesDict = new Dictionary<CharacterEnum, User>(GameManager.UserDict);
             foreach (User user in myEnemiesDict.Values)
             {
                 playerToClone.Add(user.Player);

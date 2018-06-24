@@ -141,7 +141,7 @@ namespace AmaruServer.Networking
         private KeyValuePair<Double, PlayerAction> Think(GameManager gm)
         {
             GameManager toUse = createGameManagerAndStuff(gm);
-            Player me = toUse._userDict[CharacterEnum.AMARU].Player;
+            Player me = toUse.UserDict[CharacterEnum.AMARU].Player;
             LimitedList<Card> myCards = me.Hand;
             LimitedList<CreatureCard> myWarZone = me.Outer;
             LimitedList<CreatureCard> myInnerZone = me.Inner;
@@ -183,7 +183,7 @@ namespace AmaruServer.Networking
             // inizializzo struttura dati di possibili target per un attacco, potando la ricerca delle azioni evidentemente impossibili
             List<CardTarget> allAcceptableTargets = new List<CardTarget>();
             List<PlayerTarget> allAcceptablePlayerTarget = new List<PlayerTarget>();
-            foreach (KeyValuePair<CharacterEnum, User> pair in toUse._userDict.ToArray())
+            foreach (KeyValuePair<CharacterEnum, User> pair in toUse.UserDict.ToArray())
             {
                 Player player = pair.Value.Player;
                 foreach (CreatureCard cd in player.Outer)
@@ -279,8 +279,8 @@ namespace AmaruServer.Networking
         {
             double value = 0;
             List<Player> lp = new List<Player>();
-            Player me = gm._userDict[CharacterEnum.AMARU].Player;
-            foreach (KeyValuePair<CharacterEnum, User> p in gm._userDict.ToList())
+            Player me = gm.UserDict[CharacterEnum.AMARU].Player;
+            foreach (KeyValuePair<CharacterEnum, User> p in gm.UserDict.ToList())
             {
                 if (p.Key == CharacterEnum.AMARU)
                 {

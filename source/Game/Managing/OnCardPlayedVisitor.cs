@@ -165,7 +165,7 @@ namespace AmaruServer.Game.Managing
 
         public override int Visit(GiveHPSpellAbility ability)
         {
-            Player owner = GameManager._userDict[Owner].Player;
+            Player owner = GameManager.UserDict[Owner].Player;
             owner.Health += ability.numHP;
             foreach (CharacterEnum c in CharacterManager.Instance.Characters)
                 _successiveResponse.Add(c, new PlayerModifiedResponse(owner.Character, owner.Mana, owner.Health));
@@ -174,7 +174,7 @@ namespace AmaruServer.Game.Managing
 
         public override int Visit(GainCpSpellAbility ability)
         {
-            Player owner = GameManager._userDict[Owner].Player;
+            Player owner = GameManager.UserDict[Owner].Player;
             owner.Mana += ability.numCP;
             foreach (CharacterEnum c in CharacterManager.Instance.Characters)
                 _successiveResponse.Add(c, new PlayerModifiedResponse(owner.Character, owner.Mana, owner.Health));
