@@ -35,8 +35,8 @@ namespace AmaruServer.Game.Managing
 
         private CreatureCard Attacker;
 
-        private Dictionary<CharacterEnum, Response> _successiveResponse = new Dictionary<CharacterEnum, Response>();
-        public Dictionary<CharacterEnum, Response> SuccessiveResponse { get { Dictionary<CharacterEnum, Response> sr = _successiveResponse;  return sr; }  set { _successiveResponse.Clear(); } }
+        private List<KeyValuePair<CharacterEnum, Response>> _successiveResponse = new List<KeyValuePair<CharacterEnum, Response>>();
+        public List<KeyValuePair<CharacterEnum, Response>> SuccessiveResponse { get { List<KeyValuePair<CharacterEnum, Response>> sr = _successiveResponse;  return sr; }  set { _successiveResponse.Clear(); } }
         /// <summary>
         /// Handles attack procedures.
         /// Does NOT take care of reducing card EP
@@ -52,6 +52,12 @@ namespace AmaruServer.Game.Managing
             this.GameManager = gameManager;
             this.Attacker = attacker;
         }
+
+        private void AddResponse(CharacterEnum c, Response r)
+        {
+            _successiveResponse.Add(new KeyValuePair<CharacterEnum, Response>(c, r));
+        }
+
         public override int Visit(SimpleAttack attack)
         {
             return attack.Power;
@@ -65,7 +71,7 @@ namespace AmaruServer.Game.Managing
         {
             Caller.Mana += attack.Cp;
             foreach(CharacterEnum c in GameManager.UserDict.Keys.ToList()) {
-                _successiveResponse.Add(c, new PlayerModifiedResponse(Caller.Character, Caller.Mana, Caller.Health));
+                AddResponse(c, new PlayerModifiedResponse(Caller.Character, Caller.Mana, Caller.Health));
             }
             return attack.Power;
         }
@@ -75,14 +81,14 @@ namespace AmaruServer.Game.Managing
             if (attack.ToCreature) {
                 Attacker.Health += attack.Hp;
                 foreach (CharacterEnum c in GameManager.UserDict.Keys.ToList()) {
-                    _successiveResponse.Add(c, new CardsModifiedResponse(Attacker));
+                    AddResponse(c, new CardsModifiedResponse(Attacker));
                 }
             }
             else {
                 Caller.Health += attack.Hp;
 
                 foreach (CharacterEnum c in GameManager.UserDict.Keys.ToList()) {
-                    _successiveResponse.Add(c, new PlayerModifiedResponse(Caller.Character, Caller.Mana, Caller.Health));
+                    AddResponse(c, new PlayerModifiedResponse(Caller.Character, Caller.Mana, Caller.Health));
                 }
             }
             return attack.Power;
@@ -101,7 +107,7 @@ namespace AmaruServer.Game.Managing
                 if (targetCard.Health - attack.Power > 0) {
                     targetCard.PoisonDamage += attack.Power;
                     foreach (CharacterEnum c in GameManager.UserDict.Keys.ToList())
-                        _successiveResponse.Add(c, new CardsModifiedResponse(targetCard));
+                        AddResponse(c, new CardsModifiedResponse(targetCard));
                 }
             }
         
@@ -125,7 +131,7 @@ namespace AmaruServer.Game.Managing
             Log(OwnerCard.Name + " used GainHPAbility");
             ((CreatureCard)OwnerCard).Health += ability.Hp;
             foreach (CharacterEnum c in GameManager.UserDict.Keys.ToList())
-                _successiveResponse.Add(c, new CardsModifiedResponse((CreatureCard)OwnerCard));
+                AddResponse(c, new CardsModifiedResponse((CreatureCard)OwnerCard));
             return 0;
         }
 
@@ -167,7 +173,7 @@ namespace AmaruServer.Game.Managing
             foreach (CharacterEnum c in GameManager.UserDict.Keys.ToList())
             {
                 GameManager.UserDict[c].Player.Refresh();
-                _successiveResponse.Add(c, new CardsModifiedResponse(DeadCards));
+                AddResponse(c, new CardsModifiedResponse(DeadCards));
             }
             return 0;
         }
@@ -193,7 +199,7 @@ namespace AmaruServer.Game.Managing
                 CreatureCard targetCard = (CreatureCard)(GameManager.UserDict[t.Character].Player.GetCardFromId(t.CardId, Place.INNER) ?? GameManager.UserDict[t.Character].Player.GetCardFromId(t.CardId, Place.OUTER));
                 targetCard.Health -= attackPower;
                 foreach (CharacterEnum c in GameManager.UserDict.Keys.ToList())
-                    _successiveResponse.Add(c, new CardsModifiedResponse(targetCard));
+                    AddResponse(c, new CardsModifiedResponse(targetCard));
                 GameManager.UserDict[t.Character].Player.Refresh();
             }
             // Case target is Player
@@ -202,7 +208,7 @@ namespace AmaruServer.Game.Managing
                 Player targetPlayer = GameManager.UserDict[Targets[0].Character].Player;
                 targetPlayer.Health -= attackPower;
                 foreach (CharacterEnum c in GameManager.UserDict.Keys.ToList())
-                    _successiveResponse.Add(c, new PlayerModifiedResponse(targetPlayer.Character, targetPlayer.Mana, targetPlayer.Health));
+                    AddResponse(c, new PlayerModifiedResponse(targetPlayer.Character, targetPlayer.Mana, targetPlayer.Health));
             }
             return 0;
         }
@@ -214,10 +220,11 @@ namespace AmaruServer.Game.Managing
             foreach (CardTarget ct in CardTargets)
             {
                 CreatureCard card = (CreatureCard)(GameManager.UserDict[ct.Character].Player.GetCardFromId(ct.CardId, Place.INNER) ?? GameManager.UserDict[ct.Character].Player.GetCardFromId(ct.CardId, Place.OUTER));
-                card.Attack.BonusAttack = (int)((float)card.Health / ability.myDivisor);
+                card.Attack.BonusAttack = (int)Math.Ceiling((float)card.Health / (float)ability.myDivisor);
+                targets.Add(card);
             }
             foreach (CharacterEnum c in GameManager.UserDict.Keys.ToList())
-                _successiveResponse.Add(c, new CardsModifiedResponse(targets));
+                AddResponse(c, new CardsModifiedResponse(targets));
             return 0;
         }
 
@@ -231,9 +238,10 @@ namespace AmaruServer.Game.Managing
                 targetCard.Health -= ability.NumPD;
                 targetCard.PoisonDamage += ability.NumPD;
                 GameManager.GetPlayer(ct.Character).Refresh();
+                mods.Add(targetCard);
             }
             foreach (CharacterEnum c in GameManager.UserDict.Keys.ToList())
-                _successiveResponse.Add(c, new CardsModifiedResponse(mods));
+                AddResponse(c, new CardsModifiedResponse(mods));
             return 0;
         }
 
@@ -245,9 +253,10 @@ namespace AmaruServer.Game.Managing
             {
                 CreatureCard targetCard = (CreatureCard)(GameManager.UserDict[ct.Character].Player.GetCardFromId(ct.CardId, Place.INNER) ?? GameManager.UserDict[ct.Character].Player.GetCardFromId(ct.CardId, Place.OUTER));
                 targetCard.Energy += ability.Ep;
+                mods.Add(targetCard);
             }
             foreach (CharacterEnum c in GameManager.UserDict.Keys.ToList())
-                _successiveResponse.Add(c, new CardsModifiedResponse(mods));
+                AddResponse(c, new CardsModifiedResponse(mods));
             return 0;
         }
 
@@ -261,7 +270,16 @@ namespace AmaruServer.Game.Managing
                 mods.Add(new PlayerMod(player.Character, player.Mana, player.Health));
             }
             foreach (CharacterEnum c in GameManager.UserDict.Keys.ToList())
-                _successiveResponse.Add(c, new PlayerModifiedResponse(mods));
+                AddResponse(c, new PlayerModifiedResponse(mods));
+            return 0;
+        }
+
+        public override int Visit(DoubleHPAbility ability)
+        {
+            Log(OwnerCard.Name + " used DoubleHPAbility");
+            ((CreatureCard)OwnerCard).Health *= 2;
+            foreach (CharacterEnum c in GameManager.UserDict.Keys.ToList())
+                AddResponse(c, new CardsModifiedResponse((CreatureCard)OwnerCard));
             return 0;
         }
 
@@ -371,11 +389,6 @@ namespace AmaruServer.Game.Managing
         }
 
         public override int Visit(ImmunityCreatureEffect effect)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override int Visit(DoubleHPAbility doubleHPAbility)
         {
             throw new NotImplementedException();
         }
