@@ -1,5 +1,7 @@
 ﻿using AmaruCommon.Actions.Targets;
+using AmaruCommon.Communication.Messages;
 using AmaruCommon.Constants;
+using AmaruCommon.Exceptions;
 using AmaruCommon.GameAssets.Cards;
 using AmaruCommon.GameAssets.Cards.Properties;
 using AmaruCommon.GameAssets.Cards.Properties.Abilities;
@@ -166,6 +168,30 @@ namespace AmaruServer.Game.Managing
 
         public override int Visit(DuplicatorSpellAbility duplicatorSpellAbility)
         {
+            List<CardMovement> movedCards = new List<CardMovement>();
+            foreach(CardTarget ct in CardTargets)
+            {
+                Place origin = GameManager.UserDict[ct.Character].Player.GetCardFromId(ct.CardId, Place.INNER) == null ? Place.OUTER : Place.INNER;
+                CreatureCard card = (CreatureCard)(GameManager.UserDict[ct.Character].Player.GetCardFromId(ct.CardId, origin));
+                CreatureCard clone = (CreatureCard)card.Original;
+                clone.IsCloned = true;
+                // TODO: gestire se l'area è piena
+                if (origin == Place.OUTER)
+                {
+                    if (GameManager.UserDict[ct.Character].Player.Outer.Count < AmaruConstants.OUTER_MAX_SIZE)
+                        GameManager.UserDict[ct.Character].Player.Outer.Add(clone);
+                    movedCards.Add(new CardMovement(origin, Place.OUTER, clone));
+                }
+                else if (origin == Place.INNER)
+                {
+                    if (GameManager.UserDict[ct.Character].Player.Inner.Count < AmaruConstants.INNER_MAX_SIZE)
+                        GameManager.UserDict[ct.Character].Player.Inner.Add(clone);
+                    movedCards.Add(new CardMovement(Place.DECK, Place.INNER, clone));
+                }
+            }
+            foreach (CharacterEnum c in GameManager.UserDict.Keys)
+                if (movedCards.Any())
+                    AddResponse(c, new CardsDrawnResponse(Owner, movedCards));
             return 0;
         }
 
@@ -211,8 +237,29 @@ namespace AmaruServer.Game.Managing
             return 0;
         }
 
-        public override int Visit(ResurrectSpecificCreatureSpellAbility resurrectSpecificCreatureSpellAbility)
+        public override int Visit(ResurrectSpecificCreatureSpellAbility spellAbility)
         {
+            List<CardMovement> movedCards = new List<CardMovement>();
+            LimitedList<CreatureCard> reborn = new LimitedList<CreatureCard>((AmaruConstants.OUTER_MAX_SIZE - GameManager.UserDict[Owner].Player.Outer.Count) > 3 ? (AmaruConstants.OUTER_MAX_SIZE - GameManager.UserDict[Owner].Player.Outer.Count) : 3);
+            try
+            {
+                foreach (CreatureCard c in GameManager.Graveyard)
+                    if (c.CardEnum.Equals(Amaru.BodyGuardian) || c.CardEnum.Equals(Amaru.SoulGuardian))
+                        reborn.Add(c);
+            }
+            catch(LimitedListOutOfBoundException) { }
+            finally
+            {
+                foreach (CreatureCard c in reborn)
+                {
+                    GameManager.Graveyard.Remove(c);
+                    GameManager.UserDict[Owner].Player.Outer.Add((CreatureCard)c.Original);
+                    movedCards.Add(new CardMovement(Place.GRAVEYARD, Place.OUTER, (CreatureCard)c.Original));
+                }
+                foreach (CharacterEnum c in GameManager.UserDict.Keys)
+                    if (movedCards.Any())
+                        AddResponse(c, new CardsDrawnResponse(Owner, movedCards));
+            }
             return 0;
         }
 
