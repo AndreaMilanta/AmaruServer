@@ -103,7 +103,7 @@ namespace AmaruServer.Game.Managing
 
         public override int Visit(KrumAttack attack)
         {
-            return Caller.ManaSpentThisTurn + attack.BonusAttack;
+            return (int)Math.Ceiling((Double)(Caller.ManaSpentThisTurn/2)) + attack.BonusAttack;
         }
 
         public override int Visit(PoisonAttack attack)
