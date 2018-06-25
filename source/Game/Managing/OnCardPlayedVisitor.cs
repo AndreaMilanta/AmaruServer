@@ -1,5 +1,6 @@
 ﻿using AmaruCommon.Actions.Targets;
 using AmaruCommon.Constants;
+using AmaruCommon.Exceptions;
 using AmaruCommon.GameAssets.Cards;
 using AmaruCommon.GameAssets.Cards.Properties;
 using AmaruCommon.GameAssets.Cards.Properties.Abilities;
@@ -211,8 +212,24 @@ namespace AmaruServer.Game.Managing
             return 0;
         }
 
-        public override int Visit(ResurrectSpecificCreatureSpellAbility resurrectSpecificCreatureSpellAbility)
+        public override int Visit(ResurrectSpecificCreatureSpellAbility spellAbility)
         {
+            LimitedList<CreatureCard> reborn = new LimitedList<CreatureCard>((AmaruConstants.OUTER_MAX_SIZE - GameManager.UserDict[Owner].Player.Outer.Count) > 3 ? (AmaruConstants.OUTER_MAX_SIZE - GameManager.UserDict[Owner].Player.Outer.Count) : 3);
+            try
+            {
+                foreach (CreatureCard c in GameManager.Graveyard)
+                    if (c.CardEnum.Equals(Amaru.BodyGuardian) || c.CardEnum.Equals(Amaru.SoulGuardian))
+                        reborn.Add(c);
+            }
+            catch(LimitedListOutOfBoundException) { }
+            finally
+            {
+                foreach (CreatureCard c in reborn)
+                {
+                    GameManager.Graveyard.Remove(c);
+                    GameManager.UserDict[Owner].Player.Outer.Add(c);
+                }
+            }
             return 0;
         }
 
