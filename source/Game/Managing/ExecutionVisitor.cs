@@ -126,7 +126,7 @@ namespace AmaruServer.Game.Managing
         {
             Player caller = GameManager.GetPlayer(action.Caller);
             CreatureCard playedCard = (CreatureCard)(caller.GetCardFromId(action.PlayedCardId, Place.INNER) ?? caller.GetCardFromId(action.PlayedCardId, Place.OUTER));
-            playedCard.Energy -= playedCard.Attack.Cost;
+            playedCard.Energy -= playedCard.Ability.Cost;
             AttacksVisitor attackVisitor = new AttacksVisitor(GameManager, caller, null, playedCard);
             if (action.Targets == null)
                 playedCard.Visit(attackVisitor, caller.Character, playedCard.Ability);
@@ -139,6 +139,8 @@ namespace AmaruServer.Game.Managing
                 Log("Player " + kvp.Key.ToString() + " recieved a successive response");
                 GameManager.UserDict[kvp.Key].Write(new ResponseMessage(kvp.Value));
             }
+            foreach (CharacterEnum c in GameManager.UserDict.Keys)
+                GameManager.UserDict[c].Write(new ResponseMessage(new CardsModifiedResponse(playedCard)));
             // visitor must take care of players which he kills
         }
     }

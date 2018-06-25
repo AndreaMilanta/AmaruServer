@@ -181,6 +181,11 @@ namespace AmaruServer.Game.Managing
             return 0;
         }
 
+        public override int Visit(DoubleHPAbility ability)
+        { 
+            return 0;
+        }
+
         public override int Visit(AttackFromInnerSpellAbility attackFromInnerSpellAbility)
         {
             return 0;
@@ -257,11 +262,6 @@ namespace AmaruServer.Game.Managing
         }
 
         public override int Visit(ImmunityCreatureEffect immunityCreatureEffect)
-        {
-            return 0;
-        }
-
-        public override int Visit(DoubleHPAbility doubleHPAbility)
         {
             return 0;
         }

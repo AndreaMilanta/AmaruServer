@@ -50,7 +50,7 @@ namespace AmaruServer.Networking
         }
         public struct GoalFunctionMyFieldWeights
         {
-            //Addictive values
+            //Addictive value
             public const double ShieldAndInnerZone = -4.1;
             public const double ShieldMaidenPresentLowHPInnerZone = 4.5;
             public const double CanAttackInnerZone = -6.0;
