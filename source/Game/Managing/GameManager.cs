@@ -196,6 +196,29 @@ namespace AmaruServer.Game.Managing
                 u.Write(new ShutdownMessage());
         }
 
+        private void RefreshTable()
+        {
+            bool graveyardChanged = false;
+            foreach (User u in UserDict.Values)
+            {
+                if (u.Player.Inner.Where(c => c.Health <= 0) != null)
+                {
+                    Graveyard.AddRange(u.Player.Inner.Where(c => c.Health <= 0));
+                    u.Player.Inner.RemoveAll(c => c.Health <= 0);
+                    graveyardChanged = true;
+                }
+                if (u.Player.Outer.Where(c => c.Health <= 0) != null)
+                {
+                    Graveyard.AddRange(u.Player.Outer.Where(c => c.Health <= 0));
+                    u.Player.Outer.RemoveAll(c => c.Health <= 0);
+                    graveyardChanged = true;
+                }
+            }
+            if (graveyardChanged)
+                foreach (CharacterEnum c in UserDict.Keys)
+                    UserDict[c].Write(new ResponseMessage(new GraveyardChangedResponse(Graveyard.Count)));
+        }
+
         public void SendResponse(CharacterEnum Dest, Response response)
         {
             if (Dest == CharacterEnum.AMARU)
@@ -217,6 +240,7 @@ namespace AmaruServer.Game.Managing
             {
                 aMex.Action.Visit(this.ValidationVisitor);
                 aMex.Action.Visit(this.ExecutionVisitor);
+
             }
             catch (Exception e)
             {
