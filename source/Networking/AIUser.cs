@@ -31,7 +31,7 @@ namespace AmaruServer.Networking
         public struct GoalFunctionWeights
         {
             //Addictive values
-            public const double AliveCreature = 2.0;
+            public const double AliveCreature = 1.5;
             public const double PlayerDead = 50.0;
             public const double LegendaryCardBonus= 5;
             public const double ShieldUpCreatureBonus = 4;
@@ -39,7 +39,7 @@ namespace AmaruServer.Networking
 
             //Multiplicative values
             public const double BonusOnHpPlayer = 3;
-            public const double ManaGreed = 1.2;
+            public const double ManaGreed = 1.5;
 
             //Unimplementd cause it is not what i want
             public const double EPGreed = 0;
@@ -461,14 +461,15 @@ namespace AmaruServer.Networking
             List<double> listHpPlayers = new List<double>();
             foreach (Player p in lp)
             {
-                listHpField.Add(CalculateHpOnField(p));
+                double temp = CalculateHpOnField(p);
+                value -= temp;
+                listHpField.Add(temp);
                 listHpPlayers.Add(p.Health);
             }
+
             double meanHp = Tools.calculateAverage(listHpPlayers);
-            double meanHpField = Tools.calculateAverage(listHpField);
 
             value -= meanHp * GoalFunctionWeights.BonusOnHpPlayer;
-            value -= meanHpField;
             value -= Tools.calculateStd(listHpPlayers);
             value -= Tools.calculateStd(listHpField);
             value += new Random().NextDouble()*GoalFunctionWeights.Unpredictability;
