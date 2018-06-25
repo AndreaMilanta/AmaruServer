@@ -197,9 +197,17 @@ namespace AmaruServer.Game.Managing
             return 0;
         }
 
-        public override int Visit(SummonAbility summonAbility)
+        public override int Visit(SummonAbility ability)
         {
-            throw new NotImplementedException();
+            if (GameManager.UserDict[Owner].Player.Outer.Count < AmaruConstants.OUTER_MAX_SIZE)
+            {
+                CreatureCard summoned = (CreatureCard)ability.toSummon.Original;
+                GameManager.UserDict[Owner].Player.Outer.Add(summoned);
+
+                foreach (CharacterEnum c in GameManager.UserDict.Keys)
+                    AddResponse(c, new CardsDrawnResponse(Owner, Place.DECK, Place.OUTER, summoned));
+            }
+            return 0;
         }
 
         public override int Visit(AmaruIncarnationAbility amaruIncarnationAbility)
