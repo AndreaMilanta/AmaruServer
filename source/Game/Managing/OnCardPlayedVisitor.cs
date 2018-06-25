@@ -240,6 +240,7 @@ namespace AmaruServer.Game.Managing
 
         public override int Visit(ResurrectSpecificCreatureSpellAbility spellAbility)
         {
+            Log(OwnerCard.Name + " used ResurrectSpecificCreatureSpellAbility");
             List<CardMovement> movedCards = new List<CardMovement>();
             LimitedList<CreatureCard> reborn = new LimitedList<CreatureCard>((AmaruConstants.OUTER_MAX_SIZE - GameManager.UserDict[Owner].Player.Outer.Count) > 3 ? (AmaruConstants.OUTER_MAX_SIZE - GameManager.UserDict[Owner].Player.Outer.Count) : 3);
             try
@@ -370,8 +371,8 @@ namespace AmaruServer.Game.Managing
         public override int Visit(DealDamageToEverythingSpellAbility spell)
         {
             List<CreatureCard> modCards = new List<CreatureCard>();
-            foreach (User u in GameManager.UserDict.Values) {
-                Player p = u.Player;
+            foreach (CharacterEnum ch in CharacterManager.Instance.Others(Owner)) {
+                Player p = GameManager.UserDict[ch].Player;
                 foreach (CreatureCard c in p.Outer) {
                     c.Health -= spell.numDamage;
                     modCards.Add(c);

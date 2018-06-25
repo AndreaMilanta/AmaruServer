@@ -170,9 +170,29 @@ namespace AmaruServer.Game.Managing
             throw new NotImplementedException();
         }
 
-        public override int Visit(ResurrectOrTakeFromGraveyardAbility resurrectAbility)
+        public override int Visit(ResurrectOrTakeFromGraveyardAbility ability)
         {
-            throw new NotImplementedException();
+            Random rnd = new Random();
+            Log(OwnerCard.Name + " used ResurrectOrTakeFromGraveyardAbility");
+            CreatureCard resurrect = GameManager.Graveyard[rnd.Next(GameManager.Graveyard.Count)];
+            GameManager.Graveyard.Remove(resurrect);
+            CreatureCard original = (CreatureCard)resurrect.Original;
+            Place place;
+            if (GameManager.GetPlayer(Owner).Outer.Count < AmaruConstants.OUTER_MAX_SIZE) {
+                place = Place.OUTER;
+                GameManager.GetPlayer(Owner).Outer.Add(original);
+            }
+            else if (GameManager.GetPlayer(Owner).Inner.Count < AmaruConstants.INNER_MAX_SIZE) {
+                place = Place.INNER;
+                GameManager.GetPlayer(Owner).Inner.Add(original);
+            }
+            else
+            {
+                return 0;
+            }
+            foreach (CharacterEnum c in GameManager.UserDict.Keys)
+                AddResponse(c, new CardsDrawnResponse(Owner, Place.GRAVEYARD, place, original));
+            return 0;
         }
 
         public override int Visit(SeribuAbility seribuAbility)
