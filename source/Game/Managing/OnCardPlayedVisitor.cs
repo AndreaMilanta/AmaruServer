@@ -330,11 +330,9 @@ namespace AmaruServer.Game.Managing
                 }
             }
 
-            foreach (CharacterEnum ch in GameManager.UserDict.Keys.ToList()) {
+            foreach (CharacterEnum ch in GameManager.UserDict.Keys.ToList())
                 if (modCards.Any())
                     AddResponse(ch, new CardsModifiedResponse(modCards));
-                GameManager.UserDict[ch].Player.Refresh();
-            }
 
             return 0;
         }
@@ -362,7 +360,6 @@ namespace AmaruServer.Game.Managing
                     AddResponse(ch, new CardsModifiedResponse(modCards));
                 if (modPlayers.Any())
                     AddResponse(ch, new PlayerModifiedResponse(modPlayers));
-                GameManager.UserDict[ch].Player.Refresh();
             }
             return 0;
         }
@@ -388,12 +385,9 @@ namespace AmaruServer.Game.Managing
             }
 
             // Prepare responses
-            foreach (CharacterEnum ch in GameManager.UserDict.Keys.ToList()) {
+            foreach (CharacterEnum ch in GameManager.UserDict.Keys.ToList())
                 if (modCards.Any())
                     AddResponse(ch, new CardsModifiedResponse(modCards));
-                
-                GameManager.UserDict[ch].Player.Refresh();
-            }
             return 0;
         }
 
@@ -431,7 +425,6 @@ namespace AmaruServer.Game.Managing
                     AddResponse(ch, new CardsModifiedResponse(modCards));
                 if (modPlayers.Any())
                     AddResponse(ch, new PlayerModifiedResponse(modPlayers));
-                GameManager.UserDict[ch].Player.Refresh();
             }
 
             return 0;
@@ -449,12 +442,9 @@ namespace AmaruServer.Game.Managing
             }
 
             // Prepare responses
-            foreach (CharacterEnum ch in GameManager.UserDict.Keys.ToList()) {
+            foreach (CharacterEnum ch in GameManager.UserDict.Keys.ToList())
                 if (modCards.Any())
                     AddResponse(ch, new CardsModifiedResponse(modCards));
-
-                GameManager.UserDict[ch].Player.Refresh();
-            }
             return 0;
         }
 

@@ -240,7 +240,7 @@ namespace AmaruServer.Game.Managing
             {
                 aMex.Action.Visit(this.ValidationVisitor);
                 aMex.Action.Visit(this.ExecutionVisitor);
-
+                RefreshTable();
             }
             catch (Exception e)
             {
