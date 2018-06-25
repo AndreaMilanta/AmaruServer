@@ -168,6 +168,7 @@ namespace AmaruServer.Game.Managing
 
         public override int Visit(DuplicatorSpellAbility duplicatorSpellAbility)
         {
+            Log("in DuplicatorSpellAbility");
             List<CardMovement> movedCards = new List<CardMovement>();
             foreach(CardTarget ct in CardTargets)
             {
