@@ -242,7 +242,7 @@ namespace AmaruServer.Game.Managing
             foreach (CardTarget ct in CardTargets)
             {
                 CreatureCard card = (CreatureCard)(GameManager.UserDict[ct.Character].Player.GetCardFromId(ct.CardId, Place.INNER) ?? GameManager.UserDict[ct.Character].Player.GetCardFromId(ct.CardId, Place.OUTER));
-                card.Attack.BonusAttack = (int)Math.Ceiling((float)card.Health / (float)ability.myDivisor);
+                card.Attack.BonusAttack += (int)Math.Ceiling((float)card.Health / (float)ability.myDivisor);
                 targets.Add(card);
             }
             foreach (CharacterEnum c in GameManager.UserDict.Keys.ToList())

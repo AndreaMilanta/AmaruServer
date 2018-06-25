@@ -21,13 +21,32 @@ namespace AmaruServer.Game.Managing
     public class OnCardPlayedVisitor : PropertyVisitor
     {
         private GameManager GameManager { get; set; }
-        public List<Target> Targets { get; set; }
-        private Dictionary<CharacterEnum,Response> _successiveResponse = new Dictionary<CharacterEnum, Response>();
-        public Dictionary<CharacterEnum,Response> SuccessiveResponse { get { Dictionary<CharacterEnum,Response> sr = _successiveResponse; _successiveResponse.Clear(); return sr; } }
+        private PlayerTarget PlayerTarget { get; set; } = null;
+        private CardTarget CardTarget { get; set; } = null;
+        public Target Target {
+            set {
+                if (value is CardTarget)
+                    CardTarget = (CardTarget)value;
+                if (value is PlayerTarget)
+                    PlayerTarget = (PlayerTarget)value;
+            }}
+        public List<Target> Targets { private get; set; }
+        private List<CardTarget> CardTargets { get { return Targets.Where(t => t is CardTarget).Select(t => (CardTarget)t).ToList(); } }
+        private List<PlayerTarget> PlayerTargets { get { return Targets.Where(t => t is PlayerTarget).Select(t => (PlayerTarget)t).ToList(); } }
+
+        private CreatureCard Attacker;
+
+        private List<KeyValuePair<CharacterEnum, Response>> _successiveResponse = new List<KeyValuePair<CharacterEnum, Response>>();
+        public List<KeyValuePair<CharacterEnum, Response>> SuccessiveResponse { get { List<KeyValuePair<CharacterEnum, Response>> sr = _successiveResponse;  return sr; }  set { _successiveResponse.Clear(); } }
 
         public OnCardPlayedVisitor(GameManager gameManager) : base (AmaruConstants.GAME_PREFIX + gameManager.Id)
         {
             this.GameManager = gameManager;
+        }
+
+        private void AddResponse(CharacterEnum c, Response r)
+        {
+            _successiveResponse.Add(new KeyValuePair<CharacterEnum, Response>(c, r));
         }
 
         public override int Visit(GainCPAttack attack)
@@ -147,32 +166,46 @@ namespace AmaruServer.Game.Managing
 
         public override int Visit(AddEPAndDrawSpellAbility spell)
         {
-            //ADD DRAW CARD!!!!!!!!!!!!!!
+            // Draw card and prepare response
+            AddResponse(Owner, new DrawCardResponse(Owner, GameManager.UserDict[Owner].Player.Draw()));
+            foreach (CharacterEnum ch in CharacterManager.Instance.Others(Owner))
+                AddResponse(Owner, new DrawCardResponse(Owner, null));
 
-            List<CreatureCard> mods = new List<CreatureCard>();
-            foreach (CardTarget ct in Targets) {
-                CreatureCard targetCard = (CreatureCard)(GameManager.UserDict[ct.Character].Player.GetCardFromId(ct.CardId, Place.INNER) ?? GameManager.UserDict[ct.Character].Player.GetCardFromId(ct.CardId, Place.OUTER));
-                targetCard.Energy += spell.EpNumber;
-                mods.Add(targetCard);
+            // Handle Card targets
+            List<CreatureCard> modCards = new List<CreatureCard>();
+            foreach (CardTarget t in CardTargets)
+            {
+                CreatureCard card = (CreatureCard)(GameManager.UserDict[t.Character].Player.GetCardFromId(t.CardId, Place.INNER) ?? (GameManager.UserDict[t.Character].Player.GetCardFromId(t.CardId, Place.OUTER)));
+                GameManager.UserDict[t.Character].Player.Mana -= spell.EpNumber;
+                modCards.Add(card);
             }
-            foreach (CharacterEnum c in GameManager.UserDict.Keys.ToList())
-                _successiveResponse.Add(c, new CardsModifiedResponse(mods));
 
+            // Prepare responses
+            foreach (CharacterEnum ch in GameManager.UserDict.Keys.ToList())
+                AddResponse(ch, new CardsModifiedResponse(modCards));
             return 0;
         }
 
         public override int Visit(PDDamageToCreatureSpellAbility spell)
         {
-            foreach (Target t in Targets) {
-                CreatureCard c = ((CardTarget)t).Card;
-                c.Health -= spell.PDDamage;
-                if (c.Health - spell.PDDamage > 0) {
-                    c.PoisonDamage += spell.PDDamage;
-                    foreach (CharacterEnum ch in GameManager.UserDict.Keys.ToList())
-                        _successiveResponse.Add(ch, new CardsModifiedResponse(c));
-                }
+            // Handle Card targets
+            List<CreatureCard> modCards = new List<CreatureCard>();
+            foreach (CardTarget t in CardTargets)
+            {
+                CreatureCard card = (CreatureCard)(GameManager.UserDict[t.Character].Player.GetCardFromId(t.CardId, Place.INNER) ?? (GameManager.UserDict[t.Character].Player.GetCardFromId(t.CardId, Place.OUTER)));
+                GameManager.UserDict[t.Character].Player.Health -= spell.PDDamage;
+                if (card.Health - spell.PDDamage > 0) 
+                    card.PoisonDamage += spell.PDDamage;
+                modCards.Add(card);
             }
 
+            // Prepare responses
+            foreach (CharacterEnum ch in GameManager.UserDict.Keys.ToList())
+            {
+                if (modCards.Any())
+                    AddResponse(ch, new CardsModifiedResponse(modCards));
+                GameManager.UserDict[ch].Player.Refresh();
+            }
             return 0;
         }
 
@@ -188,10 +221,31 @@ namespace AmaruServer.Game.Managing
 
         public override int Visit(GiveHPSpellAbility spell)
         {
-            Player owner = GameManager.UserDict[Owner].Player;
-            owner.Health += spell.numHP;
-            foreach (CharacterEnum c in CharacterManager.Instance.Characters)
-                _successiveResponse.Add(c, new PlayerModifiedResponse(owner.Character, owner.Mana, owner.Health));
+            // Handle player targets
+            List<PlayerMod> modPlayers = new List<PlayerMod>();
+            foreach (PlayerTarget t in PlayerTargets)
+            {
+                GameManager.UserDict[t.Character].Player.Health += spell.numHP;
+                modPlayers.Add(new PlayerMod(GameManager.UserDict[t.Character].Player));
+            }
+
+            // Handle Card targets
+            List<CreatureCard> modCards = new List<CreatureCard>();
+            foreach (CardTarget t in CardTargets)
+            {
+                CreatureCard card = (CreatureCard)(GameManager.UserDict[t.Character].Player.GetCardFromId(t.CardId, Place.INNER) ?? (GameManager.UserDict[t.Character].Player.GetCardFromId(t.CardId, Place.OUTER)));
+                GameManager.UserDict[t.Character].Player.Health += spell.numHP;
+                modCards.Add(card);
+            }
+
+            // Prepare responses
+            foreach (CharacterEnum ch in GameManager.UserDict.Keys.ToList())
+            {
+                if (modCards.Any())
+                    AddResponse(ch, new CardsModifiedResponse(modCards));
+                if (modPlayers.Any())
+                    AddResponse(ch, new PlayerModifiedResponse(modPlayers));
+            }
             return 0;
         }
 
@@ -200,7 +254,7 @@ namespace AmaruServer.Game.Managing
             Player owner = GameManager.UserDict[Owner].Player;
             owner.Mana += spell.numCP;
             foreach (CharacterEnum c in CharacterManager.Instance.Characters)
-                _successiveResponse.Add(c, new PlayerModifiedResponse(owner.Character, owner.Mana, owner.Health));
+                AddResponse(c, new PlayerModifiedResponse(owner.Character, owner.Mana, owner.Health));
             return 0;
         }
 
@@ -222,7 +276,7 @@ namespace AmaruServer.Game.Managing
                 mods.Add(c);
             }
             foreach (CharacterEnum c in CharacterManager.Instance.Characters)
-                _successiveResponse.Add(c, new CardsModifiedResponse(mods));
+                AddResponse(c, new CardsModifiedResponse(mods));
 
             return 0;
         }
@@ -237,19 +291,33 @@ namespace AmaruServer.Game.Managing
                     PDcount += c.PoisonDamage;
             }
 
-            foreach (Target t in Targets) {
-                if(t is PlayerTarget) {
-                    GameManager.UserDict[t.Character].Player.Health -= PDcount;
-                }
-                else {
-                    CreatureCard c = ((CardTarget)t).Card;
-                    c.Health -= PDcount;
-                    if (c.Health - PDcount > 0) {
-                        c.PoisonDamage += PDcount;
-                        foreach (CharacterEnum ch in GameManager.UserDict.Keys.ToList())
-                            _successiveResponse.Add(ch, new CardsModifiedResponse(c));
-                    }
-                }
+            // Handle player targets
+            List<PlayerMod> modPlayers = new List<PlayerMod>();
+            foreach (PlayerTarget t in PlayerTargets)
+            {
+                GameManager.UserDict[t.Character].Player.Health -= PDcount;
+                modPlayers.Add(new PlayerMod(GameManager.UserDict[t.Character].Player));
+            }
+
+            // Handle Card targets
+            List<CreatureCard> modCards = new List<CreatureCard>();
+            foreach (CardTarget t in CardTargets)
+            {
+                CreatureCard card = (CreatureCard)(GameManager.UserDict[t.Character].Player.GetCardFromId(t.CardId, Place.INNER) ?? (GameManager.UserDict[t.Character].Player.GetCardFromId(t.CardId, Place.OUTER)));
+                GameManager.UserDict[t.Character].Player.Health -= PDcount;
+                if (card.Health - PDcount > 0) 
+                    card.PoisonDamage += PDcount;
+                modCards.Add(card);
+            }
+
+            // Prepare responses
+            foreach (CharacterEnum ch in GameManager.UserDict.Keys.ToList())
+            {
+                if (modCards.Any())
+                    AddResponse(ch, new CardsModifiedResponse(modCards));
+                if (modPlayers.Any())
+                    AddResponse(ch, new PlayerModifiedResponse(modPlayers));
+                GameManager.UserDict[ch].Player.Refresh();
             }
             return 0;
         }
