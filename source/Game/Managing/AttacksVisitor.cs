@@ -193,10 +193,7 @@ namespace AmaruServer.Game.Managing
                 DeadCards.Add(deadCard);
             }
             foreach (CharacterEnum c in GameManager.UserDict.Keys.ToList())
-            {
-                GameManager.UserDict[c].Player.Refresh();
                 AddResponse(c, new CardsModifiedResponse(DeadCards));
-            }
             return 0;
         }
 
@@ -222,7 +219,6 @@ namespace AmaruServer.Game.Managing
                 targetCard.Health -= attackPower;
                 foreach (CharacterEnum c in GameManager.UserDict.Keys.ToList())
                     AddResponse(c, new CardsModifiedResponse(targetCard));
-                GameManager.UserDict[t.Character].Player.Refresh();
             }
             // Case target is Player
             else
@@ -259,7 +255,6 @@ namespace AmaruServer.Game.Managing
                 CreatureCard targetCard = (CreatureCard)(GameManager.UserDict[ct.Character].Player.GetCardFromId(ct.CardId, Place.INNER) ?? GameManager.UserDict[ct.Character].Player.GetCardFromId(ct.CardId, Place.OUTER));
                 targetCard.Health -= ability.NumPD;
                 targetCard.PoisonDamage += ability.NumPD;
-                GameManager.GetPlayer(ct.Character).Refresh();
                 mods.Add(targetCard);
             }
             foreach (CharacterEnum c in GameManager.UserDict.Keys.ToList())
