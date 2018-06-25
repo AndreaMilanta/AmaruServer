@@ -159,6 +159,11 @@ namespace AmaruServer.Game.Managing
             return 0;
         }
 
+        public override int Visit(DoubleHPAbility ability)
+        {
+            return 0;
+        }
+
         public override int Visit(DuplicatorSpellAbility duplicatorSpellAbility)
         {
             return 0;
@@ -176,7 +181,7 @@ namespace AmaruServer.Game.Managing
             foreach (CardTarget t in CardTargets)
             {
                 CreatureCard card = (CreatureCard)(GameManager.UserDict[t.Character].Player.GetCardFromId(t.CardId, Place.INNER) ?? (GameManager.UserDict[t.Character].Player.GetCardFromId(t.CardId, Place.OUTER)));
-                GameManager.UserDict[t.Character].Player.Mana -= spell.EpNumber;
+                card.Energy -= spell.EpNumber;
                 modCards.Add(card);
             }
 
@@ -193,8 +198,8 @@ namespace AmaruServer.Game.Managing
             foreach (CardTarget t in CardTargets)
             {
                 CreatureCard card = (CreatureCard)(GameManager.UserDict[t.Character].Player.GetCardFromId(t.CardId, Place.INNER) ?? (GameManager.UserDict[t.Character].Player.GetCardFromId(t.CardId, Place.OUTER)));
-                GameManager.UserDict[t.Character].Player.Health -= spell.PDDamage;
-                if (card.Health - spell.PDDamage > 0) 
+                card.Health -= spell.PDDamage;
+                if (card.Health  > 0) 
                     card.PoisonDamage += spell.PDDamage;
                 modCards.Add(card);
             }
@@ -234,7 +239,7 @@ namespace AmaruServer.Game.Managing
             foreach (CardTarget t in CardTargets)
             {
                 CreatureCard card = (CreatureCard)(GameManager.UserDict[t.Character].Player.GetCardFromId(t.CardId, Place.INNER) ?? (GameManager.UserDict[t.Character].Player.GetCardFromId(t.CardId, Place.OUTER)));
-                GameManager.UserDict[t.Character].Player.Health += spell.numHP;
+                card.Health += spell.numHP;
                 modCards.Add(card);
             }
 
@@ -255,11 +260,6 @@ namespace AmaruServer.Game.Managing
             owner.Mana += spell.numCP;
             foreach (CharacterEnum c in CharacterManager.Instance.Characters)
                 AddResponse(c, new PlayerModifiedResponse(owner.Character, owner.Mana, owner.Health));
-            return 0;
-        }
-
-        public override int Visit(DoubleHPAbility ability)
-        { 
             return 0;
         }
 
@@ -304,8 +304,8 @@ namespace AmaruServer.Game.Managing
             foreach (CardTarget t in CardTargets)
             {
                 CreatureCard card = (CreatureCard)(GameManager.UserDict[t.Character].Player.GetCardFromId(t.CardId, Place.INNER) ?? (GameManager.UserDict[t.Character].Player.GetCardFromId(t.CardId, Place.OUTER)));
-                GameManager.UserDict[t.Character].Player.Health -= PDcount;
-                if (card.Health - PDcount > 0) 
+                card.Health -= PDcount;
+                if (card.Health > 0) 
                     card.PoisonDamage += PDcount;
                 modCards.Add(card);
             }
@@ -322,28 +322,143 @@ namespace AmaruServer.Game.Managing
             return 0;
         }
 
-        public override int Visit(DealDamageToEverythingSpellAbility dealDamageToEverythingSpellAbility)
+
+        public override int Visit(DealDamageToEverythingSpellAbility spell)
         {
+            List<CreatureCard> modCards = new List<CreatureCard>();
+            foreach (User u in GameManager.UserDict.Values) {
+                Player p = u.Player;
+                foreach (CreatureCard c in p.Outer) {
+                    c.Health -= spell.numDamage;
+                    modCards.Add(c);
+                }
+            }
+
+            foreach (CharacterEnum ch in GameManager.UserDict.Keys.ToList()) {
+                if (modCards.Any())
+                    AddResponse(ch, new CardsModifiedResponse(modCards));
+                GameManager.UserDict[ch].Player.Refresh();
+            }
+
             return 0;
         }
 
-        public override int Visit(DealTotDamageToTotTargetsSpellAbility dealTotDamageToTotTargetsSpellAbility)
+        public override int Visit(DealTotDamageToTotTargetsSpellAbility spell)
         {
+            // Handle player targets
+            List<PlayerMod> modPlayers = new List<PlayerMod>();
+            foreach (PlayerTarget t in PlayerTargets) {
+                GameManager.UserDict[t.Character].Player.Health -= spell.DamageToDeal;
+                modPlayers.Add(new PlayerMod(GameManager.UserDict[t.Character].Player));
+            }
+
+            // Handle Card targets
+            List<CreatureCard> modCards = new List<CreatureCard>();
+            foreach (CardTarget t in CardTargets) {
+                CreatureCard card = (CreatureCard)(GameManager.UserDict[t.Character].Player.GetCardFromId(t.CardId, Place.INNER) ?? (GameManager.UserDict[t.Character].Player.GetCardFromId(t.CardId, Place.OUTER)));
+                card.Health -= spell.DamageToDeal;
+                modCards.Add(card);
+            }
+
+            // Prepare responses
+            foreach (CharacterEnum ch in GameManager.UserDict.Keys.ToList()) {
+                if (modCards.Any())
+                    AddResponse(ch, new CardsModifiedResponse(modCards));
+                if (modPlayers.Any())
+                    AddResponse(ch, new PlayerModifiedResponse(modPlayers));
+                GameManager.UserDict[ch].Player.Refresh();
+            }
             return 0;
         }
 
-        public override int Visit(DamagePDToAllCreaturesOfTargetPlayerSpellAbility damagePDToAllCreaturesOfTargetPlayerSpellAbility)
+        public override int Visit(DamagePDToAllCreaturesOfTargetPlayerSpellAbility spell)
         {
+            // Handle Card targets
+            List<CreatureCard> modCards = new List<CreatureCard>();
+            foreach (PlayerTarget t in PlayerTargets) {
+                foreach (CreatureCard card in GameManager.UserDict[t.Character].Player.Inner) {
+                    card.Health -= spell.numPd;
+                    if (card.Health > 0)
+                        card.PoisonDamage += spell.numPd;
+                    modCards.Add(card);
+                }
+
+                foreach (CreatureCard card in GameManager.UserDict[t.Character].Player.Outer) {
+                    card.Health -= spell.numPd;
+                    if (card.Health > 0)
+                        card.PoisonDamage += spell.numPd;
+                    modCards.Add(card);
+                }
+            }
+
+            // Prepare responses
+            foreach (CharacterEnum ch in GameManager.UserDict.Keys.ToList()) {
+                if (modCards.Any())
+                    AddResponse(ch, new CardsModifiedResponse(modCards));
+                
+                GameManager.UserDict[ch].Player.Refresh();
+            }
             return 0;
         }
 
-        public override int Visit(DealDamageDependingOnMAXHPSpellAbility dealDamageDependingOnMAXHPSpeelAbility)
+        public override int Visit(DealDamageDependingOnMAXHPSpellAbility spell)
         {
+            int dmg = 0;
+            List<CreatureCard> modCards = new List<CreatureCard>();
+            
+            foreach (CreatureCard card in GameManager.UserDict[GameManager.ActiveCharacter].Player.Inner) {
+                if (card.Health > dmg)
+                    dmg = card.Health;
+            }
+
+            foreach (CreatureCard card in GameManager.UserDict[GameManager.ActiveCharacter].Player.Outer) {
+                if (card.Health > dmg)
+                    dmg = card.Health;
+            }
+
+            foreach (CardTarget t in CardTargets) {
+                CreatureCard card = (CreatureCard)(GameManager.UserDict[t.Character].Player.GetCardFromId(t.CardId, Place.INNER) ?? (GameManager.UserDict[t.Character].Player.GetCardFromId(t.CardId, Place.OUTER)));
+                card.Health -= dmg;
+                modCards.Add(card);
+            }
+
+            // Handle player targets
+            List<PlayerMod> modPlayers = new List<PlayerMod>();
+            foreach (PlayerTarget t in PlayerTargets) {
+                GameManager.UserDict[t.Character].Player.Health -= dmg;
+                modPlayers.Add(new PlayerMod(GameManager.UserDict[t.Character].Player));
+            }
+
+            // Prepare responses
+            foreach (CharacterEnum ch in GameManager.UserDict.Keys.ToList()) {
+                if (modCards.Any())
+                    AddResponse(ch, new CardsModifiedResponse(modCards));
+                if (modPlayers.Any())
+                    AddResponse(ch, new PlayerModifiedResponse(modPlayers));
+                GameManager.UserDict[ch].Player.Refresh();
+            }
+
             return 0;
         }
 
         public override int Visit(AttackEqualToHPSpellAbility attackEqualToHPSpellAbility)
         {
+            List<CreatureCard> modCards = new List<CreatureCard>();
+
+            // Handle card targets
+            foreach (CardTarget t in CardTargets) {
+                CreatureCard card = (CreatureCard)(GameManager.UserDict[t.Character].Player.GetCardFromId(t.CardId, Place.INNER) ?? (GameManager.UserDict[t.Character].Player.GetCardFromId(t.CardId, Place.OUTER)));
+                card.Attack.BonusAttack += card.Health;
+                modCards.Add(card);
+            }
+
+            // Prepare responses
+            foreach (CharacterEnum ch in GameManager.UserDict.Keys.ToList()) {
+                if (modCards.Any())
+                    AddResponse(ch, new CardsModifiedResponse(modCards));
+
+                GameManager.UserDict[ch].Player.Refresh();
+            }
             return 0;
         }
 
