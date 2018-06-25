@@ -201,6 +201,7 @@ namespace AmaruServer.Game.Managing
             if (GameManager.UserDict[Owner].Player.Outer.Count < AmaruConstants.OUTER_MAX_SIZE)
             {
                 CreatureCard summoned = (CreatureCard)ability.toSummon.Original;
+                summoned.Energy = 1;
                 GameManager.UserDict[Owner].Player.Outer.Add(summoned);
 
                 foreach (CharacterEnum c in GameManager.UserDict.Keys)
