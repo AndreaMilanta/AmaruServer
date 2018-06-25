@@ -103,8 +103,7 @@ namespace AmaruServer.Game.Managing
 
         public override int Visit(KrumAttack attack)
         {
-            // Remember to include BonusAttack
-            throw new NotImplementedException();
+            return Caller.ManaSpentThisTurn + attack.BonusAttack;
         }
 
         public override int Visit(PoisonAttack attack)

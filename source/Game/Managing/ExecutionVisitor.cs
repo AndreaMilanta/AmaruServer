@@ -86,7 +86,8 @@ namespace AmaruServer.Game.Managing
         public override void Visit(EndTurnAction action)
         {
             if (action.IsMainTurn) {
-                GameManager.UserDict[GameManager.ActiveCharacter].Player.PlayedSpell = new List<SpellCard>();
+                //GameManager.UserDict[GameManager.ActiveCharacter].Player.PlayedSpell = new List<SpellCard>();
+
                 GameManager.NextTurn();
                 GameManager.StartTurn();
             }
