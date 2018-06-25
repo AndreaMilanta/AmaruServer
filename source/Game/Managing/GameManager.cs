@@ -253,6 +253,7 @@ namespace AmaruServer.Game.Managing
 
         public CharacterEnum NextTurn()
         {
+
             this._currentIndex = (_currentIndex == (_turnList.Count - 1)) ? 0 : _currentIndex+1;
             if (_currentIndex == 0)
                 CurrentRound++;
