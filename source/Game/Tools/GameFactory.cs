@@ -33,7 +33,8 @@ namespace AmaruServer.Game.Tools
         {
             // Assign user to character
             Dictionary<CharacterEnum, User> playerClientDict = new Dictionary<CharacterEnum, User>();
-            List<CharacterEnum> chars = CharacterManager.Instance.RandomPlayCharList;
+            List<CharacterEnum> chars = CharacterManager.Instance.RandomPlayCharList;                  //TODO: Reset ordine casuale
+            //List<CharacterEnum> chars = CharacterManager.Instance.PlayCharacters;
             for (int i = 0; i < AmaruConstants.NUM_PLAYER; i++)
                 playerClientDict.Add(chars[i], users[i]);
             GameManager newGame = new GameManager(NextId, playerClientDict);
