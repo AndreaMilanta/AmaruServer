@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using AmaruCommon.GameAssets.Cards.Properties.SpellAbilities;
 using AmaruCommon.GameAssets.Cards.Properties.CreatureEffects;
 using AmaruCommon.GameAssets.Characters;
+using AmaruServer.Networking;
 
 namespace AmaruServer.Game.Managing
 {
@@ -180,8 +181,10 @@ namespace AmaruServer.Game.Managing
 
         public override void Visit(AttackCreatureAction action)
         {
-            // Check caller player is alive and it is its main turn
+
             Player caller = this.GameManager.GetPlayer(action.Caller);
+
+            // Check caller player is alive and it is its main turn
             if (!caller.IsAlive || GameManager.ActiveCharacter != action.Caller || !GameManager.IsMainTurn)
                 throw new CallerCannotPlayException();
 
@@ -192,13 +195,25 @@ namespace AmaruServer.Game.Managing
             CreatureCard card = (CreatureCard)(caller.GetCardFromId(action.PlayedCardId, Place.OUTER) ?? caller.GetCardFromId(action.PlayedCardId, Place.INNER));
             if (card.Energy < card.Attack.Cost)
                 throw new NotEnoughEPAvailableException();
-            
-            //check ShieldMaiden, immunità non so se c'è, creatura è presente?
-           
+
+            // Looking that the creature is not protected
+            foreach (User p in GameManager.UserDict.Values)
+            {
+                if (p.Player.GetCardFromId(action.Target.CardId, Place.INNER) != null)
+                {
+                    if (p.Player.IsShieldMaidenProtected)
+                    {
+                        throw new InvalidCardLocationException();
+                    }
+                }
+            }
+
+
         }
 
         public override void Visit(UseAbilityAction useAbilityAction)
         {
+
         }
     }
 }
