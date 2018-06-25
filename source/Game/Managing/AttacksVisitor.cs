@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using AmaruCommon.GameAssets.Characters;
 using AmaruCommon.Responses;
 using System.Linq;
+using AmaruServer.Networking;
 
 namespace AmaruServer.Game.Managing
 {
@@ -94,6 +95,12 @@ namespace AmaruServer.Game.Managing
             return attack.Power;
         }
 
+        //AGGIUNGERE DRAW CARD
+        public override int Visit(DrawCardAndAttack attack)
+        {
+            return attack.Power;
+        }
+
         public override int Visit(KrumAttack attack)
         {
             // Remember to include BonusAttack
@@ -116,14 +123,28 @@ namespace AmaruServer.Game.Managing
 
         public override int Visit(SalazarAttack attack)
         {
-            // Remember to include BonusAttack
-            throw new NotImplementedException();
+            int PDcount = attack.BonusAttack;
+            foreach(User u in GameManager.UserDict.Values) {
+                foreach (CreatureCard c in u.Player.Inner)
+                    PDcount += c.PoisonDamage;
+                foreach (CreatureCard c in u.Player.Outer)
+                    PDcount += c.PoisonDamage;
+            }
+            if (CardTarget != null) {
+                CreatureCard targetCard = (CreatureCard)(GameManager.UserDict[CardTarget.Character].Player.GetCardFromId(CardTarget.CardId, Place.INNER) ?? GameManager.UserDict[CardTarget.Character].Player.GetCardFromId(CardTarget.CardId, Place.OUTER));
+                if (targetCard.Health - attack.Power > 0) {
+                    targetCard.PoisonDamage += attack.Power;
+                    foreach (CharacterEnum c in GameManager.UserDict.Keys.ToList())
+                        AddResponse(c, new CardsModifiedResponse(targetCard));
+                }
+            }
+
+            return PDcount;
         }
 
         public override int Visit(SeribuAttack attack)
         {
-            // Remember to include BonusAttack
-            throw new NotImplementedException();
+            return Caller.Inner.Count + Caller.Outer.Count;
         }
 
         public override int Visit(GainHPAbility ability)
@@ -372,11 +393,6 @@ namespace AmaruServer.Game.Managing
         }
 
         public override int Visit(GainCPForCardPlayedEffect effect)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override int Visit(DrawCardAndAttack attack)
         {
             throw new NotImplementedException();
         }

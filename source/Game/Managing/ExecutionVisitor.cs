@@ -74,6 +74,7 @@ namespace AmaruServer.Game.Managing
             Player p = GameManager.GetPlayer(action.Caller);
             SpellCard spell = p.PlayASpellFromHand(action.PlayedCardId);
             visitor.Targets = action.Targets;
+            p.PlayedSpell.Add(spell);
             spell.Visit(visitor, p.Character);
             foreach (CharacterEnum target in GameManager.UserDict.Keys.ToList())
                 GameManager.UserDict[target].Write(new ResponseMessage(new PlayASpellResponse(action.Caller,spell,action.Targets)));
@@ -85,6 +86,7 @@ namespace AmaruServer.Game.Managing
         public override void Visit(EndTurnAction action)
         {
             if (action.IsMainTurn) {
+                GameManager.UserDict[GameManager.ActiveCharacter].Player.PlayedSpell = new List<SpellCard>();
                 GameManager.NextTurn();
                 GameManager.StartTurn();
             }
