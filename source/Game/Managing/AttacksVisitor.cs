@@ -144,7 +144,7 @@ namespace AmaruServer.Game.Managing
 
         public override int Visit(SeribuAttack attack)
         {
-            return Caller.Inner.Count + Caller.Outer.Count;
+            return Caller.Inner.Count + Caller.Outer.Count + attack.BonusAttack;
         }
 
         public override int Visit(GainHPAbility ability)
