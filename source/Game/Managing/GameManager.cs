@@ -41,16 +41,6 @@ namespace AmaruServer.Game.Managing
         public GameManager(GameManager gameManager, string logger) : base(logger)
         {
 
-            //per ogni giocatore in generale voglio sapere:
-            /*
-            List<Player> playerToClone = new List<Player>();
-            foreach (User user in playerToClone)
-            {
-                playerToClone.Add(new Player(user.Player));
-            }
-            foreach (Player p in playerToClone)
-                _userDict.Add(p.Character, new EmptyUser(p, logger));
-            */
             foreach (CreatureCard c in gameManager.Graveyard)
             {
                 this.Graveyard.Add(((CreatureCard)c).clone());

@@ -3,11 +3,13 @@ using AmaruCommon.Actions.Targets;
 using AmaruCommon.Communication.Messages;
 using AmaruCommon.Constants;
 using AmaruCommon.GameAssets.Cards;
+using AmaruCommon.GameAssets.Cards.Properties;
 using AmaruCommon.GameAssets.Characters;
 using AmaruCommon.GameAssets.Players;
 using AmaruCommon.Responses;
 using AmaruServer.Game.Managing;
 using ClientServer.Messages;
+using Combinatorics.Collections;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -24,13 +26,13 @@ namespace AmaruServer.Networking
         private bool myTurn = false;
         MessageHandler messageHandler = null;
         Queue<PlayerAction> listOfActions;
+        TargetValidationVisitor targetVisitor = new TargetValidationVisitor("FakeLogger");
 
         public struct GoalFunctionWeights
         {
             //Addictive values
             public const double AliveCreature = 2.0;
             public const double PlayerDead = 50.0;
-
             public const double LegendaryCardBonus= 5;
             public const double ShieldUpCreatureBonus = 4;
             public const double ShieldMaidenCreatureBonus = 2;
@@ -49,9 +51,9 @@ namespace AmaruServer.Networking
         public struct GoalFunctionMyFieldWeights
         {
             //Addictive values
-            public const double ShieldAndInnerZone = -2.0;
-            public const double ShieldMaidenPresentLowHPInnerZone = 4.0;
-            public const double CanAttackInnerZone = -2.5;
+            public const double ShieldAndInnerZone = -4.1;
+            public const double ShieldMaidenPresentLowHPInnerZone = 4.5;
+            public const double CanAttackInnerZone = -6.0;
             public const double LowHPOuterZone =  -4.0;
 
             //Multiplicative Values
@@ -133,7 +135,6 @@ namespace AmaruServer.Networking
                     }
 
                     bool gain = true;
-
                     while (gain)
                     {
                         KeyValuePair<Double, PlayerAction> pair = Think(toIterate);
@@ -181,9 +182,9 @@ namespace AmaruServer.Networking
             {
                 try
                 {
+                    //   Log("TESTO la carta "+ cd.Name + "   in war zone? " + myWarZone.Contains(cd));
+                    //   Log(me.IsShieldMaidenProtected.ToString());
                     GameManager toUseTemp = CreateGameManagerAndStuff(toUse);
-                 //   Log("TESTO la carta "+ cd.Name + "   in war zone? " + myWarZone.Contains(cd));
-                 //   Log(me.IsShieldMaidenProtected.ToString());
                     MoveCreatureAction myIntention = new MoveCreatureAction(CharacterEnum.AMARU, cd.Id, (myInnerZone.Contains(cd)? Place.OUTER: Place.INNER), 0);
                     myIntention.Visit(toUseTemp.ValidationVisitor);
                     myIntention.Visit(toUseTemp.ExecutionVisitor);
@@ -216,7 +217,7 @@ namespace AmaruServer.Networking
             LimitedList<CreatureCard> myWarZone = me.Outer;
             LimitedList<CreatureCard> myInnerZone = me.Inner;
 
-            //Inizializzo tutte le azioni posisbili legate alle carte in mano
+            //Initializing all the actions doable
             List<KeyValuePair<Double, PlayerAction>> listPossibleActions = new List<KeyValuePair<double, PlayerAction>>();
             foreach (Card c in myCards)
             {
@@ -224,31 +225,24 @@ namespace AmaruServer.Networking
                 {
                     if (c is CreatureCard && myWarZone.Count < AmaruConstants.OUTER_MAX_SIZE)
                     {
-                        GameManager toUseTemp = CreateGameManagerAndStuff(toUse);
+
                         PlayACreatureFromHandAction myIntention = new PlayACreatureFromHandAction(CharacterEnum.AMARU, c.Id, Place.OUTER, Player.Outer.Count);
-                        myIntention.Visit(toUseTemp.ValidationVisitor);
-                        myIntention.Visit(toUseTemp.ExecutionVisitor);
-                        Double valueOfGoal = ValueGoalDiscontentment(toUseTemp);
+                        Double valueOfGoal = SimulateAndEvaluate(toUse, myIntention);
                         listPossibleActions.Add(new KeyValuePair<Double, PlayerAction>(valueOfGoal, myIntention));
 
                     } else if (c is CreatureCard && myInnerZone.Count < AmaruConstants.INNER_MAX_SIZE) {
-                        GameManager toUseTemp = CreateGameManagerAndStuff(toUse);
+
                         PlayACreatureFromHandAction myIntention = new PlayACreatureFromHandAction(CharacterEnum.AMARU, c.Id, Place.INNER, Player.Inner.Count);
-                        myIntention.Visit(toUseTemp.ValidationVisitor);
-                        myIntention.Visit(toUseTemp.ExecutionVisitor);
-                        Double valueOfGoal = ValueGoalDiscontentment(toUseTemp);
+                        Double valueOfGoal = SimulateAndEvaluate(toUse, myIntention);
                         listPossibleActions.Add(new KeyValuePair<Double, PlayerAction>(valueOfGoal, myIntention));
                     }
                     else if (c is SpellCard)
                     {
-                        /*
-                        GameManager toUseTemp = createGameManagerAndStuff(toUse);
+                       //Amaru hasn't spell card requiring targets
                         PlayASpellFromHandAction myIntention = new PlayASpellFromHandAction(CharacterEnum.AMARU, c.Id, null);
-                        myIntention.Visit(toUseTemp.ValidationVisitor);
-                        myIntention.Visit(toUseTemp.ExecutionVisitor);
-                        Double valueOfGoal = ValueGoalDiscontentment(toUseTemp);
+                        Double valueOfGoal = SimulateAndEvaluate(toUse, myIntention);
                         listPossibleActions.Add(new KeyValuePair<Double, PlayerAction>(valueOfGoal, myIntention));
-                        */
+                        
                     }
                 }
                 catch (Exception e)
@@ -261,27 +255,37 @@ namespace AmaruServer.Networking
             // inizializzo struttura dati di possibili target per un attacco, potando la ricerca delle azioni evidentemente impossibili
             List<CardTarget> allAcceptableTargets = new List<CardTarget>();
             List<PlayerTarget> allAcceptablePlayerTarget = new List<PlayerTarget>();
+            // Struttura dati per le abilità
+            List<Target> abilityTarget = new List<Target>();
+
+            
             foreach (KeyValuePair<CharacterEnum, User> pair in toUse.UserDict.ToArray())
             {
                 Player player = pair.Value.Player;
                 foreach (CreatureCard cd in player.Outer)
                 {
                     allAcceptableTargets.Add(new CardTarget(pair.Key, cd));
+                    abilityTarget.Add(new CardTarget(pair.Key, cd));
                 }
-                if (!pair.Value.Player.IsShieldMaidenProtected)
+                foreach (CreatureCard cd in Player.Inner)
                 {
-                    foreach (CreatureCard cd in player.Inner)
-                    {
+                    abilityTarget.Add(new CardTarget(pair.Key, cd));
+
+                    if (!pair.Value.Player.IsShieldMaidenProtected)
                         allAcceptableTargets.Add(new CardTarget(pair.Key, cd));
-                    }
                 }
-                if (!player.IsShieldUpProtected && !player.IsImmune)
+                if (!player.IsImmune)
                 {
-                    allAcceptablePlayerTarget.Add(new PlayerTarget(pair.Key));
+                    abilityTarget.Add(new PlayerTarget(pair.Key));
+                    if (!player.IsShieldUpProtected)
+                    {
+                        allAcceptablePlayerTarget.Add(new PlayerTarget(pair.Key));
+                    }
                 }
             }
 
-            //inizializzo tutti i target possibili per un attacco
+
+            //All the possible attacks
             foreach (CreatureCard c in myWarZone)
             {
                 if (c.Energy == 0 || c.Attack is null)
@@ -293,11 +297,8 @@ namespace AmaruServer.Networking
                 {
                     try
                     {
-                        GameManager toUseTemp = CreateGameManagerAndStuff(toUse);
                         AttackCreatureAction myIntention = new AttackCreatureAction(CharacterEnum.AMARU, c.Id, Property.ATTACK, cTarget);
-                        myIntention.Visit(toUseTemp.ValidationVisitor);
-                        myIntention.Visit(toUseTemp.ExecutionVisitor);
-                        Double valueOfGoal = ValueGoalDiscontentment(toUseTemp);
+                        Double valueOfGoal = SimulateAndEvaluate(toUse, myIntention);
                         listPossibleActions.Add(new KeyValuePair<Double, PlayerAction>(valueOfGoal, myIntention));
                     }
                     catch (Exception e)
@@ -311,11 +312,8 @@ namespace AmaruServer.Networking
                 {
                     try
                     {
-                        GameManager toUseTemp = CreateGameManagerAndStuff(toUse);
                         AttackPlayerAction myIntention = new AttackPlayerAction(CharacterEnum.AMARU, c.Id, Property.ATTACK, pTarget);
-                        myIntention.Visit(toUseTemp.ValidationVisitor);
-                        myIntention.Visit(toUseTemp.ExecutionVisitor);
-                        Double valueOfGoal = ValueGoalDiscontentment(toUseTemp);
+                        Double valueOfGoal = SimulateAndEvaluate(toUse, myIntention);
                         listPossibleActions.Add(new KeyValuePair<Double, PlayerAction>(valueOfGoal, myIntention));
                     }
                     catch (Exception e)
@@ -324,6 +322,76 @@ namespace AmaruServer.Networking
                         Log(c.Name);
                     }
                 }
+                /*
+                //All the possible abilities
+                foreach(CreatureCard cd in myWarZone.Concat(myInnerZone))
+                {
+                    if (cd.Energy==0 || cd.Ability is null)
+                    {
+                        continue;
+                    }
+                    if(cd.Ability.NumTarget == 0)
+                    {
+                        try
+                        {
+                            UseAbilityAction myIntention = new UseAbilityAction(CharacterEnum.AMARU, c.Id, target: null);
+                            Double valueOfGoal = SimulateAndEvaluate(toUse, myIntention);
+                            listPossibleActions.Add(new KeyValuePair<Double, PlayerAction>(valueOfGoal, myIntention));
+                        }
+                        catch (Exception e)
+                        {
+                            Log("Eccezione Abilità" + e.ToString());
+                            Log(c.Name);
+                        }
+                        continue;
+
+                    }
+                    List<Target> targetDiscerned = new List<Target>();
+                    foreach(Target t in abilityTarget)
+                    {
+                        targetVisitor.Target = t;
+                        if (cd.Ability.Visit(targetVisitor) >= 0)
+                        {
+                            targetDiscerned.Add(t);
+                        }
+                    }
+
+                    //Invalid Value used to replace the "do not target even if you can" decision
+                    targetDiscerned.Add(new PlayerTarget(CharacterEnum.INVALID));
+                    List<List<Target>> finalListTarget = new List<List<Target>>();
+
+                    Combinations<Target> result = new Combinations<Target>(targetDiscerned, c.Ability.NumTarget , GenerateOption.WithoutRepetition);
+                    foreach (List<Target> lt in result)
+                    {
+                        List<Target> myList = new List<Target>();
+                        foreach(Target t in lt)
+                        {
+                            if (t is PlayerTarget && ((PlayerTarget)t).Character == CharacterEnum.INVALID)
+                            {
+                                continue;
+                            }
+                            myList.Add(t);
+                        }
+                        finalListTarget.Add(myList);
+
+                    }
+
+
+                    foreach (List<Target> lt in finalListTarget)
+                    {
+                        try
+                        {
+                            UseAbilityAction myIntention = new UseAbilityAction(CharacterEnum.AMARU, c.Id, lt);
+                            double valueOfGoal = SimulateAndEvaluate(toUse, myIntention);
+                            listPossibleActions.Add(new KeyValuePair<Double, PlayerAction>(valueOfGoal, myIntention));
+                        }
+                        catch (Exception e)
+                        {
+                            Log("Eccezione Player" + e.ToString());
+                            Log(c.Name);
+                        }
+                    }
+                }*/
             }
             listPossibleActions = listPossibleActions.OrderByDescending(x => x.Key).ToList();
             if (listPossibleActions.Count > 0)
@@ -335,12 +403,20 @@ namespace AmaruServer.Networking
             {
                 return new KeyValuePair<double, PlayerAction>(Double.MinValue, new EndTurnAction(CharacterEnum.AMARU, -1, false));
             }
+        }
 
+        private double SimulateAndEvaluate(GameManager toUse, PlayerAction myIntention)
+        {
+            GameManager toUseTemp = CreateGameManagerAndStuff(toUse);
+            myIntention.Visit(toUseTemp.ValidationVisitor);
+            myIntention.Visit(toUseTemp.ExecutionVisitor);
+            Double valueOfGoal = ValueGoalDiscontentment(toUseTemp);
+            return valueOfGoal;
         }
 
         public override Message ReadSync(int timeout_s)
         {
-            System.Threading.Thread.Sleep(1200+ (new Random()).Next(500));
+            System.Threading.Thread.Sleep(1500+ (new Random()).Next(500));
             return new ActionMessage(listOfActions.Dequeue());
         }
 
@@ -470,12 +546,20 @@ namespace AmaruServer.Networking
                 {
                     hp += GoalFunctionWeights.ShieldMaidenCreatureBonus;
                 }
+                if (c.IsLegendary)
+                {
+                    hp += GoalFunctionWeights.LegendaryCardBonus;
+                }
                 hp += c.Health;
                 t += 1;
             }
             foreach (CreatureCard c in p.Inner)
             {
                 hp += c.Health;
+                if (c.IsLegendary)
+                {
+                    hp += GoalFunctionWeights.LegendaryCardBonus;
+                }
                 t += 1;
             }
             if (t == 0)
