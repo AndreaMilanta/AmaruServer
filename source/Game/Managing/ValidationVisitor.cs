@@ -116,7 +116,14 @@ namespace AmaruServer.Game.Managing
                 throw new CallerCannotPlayException();
 
             //Check if caller player has enough CPs to play the card
+            foreach( Card c in caller.Hand)
+            {
+                Log(c.ToString());
+            }
             Card cardPlaying = caller.GetCardFromId(action.PlayedCardId, Place.HAND);
+            Log(cardPlaying.ToString());
+            Log(caller.Mana.ToString());
+
             if (cardPlaying.Cost > caller.Mana)
             {
                 throw new NotEnoughManaAvailableException();
@@ -132,11 +139,18 @@ namespace AmaruServer.Game.Managing
             List<Target> target = action.Targets;
             SpellAbility effect = ((SpellCard)cardPlaying).Effect;
             int numTarget = effect.NumTarget;
-            KindOfTarget acceptableTypeOfTarget = effect.kindOfTarget; 
-            if ((target == null && numTarget !=0) ||target.Count > numTarget) {
+            KindOfTarget acceptableTypeOfTarget = effect.kindOfTarget;
+
+            if (target is null)
+            {
+                return;
+            }
+
+            if (numTarget !=0 ||target.Count > numTarget) {
                 //Check targets are not immune, and that the right number of target has been chosen. BUT it depends on the card!ù
                 throw new InvalidTargetException();
             }
+
             foreach (Target t in target)
             {
                 if (t is PlayerTarget && acceptableTypeOfTarget != KindOfTarget.PLAYER && acceptableTypeOfTarget != KindOfTarget.MIXED)

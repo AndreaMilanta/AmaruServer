@@ -55,6 +55,7 @@ namespace AmaruServer.Networking
             public const double ShieldMaidenPresentLowHPInnerZone = 4.5;
             public const double CanAttackInnerZone = -6.0;
             public const double LowHPOuterZone =  -4.0;
+            public const double EPValueOfLegendaryCreature = 2.0;
 
             //Multiplicative Values
             public const double LowHpWhen = 1.0/3.0;
@@ -238,7 +239,7 @@ namespace AmaruServer.Networking
                     }
                     else if (c is SpellCard)
                     {
-                       //Amaru hasn't spell card requiring targets
+                        //Amaru hasn't spell card requiring targets
                         PlayASpellFromHandAction myIntention = new PlayASpellFromHandAction(CharacterEnum.AMARU, c.Id, null);
                         Double valueOfGoal = SimulateAndEvaluate(toUse, myIntention);
                         listPossibleActions.Add(new KeyValuePair<Double, PlayerAction>(valueOfGoal, myIntention));
@@ -292,7 +293,7 @@ namespace AmaruServer.Networking
                 {
                     continue;
                 }
-            //    Log("Nome " + c.Name + " Energy: " + c.Energy + " Attack null? " + (c.Attack is null));
+                //    Log("Nome " + c.Name + " Energy: " + c.Energy + " Attack null? " + (c.Attack is null));
                 foreach (CardTarget cTarget in allAcceptableTargets)
                 {
                     try
@@ -322,76 +323,73 @@ namespace AmaruServer.Networking
                         Log(c.Name);
                     }
                 }
-                /*
-                //All the possible abilities
-                foreach(CreatureCard cd in myWarZone.Concat(myInnerZone))
+            }
+            //All the possible abilities
+            foreach(CreatureCard cd in myWarZone.Concat(myInnerZone))
+            {
+                if (cd.Energy==0 || cd.Ability is null)
                 {
-                    if (cd.Energy==0 || cd.Ability is null)
+                    continue;
+                }
+                if(cd.Ability.NumTarget == 0)
+                {
+                    try
                     {
-                        continue;
+                        UseAbilityAction myIntention = new UseAbilityAction(CharacterEnum.AMARU, cd.Id, target: null);
+                        Double valueOfGoal = SimulateAndEvaluate(toUse, myIntention);
+                        listPossibleActions.Add(new KeyValuePair<Double, PlayerAction>(valueOfGoal, myIntention));
                     }
-                    if(cd.Ability.NumTarget == 0)
+                    catch (Exception e)
                     {
-                        try
-                        {
-                            UseAbilityAction myIntention = new UseAbilityAction(CharacterEnum.AMARU, c.Id, target: null);
-                            Double valueOfGoal = SimulateAndEvaluate(toUse, myIntention);
-                            listPossibleActions.Add(new KeyValuePair<Double, PlayerAction>(valueOfGoal, myIntention));
-                        }
-                        catch (Exception e)
-                        {
-                            Log("Eccezione Abilità" + e.ToString());
-                            Log(c.Name);
-                        }
-                        continue;
-
+                        Log("Eccezione Abilità" + e.ToString());
+                        Log(cd.Name);
                     }
-                    List<Target> targetDiscerned = new List<Target>();
-                    foreach(Target t in abilityTarget)
+                    continue;
+                }
+                List<Target> targetDiscerned = new List<Target>();
+                foreach(Target t in abilityTarget)
+                {
+                    targetVisitor.Target = t;
+                    if (cd.Ability.Visit(targetVisitor) >= 0)
                     {
-                        targetVisitor.Target = t;
-                        if (cd.Ability.Visit(targetVisitor) >= 0)
-                        {
-                            targetDiscerned.Add(t);
-                        }
+                        targetDiscerned.Add(t);
                     }
+                }
 
-                    //Invalid Value used to replace the "do not target even if you can" decision
-                    targetDiscerned.Add(new PlayerTarget(CharacterEnum.INVALID));
-                    List<List<Target>> finalListTarget = new List<List<Target>>();
+                //Invalid Value used to replace the "do not target even if you can" decision
+                targetDiscerned.Add(new PlayerTarget(CharacterEnum.INVALID));
+                List<List<Target>> finalListTarget = new List<List<Target>>();
 
-                    Combinations<Target> result = new Combinations<Target>(targetDiscerned, c.Ability.NumTarget , GenerateOption.WithoutRepetition);
-                    foreach (List<Target> lt in result)
+                Combinations<Target> result = new Combinations<Target>(targetDiscerned, cd.Ability.NumTarget , GenerateOption.WithoutRepetition);
+                foreach (List<Target> lt in result)
+                {
+                    List<Target> myList = new List<Target>();
+                    foreach(Target t in lt)
                     {
-                        List<Target> myList = new List<Target>();
-                        foreach(Target t in lt)
+                        if (t is PlayerTarget && ((PlayerTarget)t).Character == CharacterEnum.INVALID)
                         {
-                            if (t is PlayerTarget && ((PlayerTarget)t).Character == CharacterEnum.INVALID)
-                            {
-                                continue;
-                            }
-                            myList.Add(t);
+                            continue;
                         }
-                        finalListTarget.Add(myList);
-
+                        myList.Add(t);
                     }
+                    finalListTarget.Add(myList);
+                }
 
-
-                    foreach (List<Target> lt in finalListTarget)
+                foreach (List<Target> lt in finalListTarget)
+                {
+                    try
                     {
-                        try
-                        {
-                            UseAbilityAction myIntention = new UseAbilityAction(CharacterEnum.AMARU, c.Id, lt);
-                            double valueOfGoal = SimulateAndEvaluate(toUse, myIntention);
-                            listPossibleActions.Add(new KeyValuePair<Double, PlayerAction>(valueOfGoal, myIntention));
-                        }
-                        catch (Exception e)
-                        {
-                            Log("Eccezione Player" + e.ToString());
-                            Log(c.Name);
-                        }
+                        UseAbilityAction myIntention = new UseAbilityAction(CharacterEnum.AMARU, cd.Id, lt);
+                        double valueOfGoal = SimulateAndEvaluate(toUse, myIntention);
+                        listPossibleActions.Add(new KeyValuePair<Double, PlayerAction>(valueOfGoal, myIntention));
                     }
-                }*/
+                    catch (Exception e)
+                    {
+                        Log("Eccezione Player" + e.ToString());
+                        Log(cd.Name);
+                    }
+                    
+                }
             }
             listPossibleActions = listPossibleActions.OrderByDescending(x => x.Key).ToList();
             if (listPossibleActions.Count > 0)
@@ -521,6 +519,12 @@ namespace AmaruServer.Networking
                     value += GoalFunctionMyFieldWeights.LowHPOuterZone;
                 }
             }
+
+            if (c.IsLegendary)
+            {
+                value += GoalFunctionMyFieldWeights.EPValueOfLegendaryCreature;
+            }
+            value += c.Energy;
             return value;
         }
 
