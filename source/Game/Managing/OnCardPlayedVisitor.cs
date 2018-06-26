@@ -259,6 +259,7 @@ namespace AmaruServer.Game.Managing
             {
                 foreach (CreatureCard card in reborn)
                 {
+                    Log(OwnerCard.Name + " used ResurrectSpecificCreatureSpellAbility, resurrected " + card.Name);
                     GameManager.Graveyard.Remove(card);
                     GameManager.UserDict[Owner].Player.Outer.Add(card);
                     foreach (CharacterEnum ch in GameManager.UserDict.Keys)
@@ -270,6 +271,26 @@ namespace AmaruServer.Game.Managing
 
         public override int Visit(ResurrectOrReturnToHandSpellAbility resurrectOrReturnToHandSpellAbility)
         {
+            Random rnd = new Random();
+            CreatureCard resurrect = GameManager.Graveyard[rnd.Next(GameManager.Graveyard.Count)];
+            GameManager.Graveyard.Remove(resurrect);
+            CreatureCard evoked = (CreatureCard)resurrect.Original;
+            Log(OwnerCard.Name + " used ResurrectOrReturn, resurrected " + evoked.Name);
+            Place place;
+            if (GameManager.GetPlayer(Owner).Outer.Count < AmaruConstants.OUTER_MAX_SIZE) {
+                place = Place.OUTER;
+                GameManager.GetPlayer(Owner).Outer.Add(evoked);
+            }
+            else if (GameManager.GetPlayer(Owner).Inner.Count < AmaruConstants.INNER_MAX_SIZE) {
+                place = Place.INNER;
+                GameManager.GetPlayer(Owner).Inner.Add(evoked);
+            }
+            else
+            {
+                return 0;
+            }
+            foreach (CharacterEnum c in GameManager.UserDict.Keys)
+                AddResponse(c, new ResurrectResponse(Owner, evoked, place));
             return 0;
         }
 

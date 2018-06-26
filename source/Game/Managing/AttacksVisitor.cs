@@ -47,7 +47,8 @@ namespace AmaruServer.Game.Managing
         /// <param name="target"></param>
         public AttacksVisitor(GameManager gameManager, Player caller, Target target, CreatureCard attacker) : base(AmaruConstants.GAME_PREFIX + gameManager.Id)
         {
-            
+            this.Owner = caller.Character;
+            this.OwnerCard = attacker;
             this.Caller = caller;
             this.Target = target;
             this.GameManager = gameManager;
@@ -204,6 +205,7 @@ namespace AmaruServer.Game.Managing
             CreatureCard resurrect = GameManager.Graveyard[rnd.Next(GameManager.Graveyard.Count)];
             GameManager.Graveyard.Remove(resurrect);
             CreatureCard evoked = (CreatureCard)resurrect.Original;
+            Log(OwnerCard.Name + " used ResurrectOrTakeFromGraveyardAbility, resurrected " + evoked.Name);
             Place place;
             if (GameManager.GetPlayer(Owner).Outer.Count < AmaruConstants.OUTER_MAX_SIZE) {
                 place = Place.OUTER;
