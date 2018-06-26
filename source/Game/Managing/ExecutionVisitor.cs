@@ -41,7 +41,6 @@ namespace AmaruServer.Game.Managing
                 GameManager.UserDict[dest].Write(new ResponseMessage(new AttackPlayerResponse(action.Caller, action.Target.Character, playedCard, target.Health)));
 
             foreach (KeyValuePair<CharacterEnum, Response> kvp in attackVisitor.SuccessiveResponse) {
-                Log("Player " + kvp.Key.ToString() + " recieved a successive response");
                 GameManager.UserDict[kvp.Key].Write(new ResponseMessage(kvp.Value));
             }
 

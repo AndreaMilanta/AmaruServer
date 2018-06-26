@@ -116,13 +116,7 @@ namespace AmaruServer.Game.Managing
                 throw new CallerCannotPlayException();
 
             //Check if caller player has enough CPs to play the card
-            foreach( Card c in caller.Hand)
-            {
-                Log(c.ToString());
-            }
             Card cardPlaying = caller.GetCardFromId(action.PlayedCardId, Place.HAND);
-            Log(cardPlaying.ToString());
-            Log(caller.Mana.ToString());
 
             if (cardPlaying.Cost > caller.Mana)
             {
@@ -225,9 +219,17 @@ namespace AmaruServer.Game.Managing
 
         }
 
-        public override void Visit(UseAbilityAction useAbilityAction)
+        public override void Visit(UseAbilityAction action)
         {
+            Player caller = this.GameManager.GetPlayer(action.Caller);
 
+            if (!caller.IsAlive || GameManager.ActiveCharacter != action.Caller || !GameManager.IsMainTurn)
+                throw new CallerCannotPlayException();
+
+            CreatureCard card = (CreatureCard)(caller.GetCardFromId(action.PlayedCardId, Place.OUTER) ?? caller.GetCardFromId(action.PlayedCardId, Place.INNER));
+
+            if (card.Energy < card.Ability.Cost)
+                throw new NotEnoughEPAvailableException();
         }
     }
 }
