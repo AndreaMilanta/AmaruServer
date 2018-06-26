@@ -578,5 +578,15 @@ namespace AmaruServer.Game.Managing
         {
             return 0;
         }
+
+        public override int Visit(DrawCardAbility drawCardAbility)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override int Visit(IfKillGainHPAttack attack)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

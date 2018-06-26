@@ -63,6 +63,11 @@ namespace AmaruServer.Game.Managing
             return 0;
         }
 
+        public override int Visit(IfKillGainHPAttack attack)
+        {
+            return 0;
+        }
+
         public override int Visit(GainHPAbility ability)
         {
             return 0;
@@ -251,6 +256,11 @@ namespace AmaruServer.Game.Managing
         public override int Visit(DoubleHPAbility doubleHPAbility)
         {
             return 0;
+        }
+
+        public override int Visit(DrawCardAbility drawCardAbility)
+        {
+            throw new NotImplementedException();
         }
     }
 }

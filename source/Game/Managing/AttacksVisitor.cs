@@ -152,6 +152,19 @@ namespace AmaruServer.Game.Managing
             return Caller.Inner.Count + Caller.Outer.Count + attack.BonusAttack;
         }
 
+        public override int Visit(IfKillGainHPAttack attack)
+        {
+            if (CardTarget != null)
+            {
+                CreatureCard card = (CreatureCard)(Caller.GetCardFromId(CardTarget.CardId, Place.INNER) ?? Caller.GetCardFromId(CardTarget.CardId, Place.OUTER));
+                if (card.Health - attack.Power < 0)
+                    ((CreatureCard)OwnerCard).Health += attack.BonusHP;
+                foreach (CharacterEnum c in GameManager.UserDict.Keys)
+                    AddResponse(c, new CardsModifiedResponse((CreatureCard)OwnerCard));
+            }
+            return attack.Power;
+        }
+
         public override int Visit(GainHPAbility ability)
         {
             //Log(OwnerCard.Name + " used GainHPAbility");
@@ -161,9 +174,28 @@ namespace AmaruServer.Game.Managing
             return 0;
         }
 
-        public override int Visit(ReturnToHandAbility returnToHandAbility)
+        public override int Visit(ReturnToHandAbility ability)
         {
-            throw new NotImplementedException();
+            foreach (CardTarget target in CardTargets)
+            {
+                if (Caller.Hand.Count >= AmaruConstants.HAND_MAX_SIZE)
+                    return 0;
+                Place origin = GameManager.UserDict[target.Character].Player.GetCardFromId(target.CardId, Place.INNER) == null ? Place.OUTER : Place.INNER;
+                CreatureCard oldCard = ((CreatureCard)GameManager.GetPlayer(target.Character).GetCardFromId(target.CardId, origin));
+                CreatureCard moved = (CreatureCard)oldCard.Original;
+
+                // TODO: gestire se l'area è piena
+                if (origin == Place.OUTER)
+                    Caller.Outer.Remove(oldCard);
+                else if (origin == Place.INNER)
+                    Caller.Inner.Remove(oldCard);
+                else//*/
+                    return 0;
+                Caller.Hand.Add(moved);
+                foreach (CharacterEnum c in GameManager.UserDict.Keys)
+                    AddResponse(c, new EvocationResponse(Owner, oldCard, moved, Place.HAND, deleteOriginal: true));
+            }
+            return 0;
         }
 
         public override int Visit(SalazarAbility ability)
@@ -193,7 +225,16 @@ namespace AmaruServer.Game.Managing
             return 0;
         }
 
-        public override int Visit(DamageDependingOnCPAbility spendCPToDealDamageAbility)
+        public override int Visit(DrawCardAbility ability)
+        {
+            // Draw card and prepare response
+            AddResponse(Owner, new DrawCardResponse(Owner, GameManager.UserDict[Owner].Player.Draw()));
+            foreach (CharacterEnum ch in CharacterManager.Instance.Others(Owner))
+                AddResponse(ch, new DrawCardResponse(Owner, null));
+            return 0;
+        }
+
+        public override int Visit(DamageDependingOnCPAbility ability)
         {
             //Log(OwnerCard.Name + " used KillIfPDAbility");
             List<CreatureCard> modCards = new List<CreatureCard>();
@@ -201,7 +242,7 @@ namespace AmaruServer.Game.Managing
             {
                 CreatureCard targetCard = (CreatureCard)(GameManager.UserDict[t.Character].Player.GetCardFromId(t.CardId, Place.INNER) ?? GameManager.UserDict[t.Character].Player.GetCardFromId(t.CardId, Place.OUTER));
                 //Log("Target is " + (deadCard.Name ?? "null") + " of " + t.Character.ToString());
-                targetCard.Health -= Caller.Mana;
+                targetCard.Health -= (int)Math.Ceiling((double)Caller.Mana / 2);
                 modCards.Add(targetCard);
             }
             foreach (CharacterEnum c in GameManager.UserDict.Keys)
@@ -247,44 +288,52 @@ namespace AmaruServer.Game.Managing
         public override int Visit(SeribuAbility seribuAbility)
         {
             Place place;
-            foreach(CreatureCard card in Caller.Outer.Where(c => !c.IsCloned && !c.IsLegendary))
+            List<CreatureCard> tbdOut = new List<CreatureCard>();
+            List<CreatureCard> tbdIn = new List<CreatureCard>();
+            foreach (CreatureCard card in Caller.Outer.Where(c => !c.IsCloned && !c.IsLegendary))
             {
                 CreatureCard clone = (CreatureCard)card.Original;
                 clone.IsCloned = true;
                 // TODO: gestire se l'area è piena
-                if (Caller.Outer.Count < AmaruConstants.OUTER_MAX_SIZE)
+                if (Caller.Outer.Count + tbdOut.Count < AmaruConstants.OUTER_MAX_SIZE)
                 {
                     place = Place.OUTER;
-                    Caller.Outer.Add(clone);
+                    tbdOut.Add(clone);
                 }
-                else if (Caller.Inner.Count < AmaruConstants.INNER_MAX_SIZE)
+                else if (Caller.Inner.Count + tbdIn.Count < AmaruConstants.INNER_MAX_SIZE)
                 {
                     place = Place.INNER;
-                    Caller.Inner.Add(clone);
+                    tbdIn.Add(clone);
                 }
                 else
-                    return 0;
+                    continue;
+                foreach (CharacterEnum c in GameManager.UserDict.Keys)
+                    AddResponse(c, new EvocationResponse(Owner, card, clone, place));
             }
             foreach(CreatureCard card in Caller.Inner.Where(c => !c.IsCloned && !c.IsLegendary))
             {
                 CreatureCard clone = (CreatureCard)card.Original;
                 clone.IsCloned = true;
                 // TODO: gestire se l'area è piena
-                if (Caller.Inner.Count < AmaruConstants.INNER_MAX_SIZE)
-{
+                if (Caller.Inner.Count + tbdIn.Count < AmaruConstants.INNER_MAX_SIZE)
+                {
                     place = Place.INNER;
-                    Caller.Inner.Add(clone);
+                    tbdIn.Add(clone);
                 }
-                else if (Caller.Outer.Count < AmaruConstants.OUTER_MAX_SIZE)
+                else if (Caller.Outer.Count + tbdOut.Count < AmaruConstants.OUTER_MAX_SIZE)
                 {
                     place = Place.OUTER;
-                    Caller.Outer.Add(clone);
+                    tbdOut.Add(clone);
                 }
                 else
-                    return 0;
+                    continue;
                 foreach (CharacterEnum c in GameManager.UserDict.Keys)
                     AddResponse(c, new EvocationResponse(Owner, card, clone, place));
             }
+            if (tbdIn.Any())
+                Caller.Inner.AddRange(tbdIn);
+            if (tbdOut.Any())
+                Caller.Outer.AddRange(tbdOut);
             return 0;
         }
 
