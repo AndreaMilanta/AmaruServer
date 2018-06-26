@@ -289,7 +289,7 @@ namespace AmaruServer.Networking
             //All the possible attacks
             foreach (CreatureCard c in myWarZone)
             {
-                if (c.Energy == 0 || c.Attack is null)
+                if (c.Energy == 0 || c.Attack is null )
                 {
                     continue;
                 }
@@ -327,7 +327,7 @@ namespace AmaruServer.Networking
             //All the possible abilities
             foreach(CreatureCard cd in myWarZone.Concat(myInnerZone))
             {
-                if (cd.Energy==0 || cd.Ability is null)
+                if (cd.Energy==0 || cd.Ability is null || cd.Name.Contains("Guardian"))
                 {
                     continue;
                 }
@@ -388,7 +388,6 @@ namespace AmaruServer.Networking
                         Log("Eccezione Player" + e.ToString());
                         Log(cd.Name);
                     }
-                    
                 }
             }
             listPossibleActions = listPossibleActions.OrderByDescending(x => x.Key).ToList();
