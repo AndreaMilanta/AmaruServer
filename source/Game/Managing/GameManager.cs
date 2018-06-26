@@ -43,7 +43,7 @@ namespace AmaruServer.Game.Managing
 
             foreach (CreatureCard c in gameManager.Graveyard)
             {
-                this.Graveyard.Add(((CreatureCard)c).clone());
+                this.Graveyard.Add(((CreatureCard)c).Clone());
             }
             this.UserDict = new Dictionary<CharacterEnum, User>();
             foreach (User user in gameManager.UserDict.Values)
@@ -259,8 +259,8 @@ namespace AmaruServer.Game.Managing
                 CurrentRound++;
             this.ActiveCharacter = _turnList[_currentIndex];
             this.UserDict[this.ActiveCharacter].Player.ResetManaCount();
-            Log("New Player: " + ActiveCharacter.ToString());
-            Log("Current index: " + _currentIndex);
+            //Log("New Player: " + ActiveCharacter.ToString());
+            //Log("Current index: " + _currentIndex);
             
             return ActiveCharacter;
         }

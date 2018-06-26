@@ -99,7 +99,7 @@ namespace AmaruServer.Game.Managing
         //AGGIUNGERE DRAW CARD
         public override int Visit(DrawCardAndAttack attack)
         {
-            Log("In DrawCardAndAttack called by " + Owner.ToString());
+            //Log("In DrawCardAndAttack called by " + Owner.ToString());
             // Draw card and prepare response
             AddResponse(Owner, new DrawCardResponse(Owner, GameManager.UserDict[Owner].Player.Draw()));
             foreach (CharacterEnum ch in CharacterManager.Instance.Others(Owner))
@@ -154,7 +154,7 @@ namespace AmaruServer.Game.Managing
 
         public override int Visit(GainHPAbility ability)
         {
-            Log(OwnerCard.Name + " used GainHPAbility");
+            //Log(OwnerCard.Name + " used GainHPAbility");
             ((CreatureCard)OwnerCard).Health += ability.Hp;
             foreach (CharacterEnum c in GameManager.UserDict.Keys.ToList())
                 AddResponse(c, new CardsModifiedResponse((CreatureCard)OwnerCard));
@@ -193,19 +193,39 @@ namespace AmaruServer.Game.Managing
             return 0;
         }
 
-        public override int Visit(SpendCPToDealDamageAbility spendCPToDealDamageAbility)
+        public override int Visit(DamageDependingOnCPAbility spendCPToDealDamageAbility)
         {
-            throw new NotImplementedException();
+            //Log(OwnerCard.Name + " used KillIfPDAbility");
+            List<CreatureCard> modCards = new List<CreatureCard>();
+            foreach (CardTarget t in CardTargets)
+            {
+                CreatureCard targetCard = (CreatureCard)(GameManager.UserDict[t.Character].Player.GetCardFromId(t.CardId, Place.INNER) ?? GameManager.UserDict[t.Character].Player.GetCardFromId(t.CardId, Place.OUTER));
+                //Log("Target is " + (deadCard.Name ?? "null") + " of " + t.Character.ToString());
+                targetCard.Health -= Caller.Mana;
+                modCards.Add(targetCard);
+            }
+            foreach (CharacterEnum c in GameManager.UserDict.Keys)
+                if(modCards.Any())
+                    AddResponse(c, new CardsModifiedResponse(modCards));
+            // Case target is Player
+            foreach (PlayerTarget t in PlayerTargets)
+            {
+                Player targetPlayer = GameManager.UserDict[t.Character].Player;
+                targetPlayer.Health -= Caller.Mana;
+                foreach (CharacterEnum c in GameManager.UserDict.Keys.ToList())
+                    AddResponse(c, new PlayerModifiedResponse(targetPlayer.Character, targetPlayer.Mana, targetPlayer.Health));
+            }
+            return 0;
         }
 
         public override int Visit(ResurrectOrTakeFromGraveyardAbility ability)
         {
             Random rnd = new Random();
-            Log(OwnerCard.Name + " used ResurrectOrTakeFromGraveyardAbility");
+            //Log(OwnerCard.Name + " used ResurrectOrTakeFromGraveyardAbility");
             CreatureCard resurrect = GameManager.Graveyard[rnd.Next(GameManager.Graveyard.Count)];
             GameManager.Graveyard.Remove(resurrect);
             CreatureCard evoked = (CreatureCard)resurrect.Original;
-            Log(OwnerCard.Name + " used ResurrectOrTakeFromGraveyardAbility, resurrected " + evoked.Name);
+            //Log(OwnerCard.Name + " used ResurrectOrTakeFromGraveyardAbility, resurrected " + evoked.Name);
             Place place;
             if (GameManager.GetPlayer(Owner).Outer.Count < AmaruConstants.OUTER_MAX_SIZE) {
                 place = Place.OUTER;
@@ -226,17 +246,56 @@ namespace AmaruServer.Game.Managing
 
         public override int Visit(SeribuAbility seribuAbility)
         {
-            throw new NotImplementedException();
+            Place place;
+            foreach(CreatureCard card in Caller.Outer.Where(c => !c.IsCloned && !c.IsLegendary))
+            {
+                CreatureCard clone = (CreatureCard)card.Original;
+                clone.IsCloned = true;
+                // TODO: gestire se l'area è piena
+                if (Caller.Outer.Count < AmaruConstants.OUTER_MAX_SIZE)
+                {
+                    place = Place.OUTER;
+                    Caller.Outer.Add(clone);
+                }
+                else if (Caller.Inner.Count < AmaruConstants.INNER_MAX_SIZE)
+                {
+                    place = Place.INNER;
+                    Caller.Inner.Add(clone);
+                }
+                else
+                    return 0;
+            }
+            foreach(CreatureCard card in Caller.Inner.Where(c => !c.IsCloned && !c.IsLegendary))
+            {
+                CreatureCard clone = (CreatureCard)card.Original;
+                clone.IsCloned = true;
+                // TODO: gestire se l'area è piena
+                if (Caller.Inner.Count < AmaruConstants.INNER_MAX_SIZE)
+{
+                    place = Place.INNER;
+                    Caller.Inner.Add(clone);
+                }
+                else if (Caller.Outer.Count < AmaruConstants.OUTER_MAX_SIZE)
+                {
+                    place = Place.OUTER;
+                    Caller.Outer.Add(clone);
+                }
+                else
+                    return 0;
+                foreach (CharacterEnum c in GameManager.UserDict.Keys)
+                    AddResponse(c, new EvocationResponse(Owner, card, clone, place));
+            }
+            return 0;
         }
 
         public override int Visit(KillIfPDAbility ability)
         {
-            Log(OwnerCard.Name + " used KillIfPDAbility");
+            //Log(OwnerCard.Name + " used KillIfPDAbility");
             List<CreatureCard> DeadCards = new List<CreatureCard>();
             foreach (CardTarget t in CardTargets)
             {
                 CreatureCard deadCard = (CreatureCard)(GameManager.UserDict[t.Character].Player.GetCardFromId(t.CardId, Place.INNER) ?? GameManager.UserDict[t.Character].Player.GetCardFromId(t.CardId, Place.OUTER));
-                Log("Target is " + (deadCard.Name ?? "null") + " of " + t.Character.ToString());
+                //Log("Target is " + (deadCard.Name ?? "null") + " of " + t.Character.ToString());
                 deadCard.Health = 0;
                 DeadCards.Add(deadCard);
             }
@@ -247,7 +306,7 @@ namespace AmaruServer.Game.Managing
 
         public override int Visit(SummonAbility ability)
         {
-            Log("In summonAbility");
+            //Log("In summonAbility");
             if (GameManager.UserDict[Owner].Player.Outer.Count < AmaruConstants.OUTER_MAX_SIZE)
             {
                 CreatureCard summoned = (CreatureCard)ability.toSummon.Original;
@@ -260,14 +319,41 @@ namespace AmaruServer.Game.Managing
             return 0;
         }
 
-        public override int Visit(AmaruIncarnationAbility amaruIncarnationAbility)
+        public override int Visit(AmaruIncarnationAbility ability)
         {
-            throw new NotImplementedException();
+            foreach (CardTarget target in CardTargets)
+            {
+                if (Caller.Outer.Count >= AmaruConstants.OUTER_MAX_SIZE && Caller.Inner.Count >= AmaruConstants.INNER_MAX_SIZE)
+                    return 0;
+                Place origin = GameManager.UserDict[target.Character].Player.GetCardFromId(target.CardId, Place.INNER) == null ? Place.OUTER : Place.INNER;
+                Place dest;
+                CreatureCard oldCard = ((CreatureCard)GameManager.GetPlayer(target.Character).GetCardFromId(target.CardId, origin));
+                CreatureCard moved = oldCard.Clone(false);
+
+                // TODO: gestire se l'area è piena
+                if (Caller.Outer.Count < AmaruConstants.OUTER_MAX_SIZE)
+                {
+                    dest = Place.OUTER;
+                    GameManager.GetPlayer(target.Character).Outer.Remove(oldCard);
+                    Caller.Outer.Add(moved);
+                }
+                else if (Caller.Inner.Count < AmaruConstants.INNER_MAX_SIZE)
+                {
+                    dest = Place.INNER;
+                    GameManager.GetPlayer(target.Character).Inner.Remove(oldCard);
+                    Caller.Inner.Add(moved);
+                }
+                else//*/
+                    return 0;
+                foreach (CharacterEnum c in GameManager.UserDict.Keys)
+                    AddResponse(c, new EvocationResponse(Owner, oldCard, moved, dest, deleteOriginal: true));
+            }
+            return 0;
         }
 
         public override int Visit(DamageDependingOnCreatureNumberAbility ability)
         {
-            Log(OwnerCard.Name + " used DamageDependingOnCreatureNumberAbility");
+            //Log(OwnerCard.Name + " used DamageDependingOnCreatureNumberAbility");
             int attackPower = ability.myZone == Place.INNER ? GameManager.UserDict[Owner].Player.Inner.Count : GameManager.UserDict[Owner].Player.Outer.Count;
             // Case target is Creature
             if (Targets[0] is CardTarget)
@@ -291,7 +377,7 @@ namespace AmaruServer.Game.Managing
 
         public override int Visit(BonusAttackDependingOnHealthAbility ability)
         {
-            Log(OwnerCard.Name + " used BonusAttackDependingOnHealthAbilit");
+            //Log(OwnerCard.Name + " used BonusAttackDependingOnHealthAbilit");
             List<CreatureCard> targets = new List<CreatureCard>();
             foreach (CardTarget ct in CardTargets)
             {
@@ -306,7 +392,7 @@ namespace AmaruServer.Game.Managing
 
         public override int Visit(DamageWithPDAbility ability)
         {
-            Log(OwnerCard.Name + " used DamageWithPDAbility");
+            //Log(OwnerCard.Name + " used DamageWithPDAbility");
             List<CreatureCard> mods = new List<CreatureCard>();
             foreach (CardTarget ct in CardTargets)
             {
@@ -322,7 +408,7 @@ namespace AmaruServer.Game.Managing
 
         public override int Visit(GiveEPAbility ability)
         {
-            Log(OwnerCard.Name + " used GiveEPAbility");
+            //Log(OwnerCard.Name + " used GiveEPAbility");
             List<CreatureCard> mods = new List<CreatureCard>();
             foreach (CardTarget ct in CardTargets)
             {
@@ -337,10 +423,10 @@ namespace AmaruServer.Game.Managing
 
         public override int Visit(GainCPAbility ability)
         {
-            Log(OwnerCard.Name + " used GainCPAbility");
+            //Log(OwnerCard.Name + " used GainCPAbility");
             Player caller = GameManager.UserDict[Owner].Player;
             caller.Mana += ability.cp;
-            Log(Owner.ToString() + " gained " + caller.Mana + " CP");
+            //Log(Owner.ToString() + " gained " + caller.Mana + " CP");
             foreach (CharacterEnum c in GameManager.UserDict.Keys.ToList())
                 AddResponse(c, new PlayerModifiedResponse(caller.Character, caller.Mana, caller.Health));
             return 0;
@@ -348,7 +434,7 @@ namespace AmaruServer.Game.Managing
 
         public override int Visit(DoubleHPAbility ability)
         {
-            Log(OwnerCard.Name + " used DoubleHPAbility");
+            //Log(OwnerCard.Name + " used DoubleHPAbility");
             ((CreatureCard)OwnerCard).Health *= 2;
             foreach (CharacterEnum c in GameManager.UserDict.Keys.ToList())
                 AddResponse(c, new CardsModifiedResponse((CreatureCard)OwnerCard));

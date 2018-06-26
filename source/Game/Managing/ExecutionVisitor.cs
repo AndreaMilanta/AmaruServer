@@ -50,7 +50,7 @@ namespace AmaruServer.Game.Managing
 
         public override void Visit(MoveCreatureAction action)
         {
-            Log("card moved to " + action.Place.ToString());
+            //Log("card moved to " + action.Place.ToString());
             Player p = GameManager.GetPlayer(action.Caller);
             CreatureCard creature = p.MoveACreatureFromPlace(action.PlayedCardId, action.Place);
             foreach (CharacterEnum target in GameManager.UserDict.Keys.ToList())
