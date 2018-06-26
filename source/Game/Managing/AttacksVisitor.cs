@@ -248,7 +248,7 @@ namespace AmaruServer.Game.Managing
             {
                 CardTarget t = (CardTarget)Targets[0];
                 CreatureCard targetCard = (CreatureCard)(GameManager.UserDict[t.Character].Player.GetCardFromId(t.CardId, Place.INNER) ?? GameManager.UserDict[t.Character].Player.GetCardFromId(t.CardId, Place.OUTER));
-                targetCard.Health -= attackPower;
+                targetCard.Health -= attackPower+ability.bonusDmg;
                 foreach (CharacterEnum c in GameManager.UserDict.Keys.ToList())
                     AddResponse(c, new CardsModifiedResponse(targetCard));
             }
@@ -256,7 +256,7 @@ namespace AmaruServer.Game.Managing
             else
             {
                 Player targetPlayer = GameManager.UserDict[Targets[0].Character].Player;
-                targetPlayer.Health -= attackPower;
+                targetPlayer.Health -= attackPower+ability.bonusDmg;
                 foreach (CharacterEnum c in GameManager.UserDict.Keys.ToList())
                     AddResponse(c, new PlayerModifiedResponse(targetPlayer.Character, targetPlayer.Mana, targetPlayer.Health));
             }
