@@ -327,10 +327,11 @@ namespace AmaruServer.Networking
             //All the possible abilities
             foreach(CreatureCard cd in myWarZone.Concat(myInnerZone))
             {
-                if (cd.Energy==0 || cd.Ability is null || cd.Name.Contains("Guardian"))
+                if (cd.Energy==0 || cd.Ability is null)
                 {
                     continue;
                 }
+
                 if(cd.Ability.NumTarget == 0)
                 {
                     try
