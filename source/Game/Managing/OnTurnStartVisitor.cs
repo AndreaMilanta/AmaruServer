@@ -260,7 +260,7 @@ namespace AmaruServer.Game.Managing
 
         public override int Visit(DrawCardAbility drawCardAbility)
         {
-            throw new NotImplementedException();
+            return 0;
         }
     }
 }
