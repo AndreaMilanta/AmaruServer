@@ -181,13 +181,13 @@ namespace AmaruServer.Game.Managing
                 {
                     if (GameManager.UserDict[ct.Character].Player.Outer.Count < AmaruConstants.OUTER_MAX_SIZE)
                         GameManager.UserDict[ct.Character].Player.Outer.Add(clone);
-                    movedCards.Add(new CardMovement(origin, Place.OUTER, clone));
+                    movedCards.Add(new CardMovement(Owner, origin, Place.OUTER, clone));
                 }
                 else if (origin == Place.INNER)
                 {
                     if (GameManager.UserDict[ct.Character].Player.Inner.Count < AmaruConstants.INNER_MAX_SIZE)
                         GameManager.UserDict[ct.Character].Player.Inner.Add(clone);
-                    movedCards.Add(new CardMovement(Place.DECK, Place.INNER, clone));
+                    movedCards.Add(new CardMovement(Owner, origin, Place.INNER, clone));
                 }
             }
             foreach (CharacterEnum c in GameManager.UserDict.Keys)
@@ -256,7 +256,7 @@ namespace AmaruServer.Game.Managing
                 {
                     GameManager.Graveyard.Remove(c);
                     GameManager.UserDict[Owner].Player.Outer.Add((CreatureCard)c.Original);
-                    movedCards.Add(new CardMovement(Place.GRAVEYARD, Place.OUTER, (CreatureCard)c.Original));
+                    movedCards.Add(new CardMovement(CharacterEnum.INVALID, Place.GRAVEYARD, Place.OUTER, (CreatureCard)c.Original));
                 }
                 foreach (CharacterEnum c in GameManager.UserDict.Keys)
                     if (movedCards.Any())

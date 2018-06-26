@@ -195,7 +195,7 @@ namespace AmaruServer.Game.Managing
                 return 0;
             }
             foreach (CharacterEnum c in GameManager.UserDict.Keys)
-                AddResponse(c, new CardsDrawnResponse(Owner, Place.GRAVEYARD, place, original));
+                AddResponse(c, new CardsDrawnResponse(Owner, CharacterEnum.INVALID, Place.GRAVEYARD, place, original));
             return 0;
         }
 
@@ -229,7 +229,7 @@ namespace AmaruServer.Game.Managing
                 GameManager.UserDict[Owner].Player.Outer.Add(summoned);
 
                 foreach (CharacterEnum c in GameManager.UserDict.Keys)
-                    AddResponse(c, new CardsDrawnResponse(Owner, Place.DECK, Place.OUTER, summoned));
+                    AddResponse(c, new CardsDrawnResponse(Owner, Owner, Place.DECK, Place.OUTER, summoned));
             }
             return 0;
         }
