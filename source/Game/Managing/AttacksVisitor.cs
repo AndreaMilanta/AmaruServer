@@ -98,6 +98,7 @@ namespace AmaruServer.Game.Managing
         //AGGIUNGERE DRAW CARD
         public override int Visit(DrawCardAndAttack attack)
         {
+            Log("In DrawCardAndAttack called by " + Owner.ToString());
             // Draw card and prepare response
             AddResponse(Owner, new DrawCardResponse(Owner, GameManager.UserDict[Owner].Player.Draw()));
             foreach (CharacterEnum ch in CharacterManager.Instance.Others(Owner))
@@ -180,22 +181,22 @@ namespace AmaruServer.Game.Managing
             Log(OwnerCard.Name + " used ResurrectOrTakeFromGraveyardAbility");
             CreatureCard resurrect = GameManager.Graveyard[rnd.Next(GameManager.Graveyard.Count)];
             GameManager.Graveyard.Remove(resurrect);
-            CreatureCard original = (CreatureCard)resurrect.Original;
+            CreatureCard evoked = (CreatureCard)resurrect.Original;
             Place place;
             if (GameManager.GetPlayer(Owner).Outer.Count < AmaruConstants.OUTER_MAX_SIZE) {
                 place = Place.OUTER;
-                GameManager.GetPlayer(Owner).Outer.Add(original);
+                GameManager.GetPlayer(Owner).Outer.Add(evoked);
             }
             else if (GameManager.GetPlayer(Owner).Inner.Count < AmaruConstants.INNER_MAX_SIZE) {
                 place = Place.INNER;
-                GameManager.GetPlayer(Owner).Inner.Add(original);
+                GameManager.GetPlayer(Owner).Inner.Add(evoked);
             }
             else
             {
                 return 0;
             }
             foreach (CharacterEnum c in GameManager.UserDict.Keys)
-                AddResponse(c, new CardsDrawnResponse(Owner, CharacterEnum.INVALID, Place.GRAVEYARD, place, original));
+                AddResponse(c, new ResurrectResponse(Owner, evoked, place));
             return 0;
         }
 
@@ -229,7 +230,7 @@ namespace AmaruServer.Game.Managing
                 GameManager.UserDict[Owner].Player.Outer.Add(summoned);
 
                 foreach (CharacterEnum c in GameManager.UserDict.Keys)
-                    AddResponse(c, new CardsDrawnResponse(Owner, Owner, Place.DECK, Place.OUTER, summoned));
+                    AddResponse(c, new EvocationResponse(Owner, (CreatureCard)OwnerCard, summoned, Place.OUTER));
             }
             return 0;
         }

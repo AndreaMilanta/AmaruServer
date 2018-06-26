@@ -169,7 +169,6 @@ namespace AmaruServer.Game.Managing
         public override int Visit(DuplicatorSpellAbility duplicatorSpellAbility)
         {
             Log("in DuplicatorSpellAbility");
-            List<CardMovement> movedCards = new List<CardMovement>();
             foreach(CardTarget ct in CardTargets)
             {
                 Place origin = GameManager.UserDict[ct.Character].Player.GetCardFromId(ct.CardId, Place.INNER) == null ? Place.OUTER : Place.INNER;
@@ -177,22 +176,15 @@ namespace AmaruServer.Game.Managing
                 CreatureCard clone = (CreatureCard)card.Original;
                 clone.IsCloned = true;
                 // TODO: gestire se l'area è piena
-                if (origin == Place.OUTER)
-                {
-                    if (GameManager.UserDict[ct.Character].Player.Outer.Count < AmaruConstants.OUTER_MAX_SIZE)
-                        GameManager.UserDict[ct.Character].Player.Outer.Add(clone);
-                    movedCards.Add(new CardMovement(Owner, origin, Place.OUTER, clone));
-                }
-                else if (origin == Place.INNER)
-                {
-                    if (GameManager.UserDict[ct.Character].Player.Inner.Count < AmaruConstants.INNER_MAX_SIZE)
-                        GameManager.UserDict[ct.Character].Player.Inner.Add(clone);
-                    movedCards.Add(new CardMovement(Owner, origin, Place.INNER, clone));
-                }
+                if (origin == Place.OUTER && GameManager.UserDict[ct.Character].Player.Outer.Count < AmaruConstants.OUTER_MAX_SIZE)
+                    GameManager.UserDict[ct.Character].Player.Outer.Add(clone);
+                else if (GameManager.UserDict[ct.Character].Player.Inner.Count < AmaruConstants.INNER_MAX_SIZE)
+                    GameManager.UserDict[ct.Character].Player.Inner.Add(clone);
+                else
+                    return 0;
+                foreach (CharacterEnum c in GameManager.UserDict.Keys)
+                    AddResponse(c, new EvocationResponse(Owner, card, clone, origin));
             }
-            foreach (CharacterEnum c in GameManager.UserDict.Keys)
-                if (movedCards.Any())
-                    AddResponse(c, new CardsDrawnResponse(Owner, movedCards));
             return 0;
         }
 
@@ -241,26 +233,23 @@ namespace AmaruServer.Game.Managing
         public override int Visit(ResurrectSpecificCreatureSpellAbility spellAbility)
         {
             Log(OwnerCard.Name + " used ResurrectSpecificCreatureSpellAbility");
-            List<CardMovement> movedCards = new List<CardMovement>();
             LimitedList<CreatureCard> reborn = new LimitedList<CreatureCard>((AmaruConstants.OUTER_MAX_SIZE - GameManager.UserDict[Owner].Player.Outer.Count) > 3 ? (AmaruConstants.OUTER_MAX_SIZE - GameManager.UserDict[Owner].Player.Outer.Count) : 3);
             try
             {
                 foreach (CreatureCard c in GameManager.Graveyard)
                     if (c.CardEnum.Equals(Amaru.BodyGuardian) || c.CardEnum.Equals(Amaru.SoulGuardian))
-                        reborn.Add(c);
+                        reborn.Add((CreatureCard)c.Original);
             }
             catch(LimitedListOutOfBoundException) { }
             finally
             {
-                foreach (CreatureCard c in reborn)
+                foreach (CreatureCard card in reborn)
                 {
-                    GameManager.Graveyard.Remove(c);
-                    GameManager.UserDict[Owner].Player.Outer.Add((CreatureCard)c.Original);
-                    movedCards.Add(new CardMovement(CharacterEnum.INVALID, Place.GRAVEYARD, Place.OUTER, (CreatureCard)c.Original));
+                    GameManager.Graveyard.Remove(card);
+                    GameManager.UserDict[Owner].Player.Outer.Add(card);
+                    foreach (CharacterEnum ch in GameManager.UserDict.Keys)
+                        AddResponse(ch, new ResurrectResponse(Owner, card, Place.OUTER));
                 }
-                foreach (CharacterEnum c in GameManager.UserDict.Keys)
-                    if (movedCards.Any())
-                        AddResponse(c, new CardsDrawnResponse(Owner, movedCards));
             }
             return 0;
         }
