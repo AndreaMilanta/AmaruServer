@@ -425,7 +425,6 @@ namespace AmaruServer.Networking
 
         public double ValueGoalDiscontentment(GameManager gm)
         {
-            //Evaluate the field
             //This function evaluate the goal discontentment
 
             double value = 0;
@@ -475,7 +474,20 @@ namespace AmaruServer.Networking
         private double ValueMyField(GameManager toUseTemp)
         {
             Player me = toUseTemp.UserDict[CharacterEnum.AMARU].Player;
-            
+            double value = 0;
+            if (me.Outer.Count == 6)
+            {
+                double outerValue = me.Outer.Average(x => x.Health);
+                double outerMin = me.Outer.Min(x => x.Health);
+                double innerValue = me.Inner.Average(x => x.Health);
+                double innerMax = me.Inner.Max(x => x.Health);
+                double handValue = me.Hand.Average(x => x is CreatureCard? ((CreatureCard)x).Health: 0);
+
+                value += outerValue - innerValue;
+                value += outerValue - handValue;
+                value += outerMin - innerMax;
+
+            }
             return CalculateMyField(toUseTemp.UserDict[CharacterEnum.AMARU].Player);
         }
 
