@@ -98,6 +98,10 @@ namespace AmaruServer.Game.Managing
         //AGGIUNGERE DRAW CARD
         public override int Visit(DrawCardAndAttack attack)
         {
+            // Draw card and prepare response
+            AddResponse(Owner, new DrawCardResponse(Owner, GameManager.UserDict[Owner].Player.Draw()));
+            foreach (CharacterEnum ch in CharacterManager.Instance.Others(Owner))
+                AddResponse(ch, new DrawCardResponse(Owner, null));
             return attack.Power;
         }
 

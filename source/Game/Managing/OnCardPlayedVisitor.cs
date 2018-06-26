@@ -201,7 +201,7 @@ namespace AmaruServer.Game.Managing
             // Draw card and prepare response
             AddResponse(Owner, new DrawCardResponse(Owner, GameManager.UserDict[Owner].Player.Draw()));
             foreach (CharacterEnum ch in CharacterManager.Instance.Others(Owner))
-                AddResponse(Owner, new DrawCardResponse(Owner, null));
+                AddResponse(ch, new DrawCardResponse(Owner, null));
 
             // Handle Card targets
             List<CreatureCard> modCards = new List<CreatureCard>();
