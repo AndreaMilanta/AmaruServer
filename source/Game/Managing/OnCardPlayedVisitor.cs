@@ -36,7 +36,7 @@ namespace AmaruServer.Game.Managing
         private List<CardTarget> CardTargets { get { return Targets.Where(t => t is CardTarget).Select(t => (CardTarget)t).ToList(); } }
         private List<PlayerTarget> PlayerTargets { get { return Targets.Where(t => t is PlayerTarget).Select(t => (PlayerTarget)t).ToList(); } }
 
-        private CreatureCard Attacker;
+        //private CreatureCard Attacker;
 
         private List<KeyValuePair<CharacterEnum, Response>> _successiveResponse = new List<KeyValuePair<CharacterEnum, Response>>();
         public List<KeyValuePair<CharacterEnum, Response>> SuccessiveResponse { get { List<KeyValuePair<CharacterEnum, Response>> sr = _successiveResponse;  return sr; }  set { _successiveResponse.Clear(); } }
@@ -169,7 +169,6 @@ namespace AmaruServer.Game.Managing
         public override int Visit(DuplicatorSpellAbility duplicatorSpellAbility)
         {
             Log("in DuplicatorSpellAbility");
-            List<CardMovement> movedCards = new List<CardMovement>();
             foreach(CardTarget ct in CardTargets)
             {
                 Place origin = GameManager.UserDict[ct.Character].Player.GetCardFromId(ct.CardId, Place.INNER) == null ? Place.OUTER : Place.INNER;
@@ -181,18 +180,25 @@ namespace AmaruServer.Game.Managing
                 {
                     if (GameManager.UserDict[ct.Character].Player.Outer.Count < AmaruConstants.OUTER_MAX_SIZE)
                         GameManager.UserDict[ct.Character].Player.Outer.Add(clone);
-                    movedCards.Add(new CardMovement(Owner, origin, Place.OUTER, clone));
+                    else if (GameManager.UserDict[ct.Character].Player.Inner.Count < AmaruConstants.INNER_MAX_SIZE)
+                        GameManager.UserDict[ct.Character].Player.Inner.Add(clone);
+                    else
+                        return 0;
                 }
                 else if (origin == Place.INNER)
                 {
                     if (GameManager.UserDict[ct.Character].Player.Inner.Count < AmaruConstants.INNER_MAX_SIZE)
                         GameManager.UserDict[ct.Character].Player.Inner.Add(clone);
-                    movedCards.Add(new CardMovement(Owner, origin, Place.INNER, clone));
+                    else if (GameManager.UserDict[ct.Character].Player.Outer.Count < AmaruConstants.OUTER_MAX_SIZE)
+                        GameManager.UserDict[ct.Character].Player.Outer.Add(clone);
+                    else
+                        return 0;
                 }
+                else
+                    return 0;
+                foreach (CharacterEnum c in GameManager.UserDict.Keys)
+                    AddResponse(c, new EvocationResponse(Owner, card, clone, origin));
             }
-            foreach (CharacterEnum c in GameManager.UserDict.Keys)
-                if (movedCards.Any())
-                    AddResponse(c, new CardsDrawnResponse(Owner, movedCards));
             return 0;
         }
 
@@ -241,32 +247,50 @@ namespace AmaruServer.Game.Managing
         public override int Visit(ResurrectSpecificCreatureSpellAbility spellAbility)
         {
             Log(OwnerCard.Name + " used ResurrectSpecificCreatureSpellAbility");
-            List<CardMovement> movedCards = new List<CardMovement>();
             LimitedList<CreatureCard> reborn = new LimitedList<CreatureCard>((AmaruConstants.OUTER_MAX_SIZE - GameManager.UserDict[Owner].Player.Outer.Count) > 3 ? (AmaruConstants.OUTER_MAX_SIZE - GameManager.UserDict[Owner].Player.Outer.Count) : 3);
             try
             {
                 foreach (CreatureCard c in GameManager.Graveyard)
                     if (c.CardEnum.Equals(Amaru.BodyGuardian) || c.CardEnum.Equals(Amaru.SoulGuardian))
-                        reborn.Add(c);
+                        reborn.Add((CreatureCard)c.Original);
             }
             catch(LimitedListOutOfBoundException) { }
             finally
             {
-                foreach (CreatureCard c in reborn)
+                foreach (CreatureCard card in reborn)
                 {
-                    GameManager.Graveyard.Remove(c);
-                    GameManager.UserDict[Owner].Player.Outer.Add((CreatureCard)c.Original);
-                    movedCards.Add(new CardMovement(CharacterEnum.INVALID, Place.GRAVEYARD, Place.OUTER, (CreatureCard)c.Original));
+                    Log(OwnerCard.Name + " used ResurrectSpecificCreatureSpellAbility, resurrected " + card.Name);
+                    GameManager.Graveyard.Remove(card);
+                    GameManager.UserDict[Owner].Player.Outer.Add(card);
+                    foreach (CharacterEnum ch in GameManager.UserDict.Keys)
+                        AddResponse(ch, new ResurrectResponse(Owner, card, Place.OUTER));
                 }
-                foreach (CharacterEnum c in GameManager.UserDict.Keys)
-                    if (movedCards.Any())
-                        AddResponse(c, new CardsDrawnResponse(Owner, movedCards));
             }
             return 0;
         }
 
         public override int Visit(ResurrectOrReturnToHandSpellAbility resurrectOrReturnToHandSpellAbility)
         {
+            Random rnd = new Random();
+            CreatureCard resurrect = GameManager.Graveyard[rnd.Next(GameManager.Graveyard.Count)];
+            GameManager.Graveyard.Remove(resurrect);
+            CreatureCard evoked = (CreatureCard)resurrect.Original;
+            Log(OwnerCard.Name + " used ResurrectOrReturn, resurrected " + evoked.Name);
+            Place place;
+            if (GameManager.GetPlayer(Owner).Outer.Count < AmaruConstants.OUTER_MAX_SIZE) {
+                place = Place.OUTER;
+                GameManager.GetPlayer(Owner).Outer.Add(evoked);
+            }
+            else if (GameManager.GetPlayer(Owner).Inner.Count < AmaruConstants.INNER_MAX_SIZE) {
+                place = Place.INNER;
+                GameManager.GetPlayer(Owner).Inner.Add(evoked);
+            }
+            else
+            {
+                return 0;
+            }
+            foreach (CharacterEnum c in GameManager.UserDict.Keys)
+                AddResponse(c, new ResurrectResponse(Owner, evoked, place));
             return 0;
         }
 

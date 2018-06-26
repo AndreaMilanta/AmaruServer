@@ -201,13 +201,13 @@ namespace AmaruServer.Game.Managing
             bool graveyardChanged = false;
             foreach (User u in UserDict.Values)
             {
-                if (u.Player.Inner.Where(c => c.Health <= 0) != null)
+                if (u.Player.Inner.Where(c => c.Health <= 0).Any())
                 {
                     Graveyard.AddRange(u.Player.Inner.Where(c => c.Health <= 0));
                     u.Player.Inner.RemoveAll(c => c.Health <= 0);
                     graveyardChanged = true;
                 }
-                if (u.Player.Outer.Where(c => c.Health <= 0) != null)
+                if (u.Player.Outer.Where(c => c.Health <= 0).Any())
                 {
                     Graveyard.AddRange(u.Player.Outer.Where(c => c.Health <= 0));
                     u.Player.Outer.RemoveAll(c => c.Health <= 0);
