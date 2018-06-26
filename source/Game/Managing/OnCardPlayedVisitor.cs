@@ -260,7 +260,7 @@ namespace AmaruServer.Game.Managing
         public override int Visit(ResurrectSpecificCreatureSpellAbility spellAbility)
         {
             Log(OwnerCard.Name + " used ResurrectSpecificCreatureSpellAbility");
-            LimitedList<CreatureCard> reborn = new LimitedList<CreatureCard>((AmaruConstants.OUTER_MAX_SIZE - GameManager.UserDict[Owner].Player.Outer.Count) > 3 ? (AmaruConstants.OUTER_MAX_SIZE - GameManager.UserDict[Owner].Player.Outer.Count) : 3);
+            LimitedList<CreatureCard> reborn = new LimitedList<CreatureCard>((AmaruConstants.OUTER_MAX_SIZE - GameManager.UserDict[Owner].Player.Outer.Count) < 3 ? (AmaruConstants.OUTER_MAX_SIZE - GameManager.UserDict[Owner].Player.Outer.Count) : 3);
             try
             {
                 foreach (CreatureCard c in GameManager.Graveyard)
