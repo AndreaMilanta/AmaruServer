@@ -259,8 +259,8 @@ namespace AmaruServer.Game.Managing
                 CurrentRound++;
             this.ActiveCharacter = _turnList[_currentIndex];
             this.UserDict[this.ActiveCharacter].Player.ResetManaCount();
-            Log("New Player: " + ActiveCharacter.ToString());
-            Log("Current index: " + _currentIndex);
+            //Log("New Player: " + ActiveCharacter.ToString());
+            //Log("Current index: " + _currentIndex);
             
             return ActiveCharacter;
         }
