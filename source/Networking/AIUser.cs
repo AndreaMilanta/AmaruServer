@@ -327,10 +327,11 @@ namespace AmaruServer.Networking
             //All the possible abilities
             foreach(CreatureCard cd in myWarZone.Concat(myInnerZone))
             {
-                if (cd.Energy==0 || cd.Ability is null || cd.Name.Contains("Guardian"))
+                if (cd.Energy==0 || cd.Ability is null)
                 {
                     continue;
                 }
+
                 if(cd.Ability.NumTarget == 0)
                 {
                     try
@@ -368,13 +369,30 @@ namespace AmaruServer.Networking
                     {
                         if (t is PlayerTarget && ((PlayerTarget)t).Character == CharacterEnum.INVALID)
                         {
+                            Log("Eliminato?");
                             continue;
                         }
                         myList.Add(t);
                     }
                     finalListTarget.Add(myList);
                 }
+                Log("----------------------------------------------------");
+                Log(cd.Name.ToString());
+                Log("-------------------------------------------------");
+                foreach (List<Target> lt in finalListTarget)
+                {
+                    foreach (Target t in lt)
+                    {
+                        if(t is CardTarget)
+                        {
+                            Log(((CardTarget)t).Card.Name.ToString());
 
+                        }if (t is PlayerTarget)
+                        {
+                            Log("Character");
+                        }
+                    }
+                }
                 foreach (List<Target> lt in finalListTarget)
                 {
                     try
