@@ -137,7 +137,7 @@ namespace AmaruServer.Game.Managing
                 playedCard.Visit(attackVisitor, caller.Character, playedCard.Ability);
             }
             foreach (KeyValuePair<CharacterEnum, Response> kvp in attackVisitor.SuccessiveResponse) {
-                Log("Player " + kvp.Key.ToString() + " recieved a successive response");
+                //Log("Player " + kvp.Key.ToString() + " recieved a successive response");
                 GameManager.UserDict[kvp.Key].Write(new ResponseMessage(kvp.Value));
             }
             foreach (CharacterEnum c in GameManager.UserDict.Keys)

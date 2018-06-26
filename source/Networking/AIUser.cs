@@ -31,21 +31,21 @@ namespace AmaruServer.Networking
         public struct GoalFunctionWeights
         {
             //Addictive values
-            public const double AliveCreature = 1.5;
+            public const double AliveCreature = 1;
             public const double PlayerDead = 50.0;
             public const double LegendaryCardBonus= 5;
             public const double ShieldUpCreatureBonus = 4;
             public const double ShieldMaidenCreatureBonus = 2;
 
             //Multiplicative values
-            public const double BonusOnHpPlayer = 3;
+            public const double MultiplierOfPlayerHP = 3;
+            public const double BalanceAttractor = 1;
             public const double ManaGreed = 1.5;
-
-            //Unimplementd cause it is not what i want
-            public const double EPGreed = 0;
+            public const double EPGreed = 0.9;
+ 
 
             //Random Power
-            public const double Unpredictability = 0;
+            public const double Unpredictability = 0.1;
 
         }
         public struct GoalFunctionMyFieldWeights
@@ -243,7 +243,6 @@ namespace AmaruServer.Networking
                         PlayASpellFromHandAction myIntention = new PlayASpellFromHandAction(CharacterEnum.AMARU, c.Id, null);
                         Double valueOfGoal = SimulateAndEvaluate(toUse, myIntention);
                         listPossibleActions.Add(new KeyValuePair<Double, PlayerAction>(valueOfGoal, myIntention));
-                        
                     }
                 }
                 catch (Exception e)
@@ -259,7 +258,6 @@ namespace AmaruServer.Networking
             // Struttura dati per le abilità
             List<Target> abilityTarget = new List<Target>();
 
-            
             foreach (KeyValuePair<CharacterEnum, User> pair in toUse.UserDict.ToArray())
             {
                 Player player = pair.Value.Player;
@@ -268,7 +266,7 @@ namespace AmaruServer.Networking
                     allAcceptableTargets.Add(new CardTarget(pair.Key, cd));
                     abilityTarget.Add(new CardTarget(pair.Key, cd));
                 }
-                foreach (CreatureCard cd in Player.Inner)
+                foreach (CreatureCard cd in player.Inner)
                 {
                     abilityTarget.Add(new CardTarget(pair.Key, cd));
 
@@ -284,7 +282,6 @@ namespace AmaruServer.Networking
                     }
                 }
             }
-
 
             //All the possible attacks
             foreach (CreatureCard c in myWarZone)
@@ -324,15 +321,26 @@ namespace AmaruServer.Networking
                     }
                 }
             }
+
             //All the possible abilities
             foreach(CreatureCard cd in myWarZone.Concat(myInnerZone))
             {
-                if (cd.Energy==0 || cd.Ability is null)
+                //to prune the search
+                if (cd.Ability is null || cd.Ability.Cost > cd.Energy)
                 {
                     continue;
                 }
 
-                if(cd.Ability.NumTarget == 0)
+                if (cd.Name.Contains("Guardian"))
+                {
+                    continue;
+                }
+
+
+                int numTarget = cd.Ability.NumTarget;
+
+                //Avoid searching for proper targets if numtarget == 0
+                if (numTarget == 0)
                 {
                     try
                     {
@@ -347,6 +355,8 @@ namespace AmaruServer.Networking
                     }
                     continue;
                 }
+
+                //Looking for all the proper targets for the ability
                 List<Target> targetDiscerned = new List<Target>();
                 foreach(Target t in abilityTarget)
                 {
@@ -357,43 +367,15 @@ namespace AmaruServer.Networking
                     }
                 }
 
-                //Invalid Value used to replace the "do not target even if you can" decision
-                targetDiscerned.Add(new PlayerTarget(CharacterEnum.INVALID));
-                List<List<Target>> finalListTarget = new List<List<Target>>();
-
-                Combinations<Target> result = new Combinations<Target>(targetDiscerned, cd.Ability.NumTarget , GenerateOption.WithoutRepetition);
-                foreach (List<Target> lt in result)
+                //I have to generate all the possible combinations of available targets. Following the rules of the game i have to do it without repetition.
+                List<Combinations<Target>> targetsCombined = new List<Combinations<Target>>();
+                for(int i =1; i<= numTarget; i++)
                 {
-                    List<Target> myList = new List<Target>();
-                    foreach(Target t in lt)
-                    {
-                        if (t is PlayerTarget && ((PlayerTarget)t).Character == CharacterEnum.INVALID)
-                        {
-                            Log("Eliminato?");
-                            continue;
-                        }
-                        myList.Add(t);
-                    }
-                    finalListTarget.Add(myList);
+                    targetsCombined.Add( new Combinations<Target>(targetDiscerned, i, GenerateOption.WithoutRepetition));
                 }
-                Log("----------------------------------------------------");
-                Log(cd.Name.ToString());
-                Log("-------------------------------------------------");
-                foreach (List<Target> lt in finalListTarget)
-                {
-                    foreach (Target t in lt)
-                    {
-                        if(t is CardTarget)
-                        {
-                            Log(((CardTarget)t).Card.Name.ToString());
 
-                        }if (t is PlayerTarget)
-                        {
-                            Log("Character");
-                        }
-                    }
-                }
-                foreach (List<Target> lt in finalListTarget)
+                //iterate all the possible combinations to evaluate the ability on that particular target
+                foreach (List<Target> lt in targetsCombined.SelectMany(x => x))
                 {
                     try
                     {
@@ -408,10 +390,12 @@ namespace AmaruServer.Networking
                     }
                 }
             }
+            //order the possible actions depending on their value
             listPossibleActions = listPossibleActions.OrderByDescending(x => x.Key).ToList();
             if (listPossibleActions.Count > 0)
             {
-                Log(listPossibleActions[0].ToString());
+//                Log("Best Choice");
+//                Log(listPossibleActions[0].ToString());
                 return listPossibleActions[0];
             }
             else
@@ -431,7 +415,7 @@ namespace AmaruServer.Networking
 
         public override Message ReadSync(int timeout_s)
         {
-            System.Threading.Thread.Sleep(1500+ (new Random()).Next(500));
+            System.Threading.Thread.Sleep(1700+ (new Random()).Next(500));
             return new ActionMessage(listOfActions.Dequeue());
         }
 
@@ -447,6 +431,9 @@ namespace AmaruServer.Networking
 
         public double ValueGoalDiscontentment(GameManager gm)
         {
+            //Evaluate the field
+            //This function evaluate the goal discontentment
+
             double value = 0;
             List<Player> lp = new List<Player>();
             Player me = gm.UserDict[CharacterEnum.AMARU].Player;
@@ -463,17 +450,15 @@ namespace AmaruServer.Networking
                 }
                 else
                 {
-                    //Se sto per uccidere un giocatore lo faccio, valutando in maniera positiva la situazione in cui un giocatore è morto
+                    //I get a prize for a dead player, this way i am sure i will kill a player if i have the chance.
                     value += GoalFunctionWeights.PlayerDead;
                 }
             }
 
-            //Somma vita mia e delle mie creature, il mio mana 
             value += me.Health;
             value += CalculateMyField(me);
             value += me.Mana * GoalFunctionWeights.ManaGreed;
 
-            //sommo la vita degli altri e la deviazione standard, la vita media nei loro campi e la deviazione standard
             List<double> listHpField = new List<double>();
             List<double> listHpPlayers = new List<double>();
             foreach (Player p in lp)
@@ -486,9 +471,9 @@ namespace AmaruServer.Networking
 
             double meanHp = Tools.calculateAverage(listHpPlayers);
 
-            value -= meanHp * GoalFunctionWeights.BonusOnHpPlayer;
-            value -= Tools.calculateStd(listHpPlayers);
-            value -= Tools.calculateStd(listHpField);
+            value -= meanHp * GoalFunctionWeights.MultiplierOfPlayerHP;
+            value -= Tools.calculateStd(listHpPlayers)* GoalFunctionWeights.BalanceAttractor;
+            value -= Tools.calculateStd(listHpField)* GoalFunctionWeights.BalanceAttractor;
             value += new Random().NextDouble()*GoalFunctionWeights.Unpredictability;
             return value;
         }
@@ -542,7 +527,7 @@ namespace AmaruServer.Networking
             {
                 value += GoalFunctionMyFieldWeights.EPValueOfLegendaryCreature;
             }
-            value += c.Energy;
+            value += c.Energy*GoalFunctionWeights.EPGreed;
             return value;
         }
 
