@@ -106,7 +106,7 @@ namespace AmaruServer.Game.Managing
             return 0;
         }
 
-        public override int Visit(SpendCPToDealDamageAbility spendCPToDealDamageAbility)
+        public override int Visit(DamageDependingOnCPAbility spendCPToDealDamageAbility)
         {
             return 0;
         }
@@ -172,6 +172,7 @@ namespace AmaruServer.Game.Managing
             foreach(CardTarget ct in CardTargets)
             {
                 Place origin = GameManager.UserDict[ct.Character].Player.GetCardFromId(ct.CardId, Place.INNER) == null ? Place.OUTER : Place.INNER;
+                Place dest;
                 CreatureCard card = (CreatureCard)(GameManager.UserDict[ct.Character].Player.GetCardFromId(ct.CardId, origin));
                 CreatureCard clone = (CreatureCard)card.Original;
                 clone.IsCloned = true;
@@ -179,25 +180,37 @@ namespace AmaruServer.Game.Managing
                 if (origin == Place.OUTER)
                 {
                     if (GameManager.UserDict[ct.Character].Player.Outer.Count < AmaruConstants.OUTER_MAX_SIZE)
+                    {
+                        dest = Place.OUTER;
                         GameManager.UserDict[ct.Character].Player.Outer.Add(clone);
+                    }
                     else if (GameManager.UserDict[ct.Character].Player.Inner.Count < AmaruConstants.INNER_MAX_SIZE)
+                    {
+                        dest = Place.INNER;
                         GameManager.UserDict[ct.Character].Player.Inner.Add(clone);
+                    }
                     else
                         return 0;
                 }
                 else if (origin == Place.INNER)
                 {
                     if (GameManager.UserDict[ct.Character].Player.Inner.Count < AmaruConstants.INNER_MAX_SIZE)
+                    {
+                        dest = Place.INNER;
                         GameManager.UserDict[ct.Character].Player.Inner.Add(clone);
+                    }
                     else if (GameManager.UserDict[ct.Character].Player.Outer.Count < AmaruConstants.OUTER_MAX_SIZE)
+{
+                        dest = Place.OUTER;
                         GameManager.UserDict[ct.Character].Player.Outer.Add(clone);
+                    }
                     else
                         return 0;
                 }
                 else
                     return 0;
                 foreach (CharacterEnum c in GameManager.UserDict.Keys)
-                    AddResponse(c, new EvocationResponse(Owner, card, clone, origin));
+                    AddResponse(c, new EvocationResponse(Owner, card, clone, dest));
             }
             return 0;
         }

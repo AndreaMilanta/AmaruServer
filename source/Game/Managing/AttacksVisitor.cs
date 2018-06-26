@@ -193,9 +193,29 @@ namespace AmaruServer.Game.Managing
             return 0;
         }
 
-        public override int Visit(SpendCPToDealDamageAbility spendCPToDealDamageAbility)
+        public override int Visit(DamageDependingOnCPAbility spendCPToDealDamageAbility)
         {
-            throw new NotImplementedException();
+            //Log(OwnerCard.Name + " used KillIfPDAbility");
+            List<CreatureCard> modCards = new List<CreatureCard>();
+            foreach (CardTarget t in CardTargets)
+            {
+                CreatureCard targetCard = (CreatureCard)(GameManager.UserDict[t.Character].Player.GetCardFromId(t.CardId, Place.INNER) ?? GameManager.UserDict[t.Character].Player.GetCardFromId(t.CardId, Place.OUTER));
+                //Log("Target is " + (deadCard.Name ?? "null") + " of " + t.Character.ToString());
+                targetCard.Health -= Caller.Mana;
+                modCards.Add(targetCard);
+            }
+            foreach (CharacterEnum c in GameManager.UserDict.Keys)
+                if(modCards.Any())
+                    AddResponse(c, new CardsModifiedResponse(modCards));
+            // Case target is Player
+            foreach (PlayerTarget t in PlayerTargets)
+            {
+                Player targetPlayer = GameManager.UserDict[t.Character].Player;
+                targetPlayer.Health -= Caller.Mana;
+                foreach (CharacterEnum c in GameManager.UserDict.Keys.ToList())
+                    AddResponse(c, new PlayerModifiedResponse(targetPlayer.Character, targetPlayer.Mana, targetPlayer.Health));
+            }
+            return 0;
         }
 
         public override int Visit(ResurrectOrTakeFromGraveyardAbility ability)
@@ -226,7 +246,46 @@ namespace AmaruServer.Game.Managing
 
         public override int Visit(SeribuAbility seribuAbility)
         {
-            throw new NotImplementedException();
+            Place place;
+            foreach(CreatureCard card in Caller.Outer.Where(c => !c.IsCloned && !c.IsLegendary))
+            {
+                CreatureCard clone = (CreatureCard)card.Original;
+                clone.IsCloned = true;
+                // TODO: gestire se l'area è piena
+                if (Caller.Outer.Count < AmaruConstants.OUTER_MAX_SIZE)
+                {
+                    place = Place.OUTER;
+                    Caller.Outer.Add(clone);
+                }
+                else if (Caller.Inner.Count < AmaruConstants.INNER_MAX_SIZE)
+                {
+                    place = Place.INNER;
+                    Caller.Inner.Add(clone);
+                }
+                else
+                    return 0;
+            }
+            foreach(CreatureCard card in Caller.Inner.Where(c => !c.IsCloned && !c.IsLegendary))
+            {
+                CreatureCard clone = (CreatureCard)card.Original;
+                clone.IsCloned = true;
+                // TODO: gestire se l'area è piena
+                if (Caller.Inner.Count < AmaruConstants.INNER_MAX_SIZE)
+{
+                    place = Place.INNER;
+                    Caller.Inner.Add(clone);
+                }
+                else if (Caller.Outer.Count < AmaruConstants.OUTER_MAX_SIZE)
+                {
+                    place = Place.OUTER;
+                    Caller.Outer.Add(clone);
+                }
+                else
+                    return 0;
+                foreach (CharacterEnum c in GameManager.UserDict.Keys)
+                    AddResponse(c, new EvocationResponse(Owner, card, clone, place));
+            }
+            return 0;
         }
 
         public override int Visit(KillIfPDAbility ability)
@@ -262,7 +321,22 @@ namespace AmaruServer.Game.Managing
 
         public override int Visit(AmaruIncarnationAbility amaruIncarnationAbility)
         {
-            throw new NotImplementedException();
+            /*
+            CreatureCard clone = (CreatureCard)card.Original;
+            clone.IsCloned = true;
+            // TODO: gestire se l'area è piena
+            if (Caller.Outer.Count < AmaruConstants.OUTER_MAX_SIZE)
+            {
+                place = Place.OUTER;
+                Caller.Outer.Add(clone);
+            }
+            else if (Caller.Inner.Count < AmaruConstants.INNER_MAX_SIZE)
+            {
+                place = Place.INNER;
+                Caller.Inner.Add(clone);
+            }
+            else//*/
+                return 0;
         }
 
         public override int Visit(DamageDependingOnCreatureNumberAbility ability)

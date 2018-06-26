@@ -78,7 +78,7 @@ namespace AmaruServer.Game.Managing
             return 0;
         }
 
-        public override int Visit(SpendCPToDealDamageAbility spendCPToDealDamageAbility)
+        public override int Visit(DamageDependingOnCPAbility spendCPToDealDamageAbility)
         {
             return 0;
         }
