@@ -86,6 +86,7 @@ namespace AmaruServer.Game.Managing
 
             //Check if caller player has enough CPs to play the card
             Card cardPlaying = caller.GetCardFromId(action.PlayedCardId, Place.HAND);
+            Log(action.Caller + " played " + cardPlaying.Name);
             if (cardPlaying.Cost > caller.Mana)
             {
                 throw new NotEnoughManaAvailableException();
