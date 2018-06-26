@@ -38,9 +38,9 @@ namespace AmaruServer.Networking
             public const double ShieldMaidenCreatureBonus = 2;
 
             //Multiplicative values
-            public const double MultiplierOfPlayerHP = 5;
+            public const double MultiplierOfPlayerHP = 4.5;
             public const double BalanceAttractor = 0.7;
-            public const double ManaGreed = 1.5;
+            public const double ManaGreed = 1.6;
             public const double EPGreed = 0.9;
  
 
@@ -53,7 +53,7 @@ namespace AmaruServer.Networking
             //Addictive value
             public const double ShieldAndInnerZone = -4.1;
             public const double ShieldMaidenPresentLowHPInnerZone = 4.5;
-            public const double CanAttackInnerZone = -6.0;
+            public const double CanAttackInnerZone = -7.5;
             public const double LowHPOuterZone =  -4.0;
             public const double EPValueOfLegendaryCreature = 2.0;
 

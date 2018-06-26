@@ -80,6 +80,13 @@ namespace AmaruServer.Game.Managing
             foreach (KeyValuePair<CharacterEnum,Response> kvp in visitor.SuccessiveResponse)
                 GameManager.UserDict[kvp.Key].Write(new ResponseMessage(kvp.Value));
             // visitor must take care of players which he kills
+            List<CharacterEnum> killedChars = new List<CharacterEnum>();
+            foreach (PlayerTarget pt in action.Targets.Where(t => t is PlayerTarget)) {
+                if (!GameManager.GetPlayer(pt.Character).IsAlive && !killedChars.Contains(pt.Character)) {
+                    killedChars.Add(pt.Character);
+                    GameManager.KillPlayer(p.Character, pt.Character);
+                }
+            }
         }
 
         public override void Visit(EndTurnAction action)
@@ -143,6 +150,15 @@ namespace AmaruServer.Game.Managing
             foreach (CharacterEnum c in GameManager.UserDict.Keys)
                 GameManager.UserDict[c].Write(new ResponseMessage(new CardsModifiedResponse(playedCard)));
             // visitor must take care of players which he kills
+
+            List<CharacterEnum> killedChars = new List<CharacterEnum>();
+            foreach(PlayerTarget pt in action.Targets.Where( t => t is PlayerTarget)) {
+                if (!GameManager.GetPlayer(pt.Character).IsAlive && !killedChars.Contains(pt.Character)) {
+                    killedChars.Add(pt.Character);
+                    GameManager.KillPlayer(caller.Character, pt.Character);
+                }
+            }
+            
         }
     }
 }

@@ -31,7 +31,7 @@ namespace AmaruServer.Game.Managing
         private int _currentIndex = 0;              // Index of current active player
         private List<CharacterEnum> _turnList;  // List of players in order of turn
         public bool IsMainTurn { get; set; }
-
+        public bool Simulator { get; set; } = false;
         /// <summary>
         /// Constructor for AI
         /// Attenzione a settare bene di chi è il turno (ActiveCharacter) -- ADESSO è CharacterEnum.AMARU
@@ -55,6 +55,7 @@ namespace AmaruServer.Game.Managing
             this.ValidationVisitor = new ValidationVisitor(this);
             this.ExecutionVisitor = new ExecutionVisitor(this);
             this.ActiveCharacter = CharacterEnum.AMARU;
+            this.Simulator = true;
         }
 
         public GameManager(int id, Dictionary<CharacterEnum, User> clientsDict) : base(AmaruConstants.GAME_PREFIX + id)
@@ -290,6 +291,10 @@ namespace AmaruServer.Game.Managing
             UserDict[ActiveCharacter].Write(new ResponseMessage(new PlayerKilledResponse(killer, deadChar, UserDict[killer].Player.IsImmune, drawnCards)));
             foreach (CharacterEnum target in CharacterManager.Instance.Others(ActiveCharacter))
                 UserDict[target].Write(new ResponseMessage(new PlayerKilledResponse(killer, deadChar, UserDict[killer].Player.IsImmune, drawnCards.Count)));
+
+            if (Simulator)
+                return;
+
             if (_turnList.Count == 1)
                 foreach (CharacterEnum target in UserDict.Keys)
                     UserDict[target].Write(new ResponseMessage(new GameFinishedResponse(_turnList[0])));
@@ -297,6 +302,9 @@ namespace AmaruServer.Game.Managing
 
         private void KillPlayer4Turn(CharacterEnum deadChar)
         {
+            if (Simulator)
+                return;
+
             // Adapt current player index
             if (_turnList.FindIndex(c => c == deadChar) < _currentIndex)
                 _currentIndex--;
