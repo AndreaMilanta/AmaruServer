@@ -331,12 +331,6 @@ namespace AmaruServer.Networking
                     continue;
                 }
 
-                if (cd.Name.Contains("Guardian"))
-                {
-                    continue;
-                }
-
-
                 int numTarget = cd.Ability.NumTarget;
 
                 //Avoid searching for proper targets if numtarget == 0
@@ -480,6 +474,8 @@ namespace AmaruServer.Networking
 
         private double ValueMyField(GameManager toUseTemp)
         {
+            Player me = toUseTemp.UserDict[CharacterEnum.AMARU].Player;
+            
             return CalculateMyField(toUseTemp.UserDict[CharacterEnum.AMARU].Player);
         }
 
