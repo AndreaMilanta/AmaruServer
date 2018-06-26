@@ -176,10 +176,24 @@ namespace AmaruServer.Game.Managing
                 CreatureCard clone = (CreatureCard)card.Original;
                 clone.IsCloned = true;
                 // TODO: gestire se l'area è piena
-                if (origin == Place.OUTER && GameManager.UserDict[ct.Character].Player.Outer.Count < AmaruConstants.OUTER_MAX_SIZE)
-                    GameManager.UserDict[ct.Character].Player.Outer.Add(clone);
-                else if (GameManager.UserDict[ct.Character].Player.Inner.Count < AmaruConstants.INNER_MAX_SIZE)
-                    GameManager.UserDict[ct.Character].Player.Inner.Add(clone);
+                if (origin == Place.OUTER)
+                {
+                    if (GameManager.UserDict[ct.Character].Player.Outer.Count < AmaruConstants.OUTER_MAX_SIZE)
+                        GameManager.UserDict[ct.Character].Player.Outer.Add(clone);
+                    else if (GameManager.UserDict[ct.Character].Player.Inner.Count < AmaruConstants.INNER_MAX_SIZE)
+                        GameManager.UserDict[ct.Character].Player.Inner.Add(clone);
+                    else
+                        return 0;
+                }
+                else if (origin == Place.INNER)
+                {
+                    if (GameManager.UserDict[ct.Character].Player.Inner.Count < AmaruConstants.INNER_MAX_SIZE)
+                        GameManager.UserDict[ct.Character].Player.Inner.Add(clone);
+                    else if (GameManager.UserDict[ct.Character].Player.Outer.Count < AmaruConstants.OUTER_MAX_SIZE)
+                        GameManager.UserDict[ct.Character].Player.Outer.Add(clone);
+                    else
+                        return 0;
+                }
                 else
                     return 0;
                 foreach (CharacterEnum c in GameManager.UserDict.Keys)

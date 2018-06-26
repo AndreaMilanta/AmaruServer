@@ -165,9 +165,31 @@ namespace AmaruServer.Game.Managing
             throw new NotImplementedException();
         }
 
-        public override int Visit(SalazarAbility salazarAbility)
+        public override int Visit(SalazarAbility ability)
         {
-            throw new NotImplementedException();
+            // Handle Card targets
+            List<CreatureCard> modCards = new List<CreatureCard>();
+            foreach (PlayerTarget t in PlayerTargets) {
+                foreach (CreatureCard card in GameManager.UserDict[t.Character].Player.Inner) {
+                    card.Health -= ability.NumPD;
+                    if (card.Health > 0)
+                        card.PoisonDamage += ability.NumPD;
+                    modCards.Add(card);
+                }
+
+                foreach (CreatureCard card in GameManager.UserDict[t.Character].Player.Outer) {
+                    card.Health -= ability.NumPD;
+                    if (card.Health > 0)
+                        card.PoisonDamage += ability.NumPD;
+                    modCards.Add(card);
+                }
+            }
+
+            // Prepare responses
+            foreach (CharacterEnum ch in GameManager.UserDict.Keys.ToList())
+                if (modCards.Any())
+                    AddResponse(ch, new CardsModifiedResponse(modCards));
+            return 0;
         }
 
         public override int Visit(SpendCPToDealDamageAbility spendCPToDealDamageAbility)
@@ -223,6 +245,7 @@ namespace AmaruServer.Game.Managing
 
         public override int Visit(SummonAbility ability)
         {
+            Log("In summonAbility");
             if (GameManager.UserDict[Owner].Player.Outer.Count < AmaruConstants.OUTER_MAX_SIZE)
             {
                 CreatureCard summoned = (CreatureCard)ability.toSummon.Original;
