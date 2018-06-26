@@ -128,23 +128,24 @@ namespace AmaruServer.Game.Managing
 
         public override int Visit(SalazarAttack attack)
         {
-            int PDcount = attack.BonusAttack;
+            int attackPower = 2;
             foreach(User u in GameManager.UserDict.Values) {
                 foreach (CreatureCard c in u.Player.Inner)
-                    PDcount += c.PoisonDamage;
+                    attackPower += c.PoisonDamage;
                 foreach (CreatureCard c in u.Player.Outer)
-                    PDcount += c.PoisonDamage;
+                    attackPower += c.PoisonDamage;
             }
+            
             if (CardTarget != null) {
                 CreatureCard targetCard = (CreatureCard)(GameManager.UserDict[CardTarget.Character].Player.GetCardFromId(CardTarget.CardId, Place.INNER) ?? GameManager.UserDict[CardTarget.Character].Player.GetCardFromId(CardTarget.CardId, Place.OUTER));
-                if (targetCard.Health - attack.Power > 0) {
-                    targetCard.PoisonDamage += attack.Power;
+                if (targetCard.Health - attackPower > 0) {
+                    targetCard.PoisonDamage += attackPower;
                     foreach (CharacterEnum c in GameManager.UserDict.Keys.ToList())
                         AddResponse(c, new CardsModifiedResponse(targetCard));
                 }
             }
 
-            return PDcount;
+            return attackPower;
         }
 
         public override int Visit(SeribuAttack attack)
