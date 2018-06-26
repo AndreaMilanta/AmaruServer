@@ -86,6 +86,20 @@ namespace AmaruServer.Game.Managing
 
             //Check if caller player has enough CPs to play the card
             Card cardPlaying = caller.GetCardFromId(action.PlayedCardId, Place.HAND);
+
+            if(((CreatureCard)cardPlaying).creatureEffect is CostLessForPDEffect) {
+                int PDcount = 0;
+                foreach (User u in GameManager.UserDict.Values) {
+                    foreach (CreatureCard c in u.Player.Inner)
+                        PDcount += c.PoisonDamage;
+                    foreach (CreatureCard c in u.Player.Outer)
+                        PDcount += c.PoisonDamage;
+                }
+                cardPlaying.Cost -= PDcount;
+                if (cardPlaying.Cost < 0)
+                    cardPlaying.Cost = 0;
+            }
+
             Log(action.Caller + " played " + cardPlaying.Name);
             if (cardPlaying.Cost > caller.Mana)
             {
