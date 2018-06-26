@@ -157,7 +157,7 @@ namespace AmaruServer.Game.Managing
         {
             if (CardTarget != null)
             {
-                CreatureCard card = (CreatureCard)(Caller.GetCardFromId(CardTarget.CardId, Place.INNER) ?? Caller.GetCardFromId(CardTarget.CardId, Place.OUTER));
+                CreatureCard card = (CreatureCard)(GameManager.GetPlayer(CardTarget.Character).GetCardFromId(CardTarget.CardId, Place.INNER) ?? GameManager.GetPlayer(CardTarget.Character).GetCardFromId(CardTarget.CardId, Place.OUTER));
                 if (card.Health - attack.Power < 0)
                     ((CreatureCard)OwnerCard).Health += attack.BonusHP;
                 foreach (CharacterEnum c in GameManager.UserDict.Keys)

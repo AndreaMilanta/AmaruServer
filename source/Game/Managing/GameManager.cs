@@ -214,6 +214,9 @@ namespace AmaruServer.Game.Managing
                     graveyardChanged = true;
                 }
             }
+
+            Graveyard.RemoveAll(c => c.IsCloned);
+
             if (graveyardChanged)
                 foreach (CharacterEnum c in UserDict.Keys)
                     UserDict[c].Write(new ResponseMessage(new GraveyardChangedResponse(Graveyard.Count)));
