@@ -208,7 +208,7 @@ namespace AmaruServer.Game.Managing
             foreach (CardTarget t in CardTargets)
             {
                 CreatureCard card = (CreatureCard)(GameManager.UserDict[t.Character].Player.GetCardFromId(t.CardId, Place.INNER) ?? (GameManager.UserDict[t.Character].Player.GetCardFromId(t.CardId, Place.OUTER)));
-                card.Energy -= spell.EpNumber;
+                card.Energy += spell.EpNumber;
                 modCards.Add(card);
             }
 
