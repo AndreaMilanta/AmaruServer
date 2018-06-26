@@ -43,7 +43,7 @@ namespace AmaruServer.Game.Managing
 
             foreach (CreatureCard c in gameManager.Graveyard)
             {
-                this.Graveyard.Add(((CreatureCard)c).clone());
+                this.Graveyard.Add(((CreatureCard)c).Clone());
             }
             this.UserDict = new Dictionary<CharacterEnum, User>();
             foreach (User user in gameManager.UserDict.Values)
