@@ -38,7 +38,7 @@ namespace AmaruServer.Networking
             public const double ShieldMaidenCreatureBonus = 2;
 
             //Multiplicative values
-            public const double MultiplierOfPlayerHP = 3.5;
+            public const double MultiplierOfPlayerHP = 5;
             public const double BalanceAttractor = 0.7;
             public const double ManaGreed = 1.5;
             public const double EPGreed = 0.9;
@@ -255,6 +255,7 @@ namespace AmaruServer.Networking
             // inizializzo struttura dati di possibili target per un attacco, potando la ricerca delle azioni evidentemente impossibili
             List<CardTarget> allAcceptableTargets = new List<CardTarget>();
             List<PlayerTarget> allAcceptablePlayerTarget = new List<PlayerTarget>();
+
             // Struttura dati per le abilità
             List<Target> abilityTarget = new List<Target>();
 
@@ -475,22 +476,34 @@ namespace AmaruServer.Networking
         {
             Player me = toUseTemp.UserDict[CharacterEnum.AMARU].Player;
             double value = 0;
-
-            //when outer field is full
-            if (me.Outer.Count == 6)
+            try
             {
-                double outerValue = me.Outer.Average(x => (x.Health+x.myPowerAttack()+(x.Ability is null ? GoalFunctionMyFieldWeights.CanAttackInnerZone/2:0)));
-                double outerMin = me.Outer.Min(x => (x.Health + x.myPowerAttack() + (x.Ability is null ? GoalFunctionMyFieldWeights.CanAttackInnerZone / 2 : 0)));
-                double innerValue = me.Inner.Average(x => (x.Health + x.myPowerAttack() + (x.Ability is null ? -GoalFunctionMyFieldWeights.CanAttackInnerZone / 2 : 0)));
-                double innerMax = me.Inner.Max(x => (x.Health + x.myPowerAttack() + (x.Ability is null ? -GoalFunctionMyFieldWeights.CanAttackInnerZone / 2 : 0)));
-                double handValue = me.Hand.Average(x => x is CreatureCard? ((CreatureCard)x).Health + (((CreatureCard)x).myPowerAttack()) : 0);
+                if (me.Outer.Count == 6)
+                {
+                    double innerValue = 0;
+                    double innerMax = 0;
+                    double outerValue = me.Outer.Average(x => (x.Health + x.myPowerAttack() + (x.Ability is null ? GoalFunctionMyFieldWeights.CanAttackInnerZone / 2 : 0)));
+                    double outerMin = me.Outer.Min(x => (x.Health + x.myPowerAttack() + (x.Ability is null ? GoalFunctionMyFieldWeights.CanAttackInnerZone / 2 : 0)));
+                    if (me.Inner.Count >= 0)
+                    {
+                        innerValue = me.Inner.Average(x => (x.Health + x.myPowerAttack() + (x.Ability is null ? -GoalFunctionMyFieldWeights.CanAttackInnerZone / 2 : 0)));
+                        innerMax = me.Inner.Max(x => (x.Health + x.myPowerAttack() + (x.Ability is null ? -GoalFunctionMyFieldWeights.CanAttackInnerZone / 2 : 0)));
+                    }
 
-                value += outerValue - innerValue;
-                value += outerValue - handValue;
-                value += outerMin - innerMax;
+                    double handValue = me.Hand.Average(x => x is CreatureCard ? ((CreatureCard)x).Health + (((CreatureCard)x).myPowerAttack()) : 0);
 
+                    value += outerValue - innerValue;
+                    value += outerValue - handValue;
+                    value += outerMin - innerMax;
+
+                }
+            } catch(Exception e)
+            {
+                LogException(e);
             }
-            return CalculateMyField(toUseTemp.UserDict[CharacterEnum.AMARU].Player);
+            //when outer field is full
+
+            return (value + CalculateMyField(toUseTemp.UserDict[CharacterEnum.AMARU].Player));
         }
 
         private double CalculateMyField(Player me)
