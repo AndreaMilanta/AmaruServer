@@ -93,7 +93,7 @@ namespace AmaruServer.Game.Managing
                 // Init Players
                 foreach (CharacterEnum c in UserDict.Keys)                       // Default draw
                     UserDict[c].SetPlayer(new Player(c, AmaruConstants.GAME_PREFIX + Id), this);
-                UserDict.Add(CharacterEnum.AMARU, new AIUser("AI_"+AmaruConstants.GAME_PREFIX + Id));
+                UserDict.Add(CharacterEnum.AMARU, new AIUserExperimental("AI_"+AmaruConstants.GAME_PREFIX + Id));
                     UserDict[CharacterEnum.AMARU].SetPlayer(new AmaruPlayer(AmaruConstants.GAME_PREFIX + Id), this);
 
                 // Draw cards 

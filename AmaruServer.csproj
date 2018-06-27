@@ -106,6 +106,7 @@
     <Compile Include="source\Game\Managing\ValidationVisitor.cs" />
     <Compile Include="source\Game\Tools\GameFactory.cs" />
     <Compile Include="source\Networking\AIUser.cs" />
+    <Compile Include="source\Networking\AIUserExperimental.cs" />
     <Compile Include="source\Networking\ConnectionManager.cs" />
     <Compile Include="source\Networking\EmptyUser.cs" />
     <Compile Include="source\Networking\MainServer.cs" />

@@ -21,7 +21,7 @@ using static ClientServer.Communication.ClientTCP;
 
 namespace AmaruServer.Networking
 {
-    public class AIUser : User
+    public class AIUserExperimental : User
     {
         private bool myTurn = false;
         MessageHandler messageHandler = null;
@@ -36,18 +36,18 @@ namespace AmaruServer.Networking
         public struct GoalFunctionWeights
         {
             //Addictive values
-            public const double AliveCreature = 1;
-            public const double PlayerDead = 50.0;
-            public const double LegendaryCardBonus= 5;
+            public const double AliveCreature = 1.5;
+            public const double PlayerDead = 100.0;
+            public const double LegendaryCardBonus = 5;
             public const double ShieldUpCreatureBonus = 4;
             public const double ShieldMaidenCreatureBonus = 2;
 
             //Multiplicative values
-            public const double MultiplierOfPlayerHP = 4.5;
-            public const double BalanceAttractor = 0.7;
+            public const double MultiplierOfPlayerHP = 1.75;
+            public const double BalanceAttractor = 1;
             public const double ManaGreed = 1.6;
             public const double EPGreed = 0.9;
- 
+
 
             //Random Power
             public const double Unpredictability = 0.1;
@@ -61,14 +61,14 @@ namespace AmaruServer.Networking
             public const double ShieldAndInnerZone = -4.1;
             public const double ShieldMaidenPresentLowHPInnerZone = 4.5;
             public const double CanOnlyAttack = -8.5;
-            public const double LowHPOuterZone =  -4.0;
+            public const double LowHPOuterZone = -4.0;
             public const double EPValueOfLegendaryCreature = 2.0;
 
             //Multiplicative Values
-            public const double LowHpWhen = 1.0/3.0;
+            public const double LowHpWhen = 1.0 / 3.0;
         }
 
-        public AIUser(string logger) : base(logger)
+        public AIUserExperimental(string logger) : base(logger)
         {
             listOfActions = new Queue<PlayerAction>();
         }
@@ -121,7 +121,9 @@ namespace AmaruServer.Networking
                                 }
                                 catch (Exception e)
                                 {
+                                    Log("STOPEXECUTION");
                                     Log(e.ToString());
+                                    gain = false;
                                 }
                             }
                             else
@@ -137,7 +139,7 @@ namespace AmaruServer.Networking
                     myTurn = false;
                     GameManager toIterate = CreateGameManagerAndStuff(this.GameManager);
                     double discontentment = ValueGoalDiscontentment(toIterate);
-                    Log("My Hand");
+
                     Log("My Hand");
 
                     foreach (Card c in Player.Hand)
@@ -167,7 +169,9 @@ namespace AmaruServer.Networking
                             }
                             catch (Exception e)
                             {
+                                Log("STOPMovementExecution");
                                 Log(e.ToString());
+                                gain = false;
                             }
                         }
                         else
@@ -185,7 +189,7 @@ namespace AmaruServer.Networking
         /// </summary>
         /// <param name="gm"></param>
         /// <returns> Best movement action</returns>
-        private KeyValuePair<Double,PlayerAction> ThinkToMove(GameManager gm)
+        private KeyValuePair<Double, PlayerAction> ThinkToMove(GameManager gm)
         {
             GameManager toUse = CreateGameManagerAndStuff(gm);
             Player me = toUse.UserDict[CharacterEnum.AMARU].Player;
@@ -201,16 +205,17 @@ namespace AmaruServer.Networking
                     //   Log("TESTO la carta "+ cd.Name + "   in war zone? " + myWarZone.Contains(cd));
                     //   Log(me.IsShieldMaidenProtected.ToString());
                     GameManager toUseTemp = CreateGameManagerAndStuff(toUse);
-                    MoveCreatureAction myIntention = new MoveCreatureAction(CharacterEnum.AMARU, cd.Id, (myInnerZone.Contains(cd)? Place.OUTER: Place.INNER), 0);
+                    MoveCreatureAction myIntention = new MoveCreatureAction(CharacterEnum.AMARU, cd.Id, (myInnerZone.Contains(cd) ? Place.OUTER : Place.INNER), 0);
                     myIntention.Visit(toUseTemp.ValidationVisitor);
                     myIntention.Visit(toUseTemp.ExecutionVisitor);
                     Double valueOfGoal = ValueMyField(toUseTemp);
                     listPossibleActions.Add(new KeyValuePair<Double, PlayerAction>(valueOfGoal, myIntention));
                 }
-                catch (Exception e){
+                catch (Exception e)
+                {
                     Log("Eccezione " + e.ToString());
                     Log(cd.Name);
-                }            
+                }
             }
             listPossibleActions = listPossibleActions.OrderByDescending(x => x.Key).ToList();
             if (listPossibleActions.Count > 0)
@@ -233,11 +238,12 @@ namespace AmaruServer.Networking
         {
             GameManager toUse = CreateGameManagerAndStuff(gm);
             Player me = toUse.UserDict[CharacterEnum.AMARU].Player;
+
             LimitedList<Card> myCards = me.Hand;
             LimitedList<CreatureCard> myWarZone = me.Outer;
             LimitedList<CreatureCard> myInnerZone = me.Inner;
 
-            //Initializing all the actions doable
+            //Structure keeping track of all the actions available
             List<KeyValuePair<Double, PlayerAction>> listPossibleActions = new List<KeyValuePair<double, PlayerAction>>();
             foreach (Card c in myCards)
             {
@@ -247,13 +253,12 @@ namespace AmaruServer.Networking
 
                     if (c is CreatureCard && myWarZone.Count < AmaruConstants.OUTER_MAX_SIZE)
                     {
-
                         PlayACreatureFromHandAction myIntention = new PlayACreatureFromHandAction(CharacterEnum.AMARU, c.Id, Place.OUTER, Player.Outer.Count);
                         Double valueOfGoal = SimulateAndEvaluate(toUse, myIntention);
                         listPossibleActions.Add(new KeyValuePair<Double, PlayerAction>(valueOfGoal, myIntention));
-
-                    } else if (c is CreatureCard && myInnerZone.Count < AmaruConstants.INNER_MAX_SIZE) {
-
+                    }
+                    else if (c is CreatureCard && myInnerZone.Count < AmaruConstants.INNER_MAX_SIZE)
+                    {
                         PlayACreatureFromHandAction myIntention = new PlayACreatureFromHandAction(CharacterEnum.AMARU, c.Id, Place.INNER, Player.Inner.Count);
                         Double valueOfGoal = SimulateAndEvaluate(toUse, myIntention);
                         listPossibleActions.Add(new KeyValuePair<Double, PlayerAction>(valueOfGoal, myIntention));
@@ -268,8 +273,8 @@ namespace AmaruServer.Networking
                 }
                 catch (Exception e)
                 {
-                    Log("Eccezione " + e.ToString());
-                    Log(c.Name);
+                    //Log("Exception on Card Play\n" + e.ToString());
+                    //Log(c.Name);
                 }
             }
 
@@ -285,14 +290,15 @@ namespace AmaruServer.Networking
                 Player player = pair.Value.Player;
                 foreach (CreatureCard cd in player.Outer)
                 {
-                    allAcceptableTargets.Add(new CardTarget(pair.Key, cd));
                     abilityTarget.Add(new CardTarget(pair.Key, cd));
+                    if(player.Character!= CharacterEnum.AMARU)
+                        allAcceptableTargets.Add(new CardTarget(pair.Key, cd));
                 }
                 foreach (CreatureCard cd in player.Inner)
                 {
                     abilityTarget.Add(new CardTarget(pair.Key, cd));
 
-                    if (!pair.Value.Player.IsShieldMaidenProtected)
+                    if (!pair.Value.Player.IsShieldMaidenProtected && player.Character != CharacterEnum.AMARU)
                         allAcceptableTargets.Add(new CardTarget(pair.Key, cd));
                 }
                 if (!player.IsImmune)
@@ -309,7 +315,7 @@ namespace AmaruServer.Networking
             foreach (CreatureCard c in myWarZone)
             {
                 //some pruning
-                if (c.Energy == 0 || c.Attack is null )
+                if (c.Attack is null || c.Energy < c.Attack.Cost)
                 {
                     continue;
                 }
@@ -324,9 +330,7 @@ namespace AmaruServer.Networking
                     }
                     catch (Exception e)
                     {
-                        Log("Eccezione " + e.ToString());
-                        Log("ATTACCANTE " + c.Name);
-                        Log(cTarget.Card.Name);
+                        Log("Exception on Attack of " +c.Name + " to " + cTarget.Card.Name +"\n" + e.ToString());
                     }
                 }
                 foreach (PlayerTarget pTarget in allAcceptablePlayerTarget)
@@ -335,18 +339,19 @@ namespace AmaruServer.Networking
                     {
                         AttackPlayerAction myIntention = new AttackPlayerAction(CharacterEnum.AMARU, c.Id, Property.ATTACK, pTarget);
                         Double valueOfGoal = SimulateAndEvaluate(toUse, myIntention);
+                        Log(valueOfGoal.ToString());
+                        Log("Player " + pTarget.Character);
                         listPossibleActions.Add(new KeyValuePair<Double, PlayerAction>(valueOfGoal, myIntention));
                     }
                     catch (Exception e)
                     {
-                        Log("Eccezione Player" + e.ToString());
-                        Log("ATTACCANTE " +c.Name);
+                        Log("Exception on player attack of " +c.Name + " \n " + e.ToString());
                     }
                 }
             }
 
             //All the possible abilities with their own specific targets combinations
-            foreach(CreatureCard cd in myWarZone.Concat(myInnerZone))
+            foreach (CreatureCard cd in myWarZone.Concat(myInnerZone))
             {
                 //Some Pruning
                 if (cd.Ability is null || cd.Ability.Cost > cd.Energy)
@@ -367,15 +372,15 @@ namespace AmaruServer.Networking
                     }
                     catch (Exception e)
                     {
-                        Log("Eccezione Abilità" + e.ToString());
-                        Log(cd.Name);
+                        //Log("Eccezione Abilità" + e.ToString());
+                        //Log(cd.Name);
                     }
                     continue;
                 }
 
                 //Looking for all the proper targets for the ability
                 List<Target> targetDiscerned = new List<Target>();
-                foreach(Target t in abilityTarget)
+                foreach (Target t in abilityTarget)
                 {
                     targetVisitor.Target = t;
                     if (cd.Ability.Visit(targetVisitor) >= 0)
@@ -386,9 +391,9 @@ namespace AmaruServer.Networking
 
                 //I have to generate all the possible combinations of available targets. Following the rules of the game i have to do it without repetition.
                 List<Combinations<Target>> targetsCombined = new List<Combinations<Target>>();
-                for(int i =1; i<= numTarget; i++)
+                for (int i = 1; i <= numTarget; i++)
                 {
-                    targetsCombined.Add( new Combinations<Target>(targetDiscerned, i, GenerateOption.WithoutRepetition));
+                    targetsCombined.Add(new Combinations<Target>(targetDiscerned, i, GenerateOption.WithoutRepetition));
                 }
 
                 //iterate all the possible combinations to evaluate the ability on that particular target
@@ -402,8 +407,8 @@ namespace AmaruServer.Networking
                     }
                     catch (Exception e)
                     {
-                        Log("Eccezione Player" + e.ToString());
-                        Log(cd.Name);
+                        Log("Exception on Targeting, Creature in question: " + cd.Name+ "\n" + e.ToString());
+
                     }
                 }
             }
@@ -411,8 +416,6 @@ namespace AmaruServer.Networking
             listPossibleActions = listPossibleActions.OrderByDescending(x => x.Key).ToList();
             if (listPossibleActions.Count > 0)
             {
-//                Log("Best Choice");
-//                Log(listPossibleActions[0].ToString());
                 return listPossibleActions[0];
             }
             else
@@ -435,14 +438,14 @@ namespace AmaruServer.Networking
             Double valueOfGoal = ValueGoalDiscontentment(toUseTemp);
             return valueOfGoal;
         }
-         /// <summary>
-         /// Where the game manager asks for actions
-         /// </summary>
-         /// <param name="timeout_s"></param>
-         /// <returns></returns>
+        /// <summary>
+        /// Where the game manager asks for actions
+        /// </summary>
+        /// <param name="timeout_s"></param>
+        /// <returns></returns>
         public override Message ReadSync(int timeout_s)
         {
-            System.Threading.Thread.Sleep(1700+ (new Random()).Next(500));
+            System.Threading.Thread.Sleep(1700 + (new Random()).Next(500));
             return new ActionMessage(listOfActions.Dequeue());
         }
 
@@ -497,15 +500,12 @@ namespace AmaruServer.Networking
                 double temp = CalculateHpOnField(p);
                 value -= temp;
                 listHpField.Add(temp);
+                value -= p.Health * GoalFunctionWeights.MultiplierOfPlayerHP;
                 listHpPlayers.Add(p.Health);
             }
-
-            double meanHp = Tools.calculateAverage(listHpPlayers);
-
-            value -= meanHp * GoalFunctionWeights.MultiplierOfPlayerHP;
-            value -= Tools.calculateStd(listHpPlayers)* GoalFunctionWeights.BalanceAttractor;
-            value -= Tools.calculateStd(listHpField)* GoalFunctionWeights.BalanceAttractor;
-            value += new Random().NextDouble()*GoalFunctionWeights.Unpredictability;
+            value -= Tools.calculateStd(listHpPlayers) * GoalFunctionWeights.BalanceAttractor;
+            value -= Tools.calculateStd(listHpField) * GoalFunctionWeights.BalanceAttractor;
+            value += new Random().NextDouble() * GoalFunctionWeights.Unpredictability;
             return value;
         }
 
@@ -526,24 +526,25 @@ namespace AmaruServer.Networking
                     double innerValue = 0;
                     double innerMax = 0;
                     double handValue = 0;
-                    double outerValue = me.Outer.Average(x => (x.Health + x.myPowerAttack() + (x.Ability is null ? GoalFunctionMyFieldWeights.CanOnlyAttack / 2 : 0)));
-                    double outerMin = me.Outer.Min(x => (x.Health + x.myPowerAttack() + (x.Ability is null ? GoalFunctionMyFieldWeights.CanOnlyAttack / 2 : 0)));
+                    double outerValue = me.Outer.Average(x => (x.Health + x.myPowerAttack() + (x.Ability is null ? GoalFunctionMyFieldWeights.CanOnlyAttack : 0)));
+                    double outerMin = me.Outer.Min(x => (x.Health + x.myPowerAttack() + (x.Ability is null ? GoalFunctionMyFieldWeights.CanOnlyAttack: 0)));
                     if (me.Inner.Count > 0)
                     {
                         innerValue = me.Inner.Average(x => (x.Health + x.myPowerAttack() + (x.Ability is null ? -GoalFunctionMyFieldWeights.CanOnlyAttack : 0)));
-                        innerMax = me.Inner.Max(x => (x.Health + x.myPowerAttack() + (x.Ability is null ? -GoalFunctionMyFieldWeights.CanOnlyAttack: 0)));
+                        innerMax = me.Inner.Max(x => (x.Health + x.myPowerAttack() + (x.Ability is null ? -GoalFunctionMyFieldWeights.CanOnlyAttack : 0)));
                     }
                     if (me.Hand.Count > 0)
                     {
                         handValue = me.Hand.Average(x => x is CreatureCard ? ((CreatureCard)x).Health + (((CreatureCard)x).myPowerAttack()) : 0);
                     }
-                    
+
                     value += outerValue - innerValue;
                     value += outerValue - handValue;
                     value += outerMin - innerMax;
 
                 }
-            } catch(Exception e)
+            }
+            catch (Exception e)
             {
                 LogException(e);
             }
@@ -563,13 +564,13 @@ namespace AmaruServer.Networking
             {
                 value += cd.Health;
                 value += GoalFunctionWeights.AliveCreature;
-                value += ValueGoalForSingleCreature(me.IsShieldMaidenProtected,Place.INNER,cd);
+                value += ValueGoalForSingleCreature(me.IsShieldMaidenProtected, Place.INNER, cd);
             }
-            foreach(CreatureCard cd in me.Outer)
+            foreach (CreatureCard cd in me.Outer)
             {
                 value += cd.Health;
                 value += GoalFunctionWeights.AliveCreature;
-                value += ValueGoalForSingleCreature(me.IsShieldMaidenProtected,Place.OUTER,cd);
+                value += ValueGoalForSingleCreature(me.IsShieldMaidenProtected, Place.OUTER, cd);
             }
             return value;
         }
@@ -581,21 +582,21 @@ namespace AmaruServer.Networking
         /// <param name="p"></param>
         /// <param name="c"></param>
         /// <returns></returns>
-        private double ValueGoalForSingleCreature(bool ShieldMaidenProtected,Place p, CreatureCard c)
+        private double ValueGoalForSingleCreature(bool ShieldMaidenProtected, Place p, CreatureCard c)
         {
             double value = 0;
-            if (p ==  Place.INNER)
+            if (p == Place.INNER)
             {
                 if (!(c.Attack is null) && (c.Ability is null))
                     value += GoalFunctionMyFieldWeights.CanOnlyAttack;
 
-                if(c.Shield != Shield.NONE)
+                if (c.Shield != Shield.NONE)
                     value += GoalFunctionMyFieldWeights.ShieldAndInnerZone;
 
                 if (LowHP(c) && ShieldMaidenProtected)
                     value += GoalFunctionMyFieldWeights.ShieldMaidenPresentLowHPInnerZone;
             }
-            else if (p== Place.OUTER)
+            else if (p == Place.OUTER)
             {
                 if (LowHP(c))
                 {
@@ -611,7 +612,7 @@ namespace AmaruServer.Networking
             {
                 energy = energy * GoalFunctionMyFieldWeights.EPValueOfLegendaryCreature;
             }
-            value += energy*GoalFunctionWeights.EPGreed;
+            value += energy * GoalFunctionWeights.EPGreed;
             return value;
         }
 
@@ -625,7 +626,7 @@ namespace AmaruServer.Networking
             CreatureCard creatureOriginal = (CreatureCard)c.Original;
             return (c.Health <= creatureOriginal.Health * GoalFunctionMyFieldWeights.LowHpWhen);
         }
-        
+
         /// <summary>
         /// Function used to evaluate field of the other players
         /// </summary>
@@ -637,11 +638,11 @@ namespace AmaruServer.Networking
             int t = 0;
             foreach (CreatureCard c in p.Outer)
             {
-                if(c.Shield == Shield.SHIELDUP || c.Shield == Shield.BOTH)
+                if (c.Shield == Shield.SHIELDUP || c.Shield == Shield.BOTH)
                 {
                     hp += GoalFunctionWeights.ShieldUpCreatureBonus;
                 }
-                if(c.Shield == Shield.SHIELDMAIDEN)
+                if (c.Shield == Shield.SHIELDMAIDEN)
                 {
                     hp += GoalFunctionWeights.ShieldMaidenCreatureBonus;
                 }
