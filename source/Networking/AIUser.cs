@@ -60,7 +60,7 @@ namespace AmaruServer.Networking
             //Addictive value
             public const double ShieldAndInnerZone = -4.1;
             public const double ShieldMaidenPresentLowHPInnerZone = 4.5;
-            public const double CanOnlyAttack = -7.5;
+            public const double CanOnlyAttack = -8.5;
             public const double LowHPOuterZone =  -4.0;
             public const double EPValueOfLegendaryCreature = 2.0;
 
@@ -528,10 +528,10 @@ namespace AmaruServer.Networking
                     double handValue = 0;
                     double outerValue = me.Outer.Average(x => (x.Health + x.myPowerAttack() + (x.Ability is null ? GoalFunctionMyFieldWeights.CanOnlyAttack / 2 : 0)));
                     double outerMin = me.Outer.Min(x => (x.Health + x.myPowerAttack() + (x.Ability is null ? GoalFunctionMyFieldWeights.CanOnlyAttack / 2 : 0)));
-                    if (me.Inner.Count >= 0)
+                    if (me.Inner.Count > 0)
                     {
-                        innerValue = me.Inner.Average(x => (x.Health + x.myPowerAttack() + (x.Ability is null ? -GoalFunctionMyFieldWeights.CanOnlyAttack / 2 : 0)));
-                        innerMax = me.Inner.Max(x => (x.Health + x.myPowerAttack() + (x.Ability is null ? -GoalFunctionMyFieldWeights.CanOnlyAttack / 2 : 0)));
+                        innerValue = me.Inner.Average(x => (x.Health + x.myPowerAttack() + (x.Ability is null ? -GoalFunctionMyFieldWeights.CanOnlyAttack : 0)));
+                        innerMax = me.Inner.Max(x => (x.Health + x.myPowerAttack() + (x.Ability is null ? -GoalFunctionMyFieldWeights.CanOnlyAttack: 0)));
                     }
                     if (me.Hand.Count > 0)
                     {
@@ -611,7 +611,7 @@ namespace AmaruServer.Networking
                 }
                 if (c.IsLegendary)
                 {
-                    value += GoalFunctionWeights.LegendaryCardBonus;
+                    value += GoalFunctionWeights.LegendaryCardBonus * 2;
                 }
             }
             double energy = c.Energy;
