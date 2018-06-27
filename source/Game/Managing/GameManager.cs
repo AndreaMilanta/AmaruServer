@@ -266,6 +266,13 @@ namespace AmaruServer.Game.Managing
 
         public CharacterEnum NextTurn()
         {
+            foreach (CreatureCard c in UserDict[ActiveCharacter].Player.Inner)
+                if (c.Attack != null)
+                    c.Attack.BonusAttack = 0;
+
+            foreach (CreatureCard c in UserDict[ActiveCharacter].Player.Outer)
+                if (c.Attack != null)
+                    c.Attack.BonusAttack = 0;
 
             this._currentIndex = (_currentIndex == (_turnList.Count - 1)) ? 0 : _currentIndex+1;
             if (_currentIndex == 0)
