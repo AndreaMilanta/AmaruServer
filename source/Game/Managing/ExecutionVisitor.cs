@@ -69,6 +69,7 @@ namespace AmaruServer.Game.Managing
 
         public override void Visit(PlayASpellFromHandAction action)
         {
+            GameManager.PlayersAliveBeforeAction = GameManager.UserDict.Keys.ToList().Where(c => GameManager.GetPlayer(c).IsAlive).ToList();
             OnCardPlayedVisitor visitor = new OnCardPlayedVisitor(GameManager);
             Player p = GameManager.GetPlayer(action.Caller);
             SpellCard spell = p.PlayASpellFromHand(action.PlayedCardId);
@@ -80,11 +81,9 @@ namespace AmaruServer.Game.Managing
             foreach (KeyValuePair<CharacterEnum,Response> kvp in visitor.SuccessiveResponse)
                 GameManager.UserDict[kvp.Key].Write(new ResponseMessage(kvp.Value));
             // visitor must take care of players which he kills
-            List<CharacterEnum> killedChars = new List<CharacterEnum>();
-            foreach (PlayerTarget pt in action.Targets.Where(t => t is PlayerTarget)) {
-                if (!GameManager.GetPlayer(pt.Character).IsAlive && !killedChars.Contains(pt.Character)) {
-                    killedChars.Add(pt.Character);
-                    GameManager.KillPlayer(p.Character, pt.Character);
+            foreach (CharacterEnum ch in GameManager.PlayersAliveBeforeAction) {
+                if (!GameManager.GetPlayer(ch).IsAlive) {
+                    GameManager.KillPlayer(p.Character, ch);
                 }
             }
         }
@@ -132,6 +131,7 @@ namespace AmaruServer.Game.Managing
 
         public override void Visit(UseAbilityAction action)
         {
+            GameManager.PlayersAliveBeforeAction = GameManager.UserDict.Keys.ToList().Where(c => GameManager.GetPlayer(c).IsAlive).ToList();
             Player caller = GameManager.GetPlayer(action.Caller);
             CreatureCard playedCard = (CreatureCard)(caller.GetCardFromId(action.PlayedCardId, Place.INNER) ?? caller.GetCardFromId(action.PlayedCardId, Place.OUTER));
             playedCard.Energy -= playedCard.Ability.Cost;
@@ -151,14 +151,11 @@ namespace AmaruServer.Game.Managing
                 GameManager.UserDict[c].Write(new ResponseMessage(new CardsModifiedResponse(playedCard)));
             // visitor must take care of players which he kills
 
-            List<CharacterEnum> killedChars = new List<CharacterEnum>();
-            foreach(PlayerTarget pt in action.Targets.Where( t => t is PlayerTarget)) {
-                if (!GameManager.GetPlayer(pt.Character).IsAlive && !killedChars.Contains(pt.Character)) {
-                    killedChars.Add(pt.Character);
-                    GameManager.KillPlayer(caller.Character, pt.Character);
+            foreach (CharacterEnum ch in GameManager.PlayersAliveBeforeAction) {
+                if (!GameManager.GetPlayer(ch).IsAlive) {
+                    GameManager.KillPlayer(caller.Character, ch);
                 }
             }
-            
         }
     }
 }

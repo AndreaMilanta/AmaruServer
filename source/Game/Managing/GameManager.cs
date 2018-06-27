@@ -32,6 +32,7 @@ namespace AmaruServer.Game.Managing
         private List<CharacterEnum> _turnList;  // List of players in order of turn
         public bool IsMainTurn { get; set; }
         public bool Simulator { get; set; } = false;
+        public List<CharacterEnum> PlayersAliveBeforeAction;
         /// <summary>
         /// Constructor for AI
         /// Attenzione a settare bene di chi è il turno (ActiveCharacter) -- ADESSO è CharacterEnum.AMARU
@@ -204,13 +205,21 @@ namespace AmaruServer.Game.Managing
             {
                 if (u.Player.Inner.Where(c => c.Health <= 0).Any())
                 {
-                    Graveyard.AddRange(u.Player.Inner.Where(c => c.Health <= 0));
+                    foreach(CreatureCard card in u.Player.Inner.Where(c => c.Health <= 0)) {
+                        if (card.Name != "Calf" && card.Name != "Bear" && card.Name != "Imperial Toucan")
+                            Graveyard.Add(card);
+                    }
+                    //Graveyard.AddRange(u.Player.Inner.Where(c => c.Health <= 0));
                     u.Player.Inner.RemoveAll(c => c.Health <= 0);
                     graveyardChanged = true;
                 }
                 if (u.Player.Outer.Where(c => c.Health <= 0).Any())
                 {
-                    Graveyard.AddRange(u.Player.Outer.Where(c => c.Health <= 0));
+                    foreach (CreatureCard card in u.Player.Outer.Where(c => c.Health <= 0)) {
+                        if (card.Name != "Calf" && card.Name != "Bear" && card.Name != "Imperial Toucan")
+                            Graveyard.Add(card);
+                    }
+                    //Graveyard.AddRange(u.Player.Outer.Where(c => c.Health <= 0));
                     u.Player.Outer.RemoveAll(c => c.Health <= 0);
                     graveyardChanged = true;
                 }
